@@ -1,0 +1,50 @@
+[package]
+name = "AviCore"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies.ahash]
+version = "0.8"
+
+[dependencies.chrono]
+version = "0.4"
+features = ["serde"]
+
+[dependencies.dashmap]
+version = "5.5"
+
+[dependencies.regex]
+version = "1.0"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[dependencies.serde_json]
+version = "1.0"
+
+[dependencies.thiserror]
+version = "1.0"
+
+[dependencies.tokio]
+version = "1.0"
+features = ["full"]
+
+[dependencies.tracing]
+version = "0.1"
+
+[dependencies.unicode-segmentation]
+version = "1.10"
+
+[dependencies.uuid]
+version = "1.0"
+features = [
+    "v4",
+    "serde",
+]
+
+[dev-dependencies.tokio-test]
+version = "0.4"
+
+[dev-dependencies.tracing-subscriber]
+version = "0.3"
