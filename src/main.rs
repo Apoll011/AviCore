@@ -1,7 +1,5 @@
-use crate::intent::{IntentClassifier, IntentId, TrainingExample, TrainingSource};
-
 mod intent;
-
+use crate::intent::{IntentClassifier, IntentId, TrainingExample, TrainingSource};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a new classifier

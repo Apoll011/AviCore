@@ -13,9 +13,6 @@ features = ["serde"]
 [dependencies.dashmap]
 version = "5.5"
 
-[dependencies.regex]
-version = "1.0"
-
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
@@ -33,18 +30,9 @@ features = ["full"]
 [dependencies.tracing]
 version = "0.1"
 
-[dependencies.unicode-segmentation]
-version = "1.10"
-
 [dependencies.uuid]
 version = "1.0"
 features = [
     "v4",
     "serde",
 ]
-
-[dev-dependencies.tokio-test]
-version = "0.4"
-
-[dev-dependencies.tracing-subscriber]
-version = "0.3"

@@ -43,10 +43,7 @@ impl IntentClassifier {
             intent_patterns: Arc::new(DashMap::with_hasher(RandomState::new())),
             config,
         };
-        
-        // Load bootstrap data
-        classifier.load_bootstrap_data().await?;
-        
+
         if classifier.config.debug_mode {
             info!("Intent classifier initialized with {} dimensions", classifier.config.feature_dimensions);
         }
@@ -229,10 +226,7 @@ impl IntentClassifier {
         
         self.vocabulary.clear();
         self.intent_patterns.clear();
-        
-        // Reload bootstrap data
-        self.load_bootstrap_data().await?;
-        
+
         if self.config.debug_mode {
             info!("Cleared all training data and reloaded bootstrap data");
         }
@@ -360,97 +354,7 @@ impl IntentClassifier {
         
         format!("Classified as '{}' using rule-based analysis", intent)
     }
-    
-    /// Load bootstrap training data
-    async fn load_bootstrap_data(&self) -> Result<()> {
-        let bootstrap_examples = self.get_bootstrap_examples();
-        
-        for (text, intent_str) in bootstrap_examples {
-            let example = TrainingExample {
-                text: text.to_string(),
-                intent: IntentId::from(intent_str),
-                confidence: 1.0,
-                source: TrainingSource::Bootstrap,
-            };
-            
-            self.add_training_example(example).await?;
-        }
-        
-        if self.config.debug_mode {
-            info!("Loaded {} bootstrap training examples", self.get_bootstrap_examples().len());
-        }
-        
-        Ok(())
-    }
-    
-    /// Get bootstrap examples
-    fn get_bootstrap_examples(&self) -> Vec<(&'static str, &'static str)> {
-        vec![
-            // Data operations
-            ("merge these JSON files together", "data_merge"),
-            ("combine multiple JSON documents", "data_merge"),
-            ("join several data files into one", "data_merge"),
-            ("consolidate JSON objects", "data_merge"),
-            ("split this large JSON file", "data_split"),
-            ("break apart this data into smaller pieces", "data_split"),
-            ("divide this file into multiple parts", "data_split"),
-            ("convert JSON to CSV format", "data_transform"),
-            ("transform this data structure", "data_transform"),
-            ("change the format of this file", "data_transform"),
-            ("analyze this dataset for patterns", "data_analyze"),
-            ("examine the data for insights", "data_analyze"),
-            ("what trends do you see in this data", "data_analyze"),
-            ("give me statistics about this data", "data_analyze"),
-            
-            // File operations
-            ("read the contents of this file", "file_read"),
-            ("load this document", "file_read"),
-            ("open and parse this file", "file_read"),
-            ("save this data to a file", "file_write"),
-            ("write this content to disk", "file_write"),
-            ("create a new file with this data", "file_write"),
-            ("convert PDF to markdown", "file_convert"),
-            ("change this file format", "file_convert"),
-            ("export as different format", "file_convert"),
-            ("compare these two files", "file_compare"),
-            ("what's different between these documents", "file_compare"),
-            ("find differences in these files", "file_compare"),
-            
-            // Network operations
-            ("make an API request to this URL", "network_request"),
-            ("call this REST endpoint", "network_request"),
-            ("send HTTP request", "network_request"),
-            ("download this file from the internet", "network_download"),
-            ("fetch data from this URL", "network_download"),
-            ("retrieve file from web", "network_download"),
-            ("check if this website is up", "network_monitor"),
-            ("monitor API endpoint", "network_monitor"),
-            ("test connectivity to server", "network_monitor"),
-            
-            // Processing operations
-            ("extract text from this document", "extraction"),
-            ("pull out specific information", "extraction"),
-            ("get the important parts from this", "extraction"),
-            ("validate this data against schema", "validation"),
-            ("check if this data is correct", "validation"),
-            ("verify the format of this file", "validation"),
-            ("generate a report from this data", "generation"),
-            ("create summary of this information", "generation"),
-            ("produce documentation", "generation"),
-            ("classify this content", "classification"),
-            ("categorize this data", "classification"),
-            ("determine the type of this file", "classification"),
-            
-            // Code operations
-            ("analyze this code for issues", "code_analyze"),
-            ("review this source code", "code_analyze"),
-            ("check code quality", "code_analyze"),
-            ("process this text document", "text_process"),
-            ("clean up this text", "text_process"),
-            ("parse natural language", "text_process"),
-        ]
-    }
-    
+
     /// Preprocess text for feature extraction
     fn preprocess_text(&self, text: &str) -> String {
         text.to_lowercase()
