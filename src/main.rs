@@ -1,26 +1,16 @@
-mod intent;
-use crate::intent::{IntentClassifier, IntentId, TrainingExample, TrainingSource};
+mod api;
+use std::collections::HashMap;
+use crate::api::send::send_dict_to_server;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Create a new classifier
-    let classifier = IntentClassifier::new().await?;
+    let url = "http://127.0.0.1:1178/lang/format/pronounce_number";
 
-    // Predict an intent
-    let prediction = classifier.predict_intent("merge these JSON files together").await?;
-    println!("Intent: {}, Confidence: {:.3}", prediction.intent, prediction.confidence.value());
+    let mut args = HashMap::new();
+    args.insert("number", "42");
 
-    // Add custom training data
-    let example = TrainingExample {
-        text: "calculate the sum of these numbers".to_string(),
-        intent: IntentId::from("math_operation"),
-        confidence: 1.0,
-        source: TrainingSource::Programmatic,
-    };
-    classifier.add_training_example(example).await?;
-
-    // Get statistics
-    let stats = classifier.get_stats().await;
-    println!("Training examples: {}", stats.training_examples);
+    let r = send_dict_to_server(url, args).await?;
+    println!("Server replied: {:?}", r.response);
 
     Ok(())
 }
