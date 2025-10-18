@@ -1,0 +1,10 @@
+{
+  "name": "light.turn_on",
+  "examples": [
+    "turn on the {location} light",
+    "switch on the lamp in the {room}"
+  ],
+  "slots": {
+    "location": { "type": "string", "required": false }
+  }
+}

@@ -1,0 +1,75 @@
+settings:
+  # Device IP shown as a text field in UI
+  device_ip:
+    value: "192.168.1.123"
+    type: io.ip
+    description: "IP address of the smart plug"
+    ui: text
+    required: true
+
+  # Poll interval shown as a number input (seconds)
+  poll_interval:
+    value: 30
+    type: time.seconds
+    description: "Polling frequency to check if the device is online"
+    ui: slider
+    min: 5
+    max: 300
+
+  # Operating mode with dropdown options
+  mode:
+    value: "eco"
+    type: enum
+    enum: ["eco", "normal", "turbo"]
+    description: "Select device mode"
+    ui: dropdown
+
+  # Boolean toggle
+  enable_logging:
+    value: true
+    type: boolean
+    description: "Enable verbose logging"
+    ui: toggle
+
+  # Example string used by module logic
+  welcome_message:
+    value: "Welcome home!"
+    type: string
+    description: "Message to play when the user arrives"
+    ui: text
+
+  # Example number
+  welcome_brightness:
+    value: 80
+    type: number
+    description: "Brightness level for the welcome light"
+    min: 0
+    max: 100
+
+  # Advanced hidden config
+  api_token:
+    value: ""
+    type: string
+    description: "Private API token for debug operations"
+    ui: password
+    advanced: true
+
+  # Optional grouping for UI sections
+  hallway:
+    group: "Hallway Settings"
+    light_id:
+      value: "light-hallway-1"
+      type: string
+      description: "ID of the hallway light"
+    motion_timeout:
+      value: 120
+      type: time.seconds
+      description: "Seconds before auto-off"
+
+  # Nested list example
+  linked_devices:
+    value:
+       - "light-bedroom"
+       - "speaker-bedroom"
+    type: list
+    description: "Devices to activate together"

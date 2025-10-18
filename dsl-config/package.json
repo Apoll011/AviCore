@@ -1,0 +1,19 @@
+{
+  "name": "avi-dsl",
+  "contributes": {
+    "grammars": [
+      {
+        "language": "avi",
+        "scopeName": "source.avi",
+        "path": "./avi.tmLanguage.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "avi",
+        "extensions": [".avi"],
+        "aliases": ["AviScript"]
+      }
+    ]
+  }
+}

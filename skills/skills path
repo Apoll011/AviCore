@@ -1,0 +1,25 @@
+Skill Import:
+Avi Downloads the Skill from url, Checks integrity
+Avi will then get the intents send it to the Api to train,
+Then add it to the skill path
+Use a generator to build a web ui for the settings and save it in the skill (If it does not exists)
+
+System Start:
+Avi will start the system, and will load the skills from the skill path, that are not disabled.
+Create a OBJ that represents the skill exposing functions to interact with it
+Load all the web ui's from the skills' and host them on the Core UI
+
+Skill Call
+Get te entry point and run it for the required intent
+
+Skill Disable: (Requiring a restart)
+Add a flag on the manifest to disable the skill
+
+Skill Enable:
+Remove the flag from the manifest
+Load the Skill
+
+Skill Uninstall:
+Remove the UI from the core UI
+Send a request to the API to remove the skills intents
+Remove the skill from the skill path

@@ -1,0 +1,9 @@
+{
+  "id": "light_control",
+  "name": "Light Control",
+  "entry": "main.avi",
+  "capabilities": ["intent:light.turn_on", "intent:light.turn_off"],
+  "permissions": ["speak", "display"],
+  "author": "Avi Labs",
+  "version": "1.0.0"
+}
