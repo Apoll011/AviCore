@@ -27,10 +27,6 @@ pub fn load_module() -> Option<dyon::Module> {
 
     let mut module = Module::new();
     module.add_str("say_hello", say_hello, Dfn::nl(vec![], Void));
-    module.add_str("homer", homer, Dfn::nl(vec![], Any));
-    module.add_str("age", age, Dfn::nl(vec![Any], Any));
-    module.add_str("mr", mr, Dfn::nl(vec![Str; 2], Str));
-
 
     Some(module)
 }
@@ -38,30 +34,6 @@ pub fn load_module() -> Option<dyon::Module> {
 dyon_fn! {fn say_hello() {
     println!("hi!");
 }}
-
-dyon_fn! {fn homer() -> Person {
-    Person {
-        first_name: "Homer".into(),
-        last_name: "Simpson".into(),
-        age: 48
-    }
-}}
-
-dyon_fn! {fn age(person: Person) -> Person {
-    Person { age: person.age + 1, ..person }
-}}
-
-dyon_fn! {fn mr(first_name: String, last_name: String) -> String {
-    format!("Mr {} {}", first_name, last_name)
-}}
-
-pub struct Person {
-    pub first_name: String,
-    pub last_name: String,
-    pub age: u32,
-}
-
-dyon_obj! {Person { first_name, last_name, age }}
 
 dyon_obj! {Intent { input, intent, slots}}
 dyon_obj! { IntentInfo { intent_name, probability } }

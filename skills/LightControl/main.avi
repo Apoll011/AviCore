@@ -1,5 +1,5 @@
-fn intent_light_on(intent) {
-    println(intent.age)
+fn intent_turn_on(intent: Intent) {
+    println(intent)
 }
 
 fn main() {
