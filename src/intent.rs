@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
+use serde_json;
+
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
+pub struct JsonValue(pub serde_json::Value);
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Intent {
