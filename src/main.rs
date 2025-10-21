@@ -12,7 +12,7 @@ use crate::skills::skill::Skill;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut api = Api::new();
-    let mut skill = Skill::new("LightControl".to_string());
+    let mut skill = Skill::new("saudation".to_string());
     skill.start();
 
     loop {
