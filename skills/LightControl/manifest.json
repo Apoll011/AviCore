@@ -1,6 +1,7 @@
 {
   "id": "light_control",
   "name": "Light Control",
+  "description": "A skill to control the lights",
   "entry": "main.avi",
   "capabilities": ["intent:light.turn_on", "intent:light.turn_off"],
   "permissions": ["speak", "display"],

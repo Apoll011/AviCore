@@ -1,2 +1,2 @@
-mod skill;
+pub mod skill;
 pub mod dsl;

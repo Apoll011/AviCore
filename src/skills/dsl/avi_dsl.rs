@@ -4,22 +4,6 @@ use crate::intent::{Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue};
 use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
 use serde_json::Value;
-/*fn main() {
-    use dyon::{error, Runtime};
-
-    let mut dyon_runtime = Runtime::new();
-    let dyon_module = load_module().unwrap();
-
-    if error(load("source/functions/loader.dyon", &mut module)) {
-        None
-    } else {
-        Some(module)
-    }
-
-    if error(dyon_runtime.run(&Arc::new(dyon_module))) {
-        return;
-    }
-}*/
 
 pub fn load_module() -> Option<dyon::Module> {
     use dyon::Type::*;
