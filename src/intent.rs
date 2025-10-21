@@ -12,6 +12,7 @@ pub struct Intent {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct IntentInfo {
     #[serde(rename = "intentName")]
     pub intent_name: Option<String>,

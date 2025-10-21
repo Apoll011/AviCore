@@ -1,7 +1,7 @@
-fn intent_turn_on(intent: Intent) {
-    println(intent)
+fn intent_hi(intent: Intent) {
+    println("Hello Tiago!")
 }
 
 fn main() {
-    println("Hi!")
+    println("Skill Loaded!")
 }

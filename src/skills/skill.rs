@@ -1,7 +1,8 @@
-use std::fmt::format;
+use std::fmt::{format, Write};
 use std::sync::Arc;
 use dyon::{error, load, Call, Module, Runtime};
 use serde::{Deserialize, Serialize};
+use crate::intent::IntentInfo;
 use crate::skills::dsl::avi_dsl::load_module;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -69,8 +70,12 @@ impl Skill {
         }
     }
 
+    pub fn format_intent_name(name: String) -> String {
+        name.split("@").collect::<Vec<&str>>()[1].replace(".", "_")
+    }
+
     pub fn run_intent(&mut self, intent: crate::intent::Intent) {
-        let call = Call::new(&"intent_turn_on".to_string()).arg(intent);
+        let call = Call::new(&format!("intent_{}", Self::format_intent_name(intent.intent.clone().unwrap().intent_name.unwrap())).to_string()).arg(intent);
 
         if error(call.run(&mut self.runtime, &self.module)) {
             return;
