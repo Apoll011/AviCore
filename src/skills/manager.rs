@@ -10,11 +10,11 @@ pub struct SkillManager {
 impl SkillManager {
     pub fn new() -> Self {
         Self {
-            skills: Default::default(),
+            skills: Self::load_skills(),
         }
     }
 
-    pub fn load_skills(&mut self) -> HashMap<String, Skill> {
+    pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
         if let Ok(entries) = fs::read_dir("./skills") {

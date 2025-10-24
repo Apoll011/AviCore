@@ -13,7 +13,6 @@ use crate::skills::manager::SkillManager;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut api = Api::new();
     let mut manager = SkillManager::new();
-    manager.load_skills();
 
     loop {
         let mut s = String::new();
