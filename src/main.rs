@@ -7,13 +7,13 @@ mod api;
 
 use std::io::{stdin, stdout, Write};
 use crate::api::api::Api;
-use crate::skills::skill::Skill;
+use crate::skills::manager::SkillManager;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut api = Api::new();
-    let mut skill = Skill::new("saudation".to_string());
-    skill.start();
+    let mut manager = SkillManager::new();
+    manager.load_skills();
 
     loop {
         let mut s = String::new();
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let intent = api.intent(s.as_str()).await?;
         println!("Intent: {:?}", intent);
 
-        skill.run_intent(intent);
+        manager.run_intent(intent);
     }
 
     Ok(())

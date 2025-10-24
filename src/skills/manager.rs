@@ -3,12 +3,18 @@ use std::collections::HashMap;
 use crate::intent::Intent;
 use crate::skills::skill::Skill;
 
-struct SkillManager {
+pub struct SkillManager {
     skills: HashMap<String, Skill>,
 }
 
 impl SkillManager {
-    fn load_skills() -> HashMap<String, Skill> {
+    pub fn new() -> Self {
+        Self {
+            skills: Default::default(),
+        }
+    }
+
+    pub fn load_skills(&mut self) -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
         if let Ok(entries) = fs::read_dir("./skills") {
@@ -30,8 +36,8 @@ impl SkillManager {
 
         skills
     }
-    
-    fn run_intent(&mut self, intent: Intent) {
+
+    pub fn run_intent(&mut self, intent: Intent) {
         let intent_info = intent.intent.as_ref()
             .expect("Intent must have intent info");
         let full_name = intent_info.intent_name.as_ref()
