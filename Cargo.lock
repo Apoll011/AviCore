@@ -7,6 +7,7 @@ name = "AviCore"
 version = "0.1.0"
 dependencies = [
  "dyon",
+ "once_cell",
  "read_token",
  "reqwest 0.12.24",
  "serde",
