@@ -1,6 +1,8 @@
 use std::fs;
 use std::collections::HashMap;
+use crate::handle;
 use crate::intent::Intent;
+use crate::skills::fallback::{handle, FallbackType};
 use crate::skills::skill::Skill;
 
 pub struct SkillManager {
@@ -38,17 +40,30 @@ impl SkillManager {
     }
 
     pub fn run_intent(&mut self, intent: Intent) {
-        let intent_info = intent.intent.as_ref()
-            .expect("Intent must have intent info");
-        let full_name = intent_info.intent_name.as_ref()
-            .expect("Intent must have a name");
+        let intent_info = intent.intent.as_ref();
+        if intent_info.is_none() {
+            handle!(&FallbackType::NotUnderstood, &intent.input);
+            return;
+        }
+        let intent_info = intent_info.unwrap();
+
+        let full_name = intent_info.intent_name.as_ref();
+        if full_name.is_none() {
+            handle!(&FallbackType::NotUnderstood, &intent.input);
+            return;
+        }
+        let full_name = full_name.unwrap();
 
         let parts: Vec<&str> = full_name.split("@").collect();
         assert!(!parts.is_empty(), "Intent name must contain '@' separator");
         let skill_name = parts[0];
 
-        let skill = self.skills.get_mut(skill_name)
-            .unwrap_or_else(|| panic!("Skill '{}' not found", skill_name));
+        let skill = self.skills.get_mut(skill_name);
+        if skill.is_none() {
+            handle!(&FallbackType::NotInstalled);
+            return;
+        }
+        let skill = skill.unwrap();
 
         skill.run_intent(intent);
     }

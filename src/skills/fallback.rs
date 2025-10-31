@@ -50,8 +50,23 @@ impl FallbackManager {
     }
 }
 
-pub fn handle(fallback_type: &FallbackType, message: &str, args: &[String]) {
-    FALLBACK_MANAGER.lock().unwrap().handle(fallback_type, message, args);
+pub fn handle(fallback_type: &FallbackType, message: Option<&str>, args: Option<&[String]>) {
+    FALLBACK_MANAGER.lock().unwrap().handle(fallback_type, message.unwrap_or(""), args.unwrap_or(&[]));
+}
+
+#[macro_export]
+macro_rules! handle {
+    ($ft:expr, $msg:expr, $args:expr) => {
+        handle($ft, Some($msg), Some($args))
+    };
+
+    ($ft:expr, $msg:expr) => {
+        handle($ft, Some($msg), None)
+    };
+
+    ($ft:expr) => {
+        handle($ft, None, None)
+    };
 }
 
 
@@ -110,3 +125,4 @@ create_fallback!(NotUnderstood, FallbackType::NotUnderstood, message = "Sorry, I
 create_fallback!(NetworkError, FallbackType::ErrorOnNetwork, {
     println!("NetworkError fallback triggered!");
 });
+create_fallback!(NotInstalled, FallbackType::NotInstalled, message = "Sorry, But I don't know how to answer that yet.");
