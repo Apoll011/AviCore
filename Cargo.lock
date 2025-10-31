@@ -6,7 +6,9 @@ version = 4
 name = "AviCore"
 version = "0.1.0"
 dependencies = [
+ "ctor",
  "dyon",
+ "inventory",
  "once_cell",
  "read_token",
  "reqwest 0.12.24",
@@ -258,6 +260,16 @@ dependencies = [
  "autocfg 1.5.0",
  "cfg-if 0.1.10",
  "lazy_static",
+]
+
+[[package]]
+name = "ctor"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32a2785755761f3ddc1492979ce1e48d2c00d09311c39e4466429188f3dd6501"
+dependencies = [
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -880,6 +892,15 @@ checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
  "hashbrown 0.16.0",
+]
+
+[[package]]
+name = "inventory"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc61209c082fbeb19919bee74b176221b27223e27b65d781eb91af24eb1fb46e"
+dependencies = [
+ "rustversion",
 ]
 
 [[package]]

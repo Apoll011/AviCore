@@ -11,3 +11,5 @@ serde = { version = "1.0.228", features = ["derive"] }
 dyon = "0.49.2"
 read_token = "*"
 once_cell = "1.21.3"
+ctor = "0.2"
+inventory = "0.3"

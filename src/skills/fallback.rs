@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use once_cell::sync::Lazy;
 
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub enum FallbackType {
@@ -22,53 +19,42 @@ pub trait FallbackHandler: Send + Sync {
     fn run(&self, message: &str, args: &[String]);
 }
 
-pub static FALLBACK_MANAGER: Lazy<Mutex<FallbackManager>> = Lazy::new(|| {
-    Mutex::new(FallbackManager::new())
-});
-
-pub struct FallbackManager {
-    handlers: HashMap<FallbackType, Arc<dyn FallbackHandler>>,
+pub struct FallbackEntry {
+    pub ty: FallbackType,
+    pub run: fn(&str, &[String]),
 }
 
-impl FallbackManager {
-    pub fn new() -> Self {
-        Self {
-            handlers: HashMap::new(),
-        }
-    }
-
-    pub fn register<H: FallbackHandler + 'static>(&mut self, handler: H) {
-        self.handlers.insert(handler.fallback_type(), Arc::new(handler));
-    }
-
-    pub fn handle(&self, fallback_type: &FallbackType, message: &str, args: &[String]) {
-        if let Some(handler) = self.handlers.get(fallback_type) {
-            handler.run(message, args);
-        } else {
-            eprintln!("⚠️ No fallback registered for {:?}", fallback_type);
-        }
-    }
-}
+inventory::collect!(FallbackEntry);
 
 pub fn handle(fallback_type: &FallbackType, message: Option<&str>, args: Option<&[String]>) {
-    FALLBACK_MANAGER.lock().unwrap().handle(fallback_type, message.unwrap_or(""), args.unwrap_or(&[]));
+    let msg = message.unwrap_or("");
+    let args_ref = args.unwrap_or(&[]);
+
+    // Find a registered fallback whose type matches and run it
+    if let Some(entry) = inventory::iter::<FallbackEntry>
+        .into_iter()
+        .find(|e| &e.ty == fallback_type)
+    {
+        (entry.run)(msg, args_ref);
+    } else {
+        eprintln!("⚠️ No fallback implemented for {:?}", fallback_type);
+    }
 }
 
 #[macro_export]
 macro_rules! handle {
     ($ft:expr, $msg:expr, $args:expr) => {
-        handle($ft, Some($msg), Some($args))
+        $crate::skills::fallback::handle($ft, Some($msg), Some($args))
     };
 
     ($ft:expr, $msg:expr) => {
-        handle($ft, Some($msg), None)
+        $crate::skills::fallback::handle($ft, Some($msg), None)
     };
 
     ($ft:expr) => {
-        handle($ft, None, None)
+        $crate::skills::fallback::handle($ft, None, None)
     };
 }
-
 
 #[macro_export]
 macro_rules! create_fallback {
@@ -86,12 +72,18 @@ macro_rules! create_fallback {
         }
 
         impl $name {
-            #[allow(dead_code)]
-            pub fn register() {
-                $crate::skills::fallback::FALLBACK_MANAGER
-                    .lock()
-                    .unwrap()
-                    .register($name);
+            #[allow(non_snake_case)]
+            pub fn __run(message: &str, args: &[String]) {
+                // Create a temporary instance since the handler is ZST
+                let tmp = $name;
+                tmp.run(message, args);
+            }
+        }
+
+        ::inventory::submit! {
+            $crate::skills::fallback::FallbackEntry {
+                ty: $ty,
+                run: $name::__run,
             }
         }
     };
@@ -110,12 +102,17 @@ macro_rules! create_fallback {
         }
 
         impl $name {
-            #[allow(dead_code)]
-            pub fn register() {
-                $crate::skills::fallback::FALLBACK_MANAGER
-                    .lock()
-                    .unwrap()
-                    .register($name);
+            #[allow(non_snake_case)]
+            pub fn __run(message: &str, args: &[String]) {
+                let tmp = $name;
+                tmp.run(message, args);
+            }
+        }
+
+        ::inventory::submit! {
+            $crate::skills::fallback::FallbackEntry {
+                ty: $ty,
+                run: $name::__run,
             }
         }
     };
