@@ -4,6 +4,9 @@ use serde_json;
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
 pub struct JsonValue(pub serde_json::Value);
 
+#[derive(Clone)]
+pub struct YamlValue(pub serde_yaml::Value);
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Intent {
     pub input: String,

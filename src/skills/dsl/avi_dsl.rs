@@ -1,22 +1,44 @@
 use std::collections::HashMap;
 use dyon::{dyon_fn, Runtime, Variable};
-use crate::intent::{Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue};
+use crate::intent::{Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue, YamlValue};
 use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
 use serde_json::Value;
+use serde_yaml::{Value as Yaml, Mapping, Sequence};
+use crate::skills::config::{Setting, SkillConfig};
 
-pub fn load_module() -> Option<dyon::Module> {
+pub fn load_module(skill_config: SkillConfig) -> Option<dyon::Module> {
     use dyon::Type::*;
     use dyon::{Dfn, Module};
 
     let mut module = Module::new();
     module.add_str("say_hello", say_hello, Dfn::nl(vec![], Void));
 
+    module.add_str(
+        "get_config",
+        move |rt: &mut Runtime| -> Result<Variable, String> {
+            let name: String = rt.pop()?;
+            Ok(skill_config.get(&*name).unwrap().push_var())
+        },
+        Dfn::nl(vec![Str], Void),
+    );
+
+    module.add_str(
+        "get_setting",
+        move |rt: &mut Runtime| -> Result<Variable, String> {
+            let name: String = rt.pop()?;
+            Ok(skill_config.get(&*name).unwrap().push_var())
+        },
+        Dfn::nl(vec![Str], Void),
+    );
+
     Some(module)
 }
 
-dyon_fn! {fn say_hello() {
+dyon_fn! {fn say_hello(hello: String) -> String {
     println!("hi!");
+    println!("{}", hello);
+    "Hello, world!".to_string()
 }}
 
 dyon_obj! {Intent { input, intent, slots}}
@@ -24,13 +46,14 @@ dyon_obj! { IntentInfo { intent_name, probability } }
 dyon_obj! {Slot { raw_value, value, entity, slot_name, range }}
 dyon_obj! {SlotValue { kind, value, grain, precision }}
 dyon_obj! {SlotRange { start, end }}
+dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
 impl PopVariable for JsonValue {
     fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {
-        from_dyon_variable(var.clone())
+        from_dyon_variable_json(var.clone())
     }
 }
 
-fn from_dyon_variable(var: Variable) -> Result<JsonValue, String> {
+fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
     use dyon::Variable::*;
     match var {
         F64(n, ..) => {
@@ -43,20 +66,20 @@ fn from_dyon_variable(var: Variable) -> Result<JsonValue, String> {
         Array(arr) => {
             let mut values = Vec::with_capacity(arr.len());
             for v in &*arr {
-                values.push(from_dyon_variable(v.clone())?.0);
+                values.push(from_dyon_variable_json(v.clone())?.0);
             }
             Ok(JsonValue(Value::Array(values)))
         }
         Object(o) => {
             let mut map = serde_json::Map::new();
             for (k, v) in o.iter() {
-                map.insert(k.clone().to_string(), from_dyon_variable(v.clone())?.0);
+                map.insert(k.clone().to_string(), from_dyon_variable_json(v.clone())?.0);
             }
             Ok(JsonValue(Value::Object(map)))
         }
         Option(opt) => {
             match opt {
-                Some(v) => from_dyon_variable(*v.clone()),
+                Some(v) => from_dyon_variable_json(*v.clone()),
                 None => Ok(JsonValue(Value::Null)),
             }
         }
@@ -69,11 +92,11 @@ fn from_dyon_variable(var: Variable) -> Result<JsonValue, String> {
 
 impl PushVariable for JsonValue {
     fn push_var(&self) -> Variable {
-        to_dyon_variable(self.clone())
+        to_dyon_variable_json(self.clone())
     }
 }
 
-fn to_dyon_variable(value: JsonValue) -> Variable {
+fn to_dyon_variable_json(value: JsonValue) -> Variable {
     use dyon::Variable::*;
     match value {
         JsonValue(Value::Bool(b)) => Bool(b, None),
@@ -89,18 +112,121 @@ fn to_dyon_variable(value: JsonValue) -> Variable {
         }
         JsonValue(Value::String(s)) => Str(Arc::new(s)),
         JsonValue(Value::Array(vec)) => {
-            let arr: Vec<Variable> = vec.into_iter().map(|arg0: Value| to_dyon_variable(JsonValue(arg0))).collect();
+            let arr: Vec<Variable> = vec.into_iter().map(|arg0: Value| to_dyon_variable_json(JsonValue(arg0))).collect();
             Array(Arc::new(arr))
         }
         JsonValue(Value::Object(map)) => {
             let mut obj: HashMap<Arc<String>, Variable> = HashMap::new();
 
             for (k, v) in map {
-                obj.insert(Arc::new(k), to_dyon_variable(JsonValue(v)));
+                obj.insert(Arc::new(k), to_dyon_variable_json(JsonValue(v)));
             }
 
             Object(Arc::new(obj))
         }
+        _ => Bool(false, None),
+    }
+}
+
+impl PopVariable for YamlValue {
+    fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {
+        from_dyon_variable(var.clone())
+    }
+}
+
+fn from_dyon_variable(var: Variable) -> Result<YamlValue, String> {
+    use dyon::Variable::*;
+
+    match var {
+        F64(n, ..) => {
+            // YAML uses Number internally (i64, f64, etc.)
+            if n.fract() == 0.0 {
+                Ok(YamlValue(Yaml::Number((n as i64).into())))
+            } else {
+                Ok(YamlValue(Yaml::Number(n.into())))
+            }
+        }
+
+        Bool(b, _) => Ok(YamlValue(Yaml::Bool(b))),
+
+        Str(s) => Ok(YamlValue(Yaml::String((*s).clone()))),
+
+        Array(arr) => {
+            let mut seq = Sequence::with_capacity(arr.len());
+            for v in arr.iter() {
+                seq.push(from_dyon_variable(v.clone())?.0);
+            }
+            Ok(YamlValue(Yaml::Sequence(seq)))
+        }
+
+        Object(o) => {
+            let mut map = Mapping::new();
+            for (k, v) in o.iter() {
+                let key = Yaml::String((**k).clone());
+                let val = from_dyon_variable(v.clone())?.0;
+                map.insert(key, val);
+            }
+            Ok(YamlValue(Yaml::Mapping(map)))
+        }
+
+        Option(opt) => match opt {
+            Some(v) => from_dyon_variable(*v),
+            None => Ok(YamlValue(Yaml::Null)),
+        },
+
+        Link(_) | RustObject(_) | UnsafeRef(_) =>
+            Err("Cannot convert Dyon complex types (Link/RustObject/UnsafeRef) to YamlValue".into()),
+
+        _ => Err("Unsupported Dyon type for YAML".into()),
+    }
+}
+
+impl PushVariable for YamlValue {
+    fn push_var(&self) -> Variable {
+        to_dyon_variable(self.clone())
+    }
+}
+
+fn to_dyon_variable(value: YamlValue) -> Variable {
+    use dyon::Variable::*;
+    match value.0 {
+        Yaml::Bool(b) => Bool(b, None),
+
+        Yaml::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                F64(i as f64, None)
+            } else if let Some(f) = n.as_f64() {
+                F64(f, None)
+            } else {
+                // Fallback seguro
+                F64(0.0, None)
+            }
+        }
+
+        Yaml::String(s) => Str(Arc::new(s)),
+
+        Yaml::Sequence(seq) => {
+            let arr: Vec<Variable> = seq
+                .into_iter()
+                .map(|v| to_dyon_variable(YamlValue(v)))
+                .collect();
+            Array(Arc::new(arr))
+        }
+
+        Yaml::Mapping(map) => {
+            let mut obj: HashMap<Arc<String>, Variable> = HashMap::new();
+            for (k, v) in map {
+                let key = match k {
+                    Yaml::String(s) => s,
+                    _ => format!("{:?}", k),
+                };
+                obj.insert(Arc::new(key), to_dyon_variable(YamlValue(v)));
+            }
+            Object(Arc::new(obj))
+        }
+
+        Yaml::Null => Option(None),
+
         _ => Bool(false, None),
     }
 }

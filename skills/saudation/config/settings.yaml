@@ -2,7 +2,7 @@ settings:
   # Device IP shown as a text field in UI
   device_ip:
     value: "192.168.1.123"
-    type: io.ip
+    vtype: io.ip
     description: "IP address of the smart plug"
     ui: text
     required: true
@@ -10,7 +10,7 @@ settings:
   # Poll interval shown as a number input (seconds)
   poll_interval:
     value: 30
-    type: time.seconds
+    vtype: time.seconds
     description: "Polling frequency to check if the device is online"
     ui: slider
     min: 5
@@ -19,7 +19,7 @@ settings:
   # Operating mode with dropdown options
   mode:
     value: "eco"
-    type: enum
+    vtype: enum
     enum: ["eco", "normal", "turbo"]
     description: "Select device mode"
     ui: dropdown
@@ -27,21 +27,21 @@ settings:
   # Boolean toggle
   enable_logging:
     value: true
-    type: boolean
+    vtype: boolean
     description: "Enable verbose logging"
     ui: toggle
 
   # Example string used by module logic
   welcome_message:
     value: "Welcome home!"
-    type: string
+    vtype: string
     description: "Message to play when the user arrives"
     ui: text
 
   # Example number
   welcome_brightness:
     value: 80
-    type: number
+    vtype: number
     description: "Brightness level for the welcome light"
     min: 0
     max: 100
@@ -49,27 +49,27 @@ settings:
   # Advanced hidden config
   api_token:
     value: ""
-    type: string
+    vtype: string
     description: "Private API token for debug operations"
     ui: password
     advanced: true
 
   # Optional grouping for UI sections
-  hallway:
-    group: "Hallway Settings"
-    light_id:
+  light_id:
       value: "light-hallway-1"
-      type: string
+      vtype: string
       description: "ID of the hallway light"
-    motion_timeout:
-      value: 120
-      type: time.seconds
-      description: "Seconds before auto-off"
+      group: "Hallway Settings"
+  motion_timeout:
+    value: 120
+    vtype: time.seconds
+    description: "Seconds before auto-off"
+    group: "Hallway Settings"
 
   # Nested list example
   linked_devices:
     value:
        - "light-bedroom"
        - "speaker-bedroom"
-    type: list
+    vtype: list
     description: "Devices to activate together"
