@@ -5,40 +5,21 @@ use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
 use serde_json::Value;
 use serde_yaml::{Value as Yaml, Mapping, Sequence};
-use crate::skills::config::{Setting, SkillConfig};
+use crate::skills::config::{ConstantNamed, Setting, SettingNamed, SkillConfig};
 
-pub fn load_module(skill_config: SkillConfig) -> Option<dyon::Module> {
+pub fn load_module() -> Option<dyon::Module> {
     use dyon::Type::*;
     use dyon::{Dfn, Module};
 
     let mut module = Module::new();
-    module.add_str("say_hello", say_hello, Dfn::nl(vec![], Void));
+    module.add_str("get_constant", get_constant, Dfn::nl(vec![Str, Any], Any));
 
-    module.add_str(
-        "get_config",
-        move |rt: &mut Runtime| -> Result<Variable, String> {
-            let name: String = rt.pop()?;
-            Ok(skill_config.get(&*name).unwrap().push_var())
-        },
-        Dfn::nl(vec![Str], Void),
-    );
-
-    module.add_str(
-        "get_setting",
-        move |rt: &mut Runtime| -> Result<Variable, String> {
-            let name: String = rt.pop()?;
-            Ok(skill_config.get(&*name).unwrap().push_var())
-        },
-        Dfn::nl(vec![Str], Void),
-    );
 
     Some(module)
 }
 
-dyon_fn! {fn say_hello(hello: String) -> String {
-    println!("hi!");
-    println!("{}", hello);
-    "Hello, world!".to_string()
+dyon_fn! {fn get_constant(name: String, skill_config: SkillConfig) -> YamlValue {
+    skill_config.constant(&*name).unwrap().clone()
 }}
 
 dyon_obj! {Intent { input, intent, slots}}
@@ -46,6 +27,9 @@ dyon_obj! { IntentInfo { intent_name, probability } }
 dyon_obj! {Slot { raw_value, value, entity, slot_name, range }}
 dyon_obj! {SlotValue { kind, value, grain, precision }}
 dyon_obj! {SlotRange { start, end }}
+dyon_obj! {SettingNamed { name, setting }}
+dyon_obj! {ConstantNamed { name, value }}
+dyon_obj! {SkillConfig { settings, constants }}
 dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
 impl PopVariable for JsonValue {
     fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {

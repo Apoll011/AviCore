@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc};
 use dyon::{error, load, Call, Module, Runtime};
 use serde::{Deserialize, Serialize};
 use crate::skills::config::SkillConfig;
@@ -31,7 +31,7 @@ impl Skill {
         Self {
             pathname: Self::skill_path(name.clone()),
             name: name.clone(),
-            module: Self::create_module(name.clone(), config.clone()),
+            module: Self::create_module(name.clone()),
             runtime: Self::create_runtime(),
             manifest: Self::load_manifest(Self::skill_path(name.clone())).expect(
                 "Could not load manifest"
@@ -50,8 +50,8 @@ impl Skill {
         serde_json::from_reader(manifest_file)
     }
 
-    fn create_module(name: String, config: SkillConfig) -> Arc<Module> {
-        let mut dyon_module = load_module(config).unwrap();
+    fn create_module(name: String) -> Arc<Module> {
+        let mut dyon_module = load_module().unwrap();
 
         if error(load(&format!("{}/main.avi", Self::skill_path(name.clone())), &mut dyon_module)) {
             print!("{}", format!("Error loading skill {}", name))
@@ -77,7 +77,7 @@ impl Skill {
     }
 
     pub fn run_intent(&mut self, intent: crate::intent::Intent) {
-        let call = Call::new(&format!("intent_{}", Self::format_intent_name(intent.intent.clone().unwrap().intent_name.unwrap())).to_string()).arg(intent);
+        let call = Call::new(&format!("intent_{}", Self::format_intent_name(intent.intent.clone().unwrap().intent_name.unwrap())).to_string()).arg(intent).arg(self.config.clone());
 
         if error(call.run(&mut self.runtime, &self.module)) {
             return;

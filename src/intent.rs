@@ -4,7 +4,7 @@ use serde_json;
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
 pub struct JsonValue(pub serde_json::Value);
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize, Default)]
 pub struct YamlValue(pub serde_yaml::Value);
 
 #[derive(Debug, Serialize, Deserialize)]
