@@ -1,13 +1,14 @@
-fn intent_hi(intent: Intent, ctx: SkillContext) {
+fn intent_hi(intent: Intent) {
     if (get_setting("mode") == "eco") {
         println(locale("light_error"))
     }
     else {
         println("Hello Tiago!")
     }
+
+    println(functions())
 }
 
-fn main(ctx: SkillContext) {
-    print(ctx.info.name)
+fn main() {
     println(" Skill Loaded!")
 }

@@ -65,18 +65,7 @@ impl Skill {
         if self.disabled() {
             return Err("Skill is disabled".into());
         }
-
-        let call = Call::new("main").arg(self.context.clone());
-        let f_index = self.module.find_function(&Arc::new("main".into()), 0);
-
-        match f_index {
-            FnIndex::Loaded(_f_index) => {
-                Ok(error(call.run(&mut self.runtime, &self.module)))
-            }
-            _ => {
-                Err("Could not find function main".into())
-            }
-        }
+        Ok(error(self.runtime.run(&self.module)))
     }
 
     pub fn format_intent_name(name: String) -> String {
@@ -97,7 +86,7 @@ impl Skill {
             None => return Err("Intent is not defined".into())
         }
 
-        let call = Call::new(&name).arg(intent).arg(self.context.clone());
+        let call = Call::new(&name).arg(intent);
         let f_index = self.module.find_function(&Arc::new(name.clone()), 0);
 
         match f_index {
