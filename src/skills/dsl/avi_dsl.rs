@@ -13,45 +13,61 @@ pub fn load_module() -> Option<dyon::Module> {
     use dyon::{Dfn, Module};
 
     let mut module = Module::new();
-    module.add_str("get_constant", get_constant, Dfn::nl(vec![Str, Any], Any));
-    module.add_str("get_setting", get_setting, Dfn::nl(vec![Str, Any], Any));
-    module.add_str("locale", locale, Dfn::nl(vec![Str, Any], Any));
+    module.add_str("get_constant", get_constant, Dfn::nl(vec![Str], Any));
+    module.add_str("get_setting", get_setting, Dfn::nl(vec![Str], Any));
+    module.add_str("locale", locale, Dfn::nl(vec![Str], Any));
 
     Some(module)
 }
 
-dyon_fn! {fn get_constant(name: String, skill_context: SkillContext) -> YamlValue {
+fn ctx(rt: &mut Runtime) -> SkillContext {
+    SkillContext::pop_var(rt, &rt.stack[0]).unwrap()
+}
+
+#[allow(non_snake_case)]
+pub fn get_constant(_rt: &mut Runtime) -> Result<Variable, String> {
+    let name: String = _rt.pop()?;
+    let skill_context = ctx(_rt);
+
     match skill_context.constant(&*name) {
         Some(v) => {
-            v.clone()
+            Ok(PushVariable::push_var(v))
         }
         None => {
-            YamlValue(Yaml::Null)
+            Ok(PushVariable::push_var(&YamlValue(Yaml::Null)))
         }
     }
-}}
+}
 
-dyon_fn! {fn get_setting(name: String, skill_context: SkillContext) -> YamlValue {
+#[allow(non_snake_case)]
+pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
+    let name: String = _rt.pop()?;
+    let skill_context = ctx(_rt);
+
     match skill_context.setting(&*name) {
         Some(v) => {
-            v.value.clone()
+            Ok(PushVariable::push_var(&v.value.clone()))
         }
         None => {
-            YamlValue(Yaml::Null)
+            Ok(PushVariable::push_var(&YamlValue(Yaml::Null)))
         }
     }
-}}
+}
 
-dyon_fn! {fn locale(id: String, skill_context: SkillContext) -> YamlValue {
+#[allow(non_snake_case)]
+pub fn locale(_rt: &mut Runtime) -> Result<Variable, String> {
+    let id: String = _rt.pop()?;
+    let skill_context = ctx(_rt);
+
     match RUNTIMECTX.get() {
         Some(v) => {
-            skill_context.locale(&*v.lang, &*id).unwrap()
+            Ok(PushVariable::push_var(&skill_context.locale(&*v.lang, &*id).unwrap()))
         }
         None => {
-            YamlValue(Yaml::Null)
+            Ok(PushVariable::push_var(&YamlValue(Yaml::Null)))
         }
     }
-}}
+}
 
 dyon_obj! {Intent { input, intent, slots}}
 dyon_obj! { IntentInfo { intent_name, probability } }

@@ -30,7 +30,7 @@ impl Skill {
             pathname: Self::skill_path(&name),
             name: name.clone(),
             module,
-            runtime: Self::create_runtime(),
+            runtime: Self::create_runtime(context.clone()),
             context,
         })
     }
@@ -55,14 +55,17 @@ impl Skill {
         Ok(Arc::new(dyon_module))
     }
 
-    fn create_runtime() -> Runtime {
-        Runtime::new()
+    fn create_runtime(context: SkillContext) -> Runtime {
+        let mut runtime = Runtime::new();
+        runtime.push(context);
+        runtime
     }
 
     pub fn start(&mut self)  -> Result<bool, Box<dyn std::error::Error>> {
         if self.disabled() {
             return Err("Skill is disabled".into());
         }
+
         let call = Call::new("main").arg(self.context.clone());
         let f_index = self.module.find_function(&Arc::new("main".into()), 0);
 

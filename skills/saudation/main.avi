@@ -1,6 +1,6 @@
 fn intent_hi(intent: Intent, ctx: SkillContext) {
-    if (get_setting("mode", ctx) == "eco") {
-        println(locale("light_error", ctx))
+    if (get_setting("mode") == "eco") {
+        println(locale("light_error"))
     }
     else {
         println("Hello Tiago!")
