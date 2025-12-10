@@ -144,11 +144,23 @@ impl SkillContext {
         self.constants.iter().find(|c| c.name == name).map(|c| &c.value)
     }
 
-    pub fn locale(&self, code: &str, id: &str) -> Option<&YamlValue> {
+    pub fn locale(&self, code: &str, id: &str) -> Option<YamlValue> {
+        use rand::seq::SliceRandom;
+
         self.languages
             .iter()
             .find(|l| l.code == code)
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
-            .map(|i| &i.value)
+            .map(|i| {
+                match &i.value.0 {
+                    serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
+                        let mut rng = rand::thread_rng();
+                        seq.choose(&mut rng)
+                            .map(|v| YamlValue(v.clone()))
+                            .unwrap_or_else(|| i.value.clone())
+                    }
+                    _ => i.value.clone()
+                }
+            })
     }
 }
