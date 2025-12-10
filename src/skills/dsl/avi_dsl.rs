@@ -216,7 +216,7 @@ fn to_dyon_variable(value: YamlValue) -> Variable {
             } else if let Some(f) = n.as_f64() {
                 F64(f, None)
             } else {
-                // Fallback seguro
+                // Fallback secure
                 F64(0.0, None)
             }
         }

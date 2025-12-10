@@ -118,7 +118,6 @@ impl SkillContext {
         let mut languages: Vec<Language> = Vec::new();
         let responses_dir = format!("{}/responses", path);
 
-        // If responses directory does not exist, just return empty languages
         let read_dir = match fs::read_dir(&responses_dir) {
             Ok(rd) => rd,
             Err(_) => return Ok(languages),

@@ -7,12 +7,8 @@ name = "AviCore"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ctor",
  "dyon",
- "inventory",
- "once_cell",
  "rand",
- "read_token",
  "reqwest 0.12.24",
  "serde",
  "serde_json",
@@ -272,16 +268,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ctor"
-version = "0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32a2785755761f3ddc1492979ce1e48d2c00d09311c39e4466429188f3dd6501"
-dependencies = [
- "quote",
- "syn 2.0.106",
-]
-
-[[package]]
 name = "displaydoc"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -300,9 +286,9 @@ checksum = "56899898ce76aaf4a0f24d914c97ea6ed976d42fec6ad33fcbb0a1103e07b2b0"
 
 [[package]]
 name = "dyon"
-version = "0.49.2"
+version = "0.50.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9792e03b40dec32ebe4f9e45a810d5c1bcaa0822047b0d1e2e4d5dd49a3c5706"
+checksum = "006dbc6685aa34512656804c12b84c9c3b94cacedf50d7379326581311fde2f2"
 dependencies = [
  "advancedresearch-tree_mem_sort",
  "lazy_static",
@@ -901,15 +887,6 @@ checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
  "hashbrown 0.16.0",
-]
-
-[[package]]
-name = "inventory"
-version = "0.3.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc61209c082fbeb19919bee74b176221b27223e27b65d781eb91af24eb1fb46e"
-dependencies = [
- "rustversion",
 ]
 
 [[package]]

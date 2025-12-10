@@ -30,13 +30,11 @@ impl Api {
         let r = send_dict_to_server(&*self.get_url("/avi/alive"), HashMap::new()).await?;
         let response = r.response;
         match response {
-            Some(v) => {
-                Ok(Alive {
+            Some(v) => Ok(Alive {
                     alive: v.get("on").expect("Expected a boolean").as_bool().unwrap_or(false),
                     version: v.get("version").expect("Expected a version string").to_string(), //FIXME: This is getting in as a string as I convert it to string the quotes from the previous string are being included
                     installed_lang: v.get("lang").expect("Expected a list of installed lang's").as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect(),
-                })
-            }
+                }),
             None => Err("No response from server".into())
         }
 
