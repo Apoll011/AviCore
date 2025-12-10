@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use crate::intent::YamlValue;
 
-#[derive(Debug, Deserialize, Clone, Default)]
+#[derive(Debug, Deserialize, Clone, Default, Serialize)]
 pub struct Setting {
     pub value: YamlValue,
     #[serde(default)]
@@ -37,13 +37,13 @@ pub struct ConstFile {
     pub constants: HashMap<String, YamlValue>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub  struct ConstantNamed {
     pub name: String,
     pub value: YamlValue,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SettingNamed {
     pub name: String,
     pub setting: Setting,
@@ -55,13 +55,13 @@ pub struct LanguageFile {
     pub lang: HashMap<String, YamlValue>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub  struct IndividualLocale {
     pub id: String,
     pub value: YamlValue,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Language {
     pub code: String,
     pub lang: Vec<IndividualLocale>,
@@ -79,7 +79,7 @@ pub struct Manifest {
     pub version: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SkillContext {
     pub(crate) info: Manifest,
     pub(crate) constants: Vec<ConstantNamed>,
@@ -181,5 +181,9 @@ impl SkillContext {
                     _ => i.value.clone()
                 }
             })
+    }
+
+    pub fn into_json(self) -> serde_json::Result<String> {
+        serde_json::to_string(&self)
     }
 }
