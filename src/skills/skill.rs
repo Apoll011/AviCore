@@ -1,28 +1,14 @@
 use std::sync::{Arc};
-use dyon::{error, load, Call, Module, Runtime};
-use serde::{Deserialize, Serialize};
+use dyon::{error, load, Call, FnIndex, Module, Runtime};
 use crate::skills::skill_context::SkillContext;
 use crate::skills::dsl::avi_dsl::load_module;
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Manifest {
-    id: String,
-    name: String,
-    description: String,
-    entry: String,
-    capabilities: Vec<String>,
-    permissions: Vec<String>,
-    author: String,
-    version: String,
-}
 
 pub struct Skill {
     pathname: String,
     name: String,
     module: Arc<Module>,
     runtime: Runtime,
-    manifest: Manifest,
-    config: SkillContext
+    context: SkillContext
 }
 
 impl Skill {
@@ -33,21 +19,12 @@ impl Skill {
             name: name.clone(),
             module: Self::create_module(name.clone()),
             runtime: Self::create_runtime(),
-            manifest: Self::load_manifest(Self::skill_path(name.clone())).expect(
-                "Could not load manifest"
-            ),
-            config,
+            context: config,
         }
     }
 
     fn skill_path(name: String) -> String {
         format!("./skills/{}", name)
-    }
-
-    fn load_manifest(pathname: String) -> Result<Manifest, serde_json::Error> {
-        let manifest_path = format!("{}/manifest.json", pathname);
-        let manifest_file = std::fs::File::open(manifest_path).unwrap();
-        serde_json::from_reader(manifest_file)
     }
 
     fn create_module(name: String) -> Arc<Module> {
@@ -67,8 +44,18 @@ impl Skill {
     }
 
     pub fn start(&mut self) {
-        if error(self.runtime.run(&self.module)) {
-            return;
+        let call = Call::new("main").arg(self.context.clone());
+        let f_index = self.module.find_function(&Arc::new("main".into()), 0);
+
+        match f_index {
+            FnIndex::Loaded(_f_index) => {
+                if error(call.run(&mut self.runtime, &self.module)) {
+                    return;
+                }
+            }
+            _ => {
+                println!("Could not find function main");
+            }
         }
     }
 
@@ -77,10 +64,19 @@ impl Skill {
     }
 
     pub fn run_intent(&mut self, intent: crate::intent::Intent) {
-        let call = Call::new(&format!("intent_{}", Self::format_intent_name(intent.intent.clone().unwrap().intent_name.unwrap())).to_string()).arg(intent).arg(self.config.clone());
+        let name =  format!("intent_{}", Self::format_intent_name(intent.intent.clone().unwrap().intent_name.unwrap())).to_string();
+        let call = Call::new(&name).arg(intent).arg(self.context.clone());
+        let f_index = self.module.find_function(&Arc::new(name.clone()), 0);
 
-        if error(call.run(&mut self.runtime, &self.module)) {
-            return;
+        match f_index {
+            FnIndex::Loaded(_f_index) => {
+                if error(call.run(&mut self.runtime, &self.module)) {
+                    return;
+                }
+            }
+            _ => {
+                println!("Could not find function `{}`", name);
+            }
         }
     }
 }

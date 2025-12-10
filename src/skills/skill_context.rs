@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::collections::HashMap;
 use std::fs;
@@ -67,8 +67,21 @@ pub struct Language {
     pub lang: Vec<IndividualLocale>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Manifest {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub entry: String,
+    pub capabilities: Vec<String>,
+    pub permissions: Vec<String>,
+    pub author: String,
+    pub version: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct SkillContext {
+    pub(crate) info: Manifest,
     pub(crate) constants: Vec<ConstantNamed>,
     pub(crate) settings: Vec<SettingNamed>,
     pub(crate) languages: Vec<Language>,
@@ -87,10 +100,19 @@ impl SkillContext {
         let languages = Self::load_languages(path)?;
         
         Ok(Self {
+            info:  Self::load_manifest(path.into()).expect(
+                "Could not load manifest"
+            ),
             constants: Self::const_to_named(&parsed_const.constants),
             settings: Self::settings_to_named(&parsed_settings.settings),
             languages,
         })
+    }
+
+    fn load_manifest(pathname: String) -> Result<Manifest, serde_json::Error> {
+        let manifest_path = format!("{}/manifest.json", pathname);
+        let manifest_file = fs::File::open(manifest_path).unwrap();
+        serde_json::from_reader(manifest_file)
     }
 
     fn load_languages(path: &str) -> anyhow::Result<Vec<Language>> {

@@ -7,6 +7,7 @@ fn intent_hi(intent: Intent, ctx: SkillContext) {
     }
 }
 
-fn main() {
-    println("Skill Loaded!")
+fn main(ctx: SkillContext) {
+    print(ctx.info.name)
+    println(" Skill Loaded!")
 }

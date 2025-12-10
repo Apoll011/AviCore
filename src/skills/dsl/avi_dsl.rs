@@ -6,7 +6,7 @@ use std::sync::Arc;
 use serde_json::Value;
 use serde_yaml::{Value as Yaml, Mapping, Sequence};
 use crate::ctx::RUNTIMECTX;
-use crate::skills::skill_context::{ConstantNamed, IndividualLocale, Language, Setting, SettingNamed, SkillContext};
+use crate::skills::skill_context::{ConstantNamed, IndividualLocale, Language, Manifest, Setting, SettingNamed, SkillContext};
 
 pub fn load_module() -> Option<dyon::Module> {
     use dyon::Type::*;
@@ -41,7 +41,8 @@ dyon_obj! {SettingNamed { name, setting }}
 dyon_obj! {ConstantNamed { name, value }}
 dyon_obj! {IndividualLocale { id, value }}
 dyon_obj! {Language { code, lang }}
-dyon_obj! {SkillContext { settings, constants, languages }}
+dyon_obj! {Manifest { id, name, description, entry, capabilities, permissions, author, version }}
+dyon_obj! {SkillContext { info, settings, constants, languages }}
 dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
 impl PopVariable for JsonValue {
     fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {
