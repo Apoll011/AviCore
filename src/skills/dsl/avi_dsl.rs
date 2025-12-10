@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use dyon::{dyon_fn, Runtime, Variable};
+use dyon::{Runtime, Variable};
 use crate::intent::{Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue, YamlValue};
 use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
@@ -36,14 +36,14 @@ pub fn load_module() -> Option<dyon::Module> {
 
     module.add_str("has_setting", has_setting, Dfn::nl(vec![Str], Any));
 
-    module.add_str("json.parse", json_parse, Dfn::nl(vec![Str], Any));
-    module.add_str("json.stringify", json_stringify, Dfn::nl(vec![Any], Str));
+    module.add_str("json_parse", json_parse, Dfn::nl(vec![Str], Any));
+    module.add_str("json_stringify", json_stringify, Dfn::nl(vec![Any], Str));
 
-    module.add_str("crypto.hash", crypto_hash, Dfn::nl(vec![Str, Str], Str));
-    module.add_str("crypto.hmac", crypto_hmac, Dfn::nl(vec![Str, Str, Str], Str));
+    module.add_str("crypto_hash", crypto_hash, Dfn::nl(vec![Str, Str], Str));
+    module.add_str("crypto_hmac", crypto_hmac, Dfn::nl(vec![Str, Str, Str], Str));
 
-    module.add_str("time.parse_duration", time_parse_duration, Dfn::nl(vec![Str], F64));
-    module.add_str("time.format_date", time_format_date, Dfn::nl(vec![F64, Str], Str));
+    module.add_str("time_parse_duration", time_parse_duration, Dfn::nl(vec![Str], F64));
+    module.add_str("time_format_date", time_format_date, Dfn::nl(vec![F64, Str], Str));
 
 
     Some(module)
