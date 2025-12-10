@@ -87,7 +87,6 @@ pub struct SkillContext {
     pub(crate) languages: Vec<Language>,
 }
 
-
 impl SkillContext {
     pub fn from_yaml(path: &str) -> anyhow::Result<Self> {
         let content_const = fs::read_to_string(format!("{}/config/const.yaml", path))?;
@@ -100,19 +99,17 @@ impl SkillContext {
         let languages = Self::load_languages(path)?;
         
         Ok(Self {
-            info:  Self::load_manifest(path.into()).expect(
-                "Could not load manifest"
-            ),
+            info:  Self::load_manifest(path.into()),
             constants: Self::const_to_named(&parsed_const.constants),
             settings: Self::settings_to_named(&parsed_settings.settings),
             languages,
         })
     }
 
-    fn load_manifest(pathname: String) -> Result<Manifest, serde_json::Error> {
-        let manifest_path = format!("{}/manifest.json", pathname);
-        let manifest_file = fs::File::open(manifest_path).unwrap();
-        serde_json::from_reader(manifest_file)
+    fn load_manifest(pathname: String) -> Manifest {
+        let manifest_path = format!("{}/manifest.yaml", pathname);
+        let manifest_file = fs::read_to_string(manifest_path).expect("Could not read manifest file");
+        serde_yaml::from_str(&manifest_file).expect("Could not parse manifest file")
     }
 
     fn load_languages(path: &str) -> anyhow::Result<Vec<Language>> {

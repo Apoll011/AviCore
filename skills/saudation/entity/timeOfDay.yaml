@@ -1,0 +1,7 @@
+type: entity
+name: timeOfDay
+automatically_extensible: false
+values:
+  - Manha
+  - Tarde
+  - Noite
