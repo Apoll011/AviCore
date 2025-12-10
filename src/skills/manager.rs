@@ -1,5 +1,6 @@
 use std::fs;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use crate::handle;
 use crate::intent::Intent;
 use crate::skills::fallback::{handle, FallbackType};
@@ -23,20 +24,24 @@ impl SkillManager {
             for entry in entries {
                 if let Ok(entry) = entry {
                     let path = entry.path();
-                    if path.is_dir() {
-                        if let Some(dir_name) = path.file_name() {
-                            if let Some(dir_name_str) = dir_name.to_str() {
-                                let mut skill = Skill::new(dir_name_str.to_string());
-                                skill.start();
-                                skills.insert(dir_name_str.to_string(), skill);
-                            }
-                        }
-                    }
+                    Self::load_skill(path, &mut skills)
                 }
             }
         }
 
         skills
+    }
+
+    fn load_skill(path: PathBuf, skills: &mut HashMap<String, Skill>) {
+        if path.is_dir() {
+            if let Some(dir_name) = path.file_name() {
+                if let Some(dir_name_str) = dir_name.to_str() {
+                    let mut skill = Skill::new(dir_name_str.to_string());
+                    skill.start();
+                    skills.insert(dir_name_str.to_string(), skill);
+                }
+            }
+        }
     }
 
     pub fn run_intent(&mut self, intent: Intent) {
