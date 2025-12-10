@@ -20,7 +20,7 @@ settings:
   mode:
     value: "eco"
     vtype: enum
-    enum: ["eco", "normal", "turbo"]
+    enum_: ["eco", "normal", "turbo"]
     description: "Select device mode"
     ui: dropdown
 

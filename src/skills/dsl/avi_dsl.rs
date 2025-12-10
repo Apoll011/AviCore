@@ -13,13 +13,17 @@ pub fn load_module() -> Option<dyon::Module> {
 
     let mut module = Module::new();
     module.add_str("get_constant", get_constant, Dfn::nl(vec![Str, Any], Any));
-
+    module.add_str("get_setting", get_setting, Dfn::nl(vec![Str, Any], Any));
 
     Some(module)
 }
 
 dyon_fn! {fn get_constant(name: String, skill_config: SkillConfig) -> YamlValue {
     skill_config.constant(&*name).unwrap().clone()
+}}
+
+dyon_fn! {fn get_setting(name: String, skill_config: SkillConfig) -> Setting {
+    skill_config.setting(&*name).unwrap().clone()
 }}
 
 dyon_obj! {Intent { input, intent, slots}}
