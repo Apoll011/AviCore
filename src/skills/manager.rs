@@ -37,8 +37,9 @@ impl SkillManager {
             if let Some(dir_name) = path.file_name() {
                 if let Some(dir_name_str) = dir_name.to_str() {
                     let mut skill = Skill::new(dir_name_str.to_string());
-                    skill.start();
-                    skills.insert(dir_name_str.to_string(), skill);
+                    if(skill.start().is_ok()) {
+                        skills.insert(dir_name_str.to_string(), skill);
+                    }
                 }
             }
         }

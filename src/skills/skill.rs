@@ -43,18 +43,19 @@ impl Skill {
         Runtime::new()
     }
 
-    pub fn start(&mut self) {
+    pub fn start(&mut self)  -> Result<bool, &str> {
+        if (self.disabled()) {
+            return Err("Skill is disabled");
+        }
         let call = Call::new("main").arg(self.context.clone());
         let f_index = self.module.find_function(&Arc::new("main".into()), 0);
 
         match f_index {
             FnIndex::Loaded(_f_index) => {
-                if error(call.run(&mut self.runtime, &self.module)) {
-                    return;
-                }
+                Ok(error(call.run(&mut self.runtime, &self.module)))
             }
             _ => {
-                println!("Could not find function main");
+                Err("Could not find function main")
             }
         }
     }
@@ -78,5 +79,9 @@ impl Skill {
                 println!("Could not find function `{}`", name);
             }
         }
+    }
+
+    fn disabled(&self) -> bool {
+        self.context.info.disabled
     }
 }

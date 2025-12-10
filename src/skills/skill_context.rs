@@ -72,6 +72,8 @@ pub struct Manifest {
     pub id: String,
     pub name: String,
     pub description: String,
+    #[serde(default)]
+    pub disabled: bool,
     pub entry: String,
     pub capabilities: Vec<String>,
     pub permissions: Vec<String>,
