@@ -22,8 +22,8 @@ dyon_fn! {fn get_constant(name: String, skill_config: SkillConfig) -> YamlValue 
     skill_config.constant(&*name).unwrap().clone()
 }}
 
-dyon_fn! {fn get_setting(name: String, skill_config: SkillConfig) -> Setting {
-    skill_config.setting(&*name).unwrap().clone()
+dyon_fn! {fn get_setting(name: String, skill_config: SkillConfig) -> YamlValue {
+    skill_config.setting(&*name).unwrap().clone().value
 }}
 
 dyon_obj! {Intent { input, intent, slots}}
