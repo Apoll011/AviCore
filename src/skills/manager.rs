@@ -19,8 +19,14 @@ impl SkillManager {
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
+        let ctx;
+        match RUNTIMECTX.get() {
+            Some(v) => ctx = v,
+            None => return skills
+        }
+
         let entries;
-        match fs::read_dir(RUNTIMECTX.get().unwrap().skill_path.clone()) {
+        match fs::read_dir(ctx.skill_path.clone()) {
             Ok(v) => entries = v,
             Err(_) => return skills
         }

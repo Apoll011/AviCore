@@ -40,7 +40,11 @@ impl Skill {
     }
 
     fn create_module(name: &str) -> Result<Arc<Module>, Box<dyn std::error::Error>> {
-        let mut dyon_module = load_module().unwrap();
+        let mut dyon_module;
+        match load_module() {
+            Some(v) => dyon_module = v,
+            None => return Err("Could not load avi_dsl module".into())
+        }
 
         if error(load(&format!("{}/main.avi", Self::skill_path(name)), &mut dyon_module)) {
             return Err(format!("Error loading skill {}", name).into());
