@@ -1,9 +1,10 @@
 fn intent_hi(intent: Intent, ctx: SkillContext) {
-    println("Hello Tiago!")
-    println(get_constant("API_TOKEN", ctx))
-    println(get_setting("mode", ctx))
-    println(ctx)
-    println(locale("light_error", ctx))
+    if (get_setting("mode", ctx) == "eco") {
+        println(locale("light_error", ctx))
+    }
+    else {
+        println("Hello Tiago!")
+    }
 }
 
 fn main() {

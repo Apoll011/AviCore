@@ -18,7 +18,7 @@ settings:
 
   # Operating mode with dropdown options
   mode:
-    value: "eco"
+    value: "normal"
     vtype: enum
     enum_: ["eco", "normal", "turbo"]
     description: "Select device mode"

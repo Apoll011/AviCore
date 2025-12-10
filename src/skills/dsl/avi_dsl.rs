@@ -5,6 +5,7 @@ use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
 use serde_json::Value;
 use serde_yaml::{Value as Yaml, Mapping, Sequence};
+use crate::ctx::RUNTIMECTX;
 use crate::skills::skill_context::{ConstantNamed, IndividualLocale, Language, Setting, SettingNamed, SkillContext};
 
 pub fn load_module() -> Option<dyon::Module> {
@@ -28,7 +29,7 @@ dyon_fn! {fn get_setting(name: String, skill_context: SkillContext) -> YamlValue
 }}
 
 dyon_fn! {fn locale(id: String, skill_context: SkillContext) -> YamlValue {
-    skill_context.locale("pt", &*id).unwrap()
+    skill_context.locale(&*RUNTIMECTX.get().unwrap().lang, &*id).unwrap()
 }}
 
 dyon_obj! {Intent { input, intent, slots}}

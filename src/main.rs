@@ -4,9 +4,12 @@ extern crate dyon;
 mod skills;
 mod intent;
 mod api;
+mod ctx;
 
 use std::io::{stdin, stdout, Write};
 use crate::api::api::Api;
+use crate::ctx::RuntimeContext;
+use crate::ctx::RUNTIMECTX;
 use crate::skills::manager::SkillManager;
 
 fn input(prompt: &str) -> String {
@@ -25,13 +28,16 @@ fn input(prompt: &str) -> String {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    RUNTIMECTX.set(RuntimeContext {
+        lang: "pt".into(),
+    }).unwrap();
+
     let mut api = Api::new();
     let mut manager = SkillManager::new();
 
     loop {
         let s = input("Please enter some text: ");
         let intent = api.intent(s.as_str()).await?;
-        println!("Intent: {:?}", intent);
 
         manager.run_intent(intent);
     }
