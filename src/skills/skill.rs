@@ -1,5 +1,6 @@
 use std::sync::{Arc};
 use dyon::{error, load, Call, FnIndex, Module, Runtime};
+use crate::intent::Intent;
 use crate::skills::skill_context::SkillContext;
 use crate::skills::dsl::avi_dsl::load_module;
 
@@ -12,40 +13,51 @@ pub struct Skill {
 }
 
 impl Skill {
-    pub fn new(name: String) -> Self {
-        let config =  SkillContext::from_yaml(&*Self::skill_path(name.clone())).unwrap();
-        Self {
-            pathname: Self::skill_path(name.clone()),
-            name: name.clone(),
-            module: Self::create_module(name.clone()),
-            runtime: Self::create_runtime(),
-            context: config,
+    pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
+        let context : SkillContext;
+        match SkillContext::from_yaml(&*Self::skill_path(&name)) {
+            Ok(v) => context = v,
+            Err(e) => return Err(format!("Could not load skill context ({})", e.to_string()).into())
         }
+
+        let module: Arc<Module>;
+        match Self::create_module(&name) {
+            Ok(v) => module = v,
+            Err(e) => return Err(format!("Could not load skill module ({})", e.to_string()).into())
+        }
+
+        Ok(Self {
+            pathname: Self::skill_path(&name),
+            name: name.clone(),
+            module,
+            runtime: Self::create_runtime(),
+            context,
+        })
     }
 
-    fn skill_path(name: String) -> String {
+    fn skill_path(name: &str) -> String {
         format!("./skills/{}", name)
     }
 
-    fn create_module(name: String) -> Arc<Module> {
+    fn create_module(name: &str) -> Result<Arc<Module>, Box<dyn std::error::Error>> {
         let mut dyon_module = load_module().unwrap();
 
-        if error(load(&format!("{}/main.avi", Self::skill_path(name.clone())), &mut dyon_module)) {
-            print!("{}", format!("Error loading skill {}", name))
+        if error(load(&format!("{}/main.avi", Self::skill_path(name)), &mut dyon_module)) {
+            return Err(format!("Error loading skill {}", name).into());
         } else {
             println!("{}", format!("Skill {} loaded", name))
         }
 
-        Arc::new(dyon_module)
+        Ok(Arc::new(dyon_module))
     }
 
     fn create_runtime() -> Runtime {
         Runtime::new()
     }
 
-    pub fn start(&mut self)  -> Result<bool, &str> {
-        if (self.disabled()) {
-            return Err("Skill is disabled");
+    pub fn start(&mut self)  -> Result<bool, Box<dyn std::error::Error>> {
+        if self.disabled() {
+            return Err("Skill is disabled".into());
         }
         let call = Call::new("main").arg(self.context.clone());
         let f_index = self.module.find_function(&Arc::new("main".into()), 0);
@@ -55,7 +67,7 @@ impl Skill {
                 Ok(error(call.run(&mut self.runtime, &self.module)))
             }
             _ => {
-                Err("Could not find function main")
+                Err("Could not find function main".into())
             }
         }
     }
@@ -64,19 +76,29 @@ impl Skill {
         name.split("@").collect::<Vec<&str>>()[1].replace(".", "_")
     }
 
-    pub fn run_intent(&mut self, intent: crate::intent::Intent) {
-        let name =  format!("intent_{}", Self::format_intent_name(intent.intent.clone().unwrap().intent_name.unwrap())).to_string();
+    pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
+        let name;
+        match intent.intent.clone() {
+            Some(v) => {
+                if let Some(intent_name) = v.intent_name {
+                    name = format!("intent_{}", Self::format_intent_name(intent_name)).to_string();
+                }
+                else {
+                    return Err("Intent name is not defined".into())
+                }
+            }
+            None => return Err("Intent is not defined".into())
+        }
+
         let call = Call::new(&name).arg(intent).arg(self.context.clone());
         let f_index = self.module.find_function(&Arc::new(name.clone()), 0);
 
         match f_index {
             FnIndex::Loaded(_f_index) => {
-                if error(call.run(&mut self.runtime, &self.module)) {
-                    return;
-                }
+                Ok(error(call.run(&mut self.runtime, &self.module)))
             }
             _ => {
-                println!("Could not find function `{}`", name);
+                Err(format!("Could not find function `{}`", name).into())
             }
         }
     }

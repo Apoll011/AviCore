@@ -28,9 +28,11 @@ fn input(prompt: &str) -> String {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    RUNTIMECTX.set(RuntimeContext {
+    let _ = RUNTIMECTX.set(RuntimeContext {
+        api_url: "http://127.0.0.1:1178".into(),
         lang: "pt".into(),
-    }).unwrap();
+        skill_path: "./skills".into(),
+    });
 
     let mut api = Api::new();
     let mut manager = SkillManager::new();
@@ -39,7 +41,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let s = input("Please enter some text: ");
         let intent = api.intent(s.as_str()).await?;
 
-        manager.run_intent(intent);
+        match manager.run_intent(intent) {
+            Ok(_) => (),
+            Err(e) => println!("Error: {}", e)
+        }
     }
 
     Ok(())

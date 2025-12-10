@@ -1,9 +1,8 @@
 use std::fs;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use crate::handle;
+use crate::ctx::RUNTIMECTX;
 use crate::intent::Intent;
-use crate::skills::fallback::{handle, FallbackType};
 use crate::skills::skill::Skill;
 
 pub struct SkillManager {
@@ -20,57 +19,81 @@ impl SkillManager {
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
-        if let Ok(entries) = fs::read_dir("./skills") {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
-                    Self::load_skill(path, &mut skills)
-                }
+        let entries;
+        match fs::read_dir(RUNTIMECTX.get().unwrap().skill_path.clone()) {
+            Ok(v) => entries = v,
+            Err(_) => return skills
+        }
+
+        for entry_dir in entries {
+            let entry;
+            match entry_dir {
+                Ok(v) => entry = v,
+                Err(_) => continue
+            }
+
+            let path = entry.path();
+
+            match Self::load_skill(path) {
+                Ok((dir, mut v)) => {
+                    if v.start().is_ok() {
+                        skills.insert(dir.to_string(), v);
+                    }
+                },
+                Err(e) => println!("Error loading skill: {}", e)
             }
         }
 
         skills
     }
 
-    fn load_skill(path: PathBuf, skills: &mut HashMap<String, Skill>) {
-        if path.is_dir() {
-            if let Some(dir_name) = path.file_name() {
-                if let Some(dir_name_str) = dir_name.to_str() {
-                    let mut skill = Skill::new(dir_name_str.to_string());
-                    if(skill.start().is_ok()) {
-                        skills.insert(dir_name_str.to_string(), skill);
-                    }
-                }
-            }
+    fn load_skill(path: PathBuf) -> Result<(String, Skill), Box<dyn std::error::Error>> {
+        if !path.is_dir() {
+            return Err("Not a directory".into());
         }
+
+        let dir_name;
+        match path.file_name() {
+            Some(v) => dir_name = v,
+            None => return Err("Could not get directory name".into())
+        }
+
+        let dir_name_str;
+        match dir_name.to_str() {
+            Some(v) => dir_name_str = v,
+            None => return Err("Could not get directory name as string".into())
+        }
+
+        Ok((dir_name_str.into(), Skill::new(dir_name_str.to_string())?))
     }
 
-    pub fn run_intent(&mut self, intent: Intent) {
-        let intent_info = intent.intent.as_ref();
-        if intent_info.is_none() {
-            handle!(&FallbackType::NotUnderstood, &intent.input);
-            return;
+    pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
+        let intent_info;
+        match intent.intent.clone() {
+            Some(v) => intent_info = v,
+            None => return Err("Intent is not defined".into())
         }
-        let intent_info = intent_info.unwrap();
 
-        let full_name = intent_info.intent_name.as_ref();
-        if full_name.is_none() {
-            handle!(&FallbackType::NotUnderstood, &intent.input);
-            return;
+        let full_name;
+        match intent_info.intent_name {
+            Some(v) => full_name = v,
+            None => return Err("Intent name is not defined".into())
         }
-        let full_name = full_name.unwrap();
 
         let parts: Vec<&str> = full_name.split("@").collect();
-        assert!(!parts.is_empty(), "Intent name must contain '@' separator");
+        if parts.is_empty() && parts.len() != 2 {
+            return Err("Intent name must contain '@' separator".into());
+        }
+
         let skill_name = parts[0];
 
-        let skill = self.skills.get_mut(skill_name);
-        if skill.is_none() {
-            handle!(&FallbackType::NotInstalled);
-            return;
+        match self.skills.get_mut(skill_name) {
+            Some(v) => {
+                Ok(v.run_intent(intent)?)
+            }
+            None => {
+                Err(format!("Skill {} not found", skill_name).into())
+            }
         }
-        let skill = skill.unwrap();
-
-        skill.run_intent(intent);
     }
 }

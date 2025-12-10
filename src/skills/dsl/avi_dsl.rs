@@ -21,15 +21,36 @@ pub fn load_module() -> Option<dyon::Module> {
 }
 
 dyon_fn! {fn get_constant(name: String, skill_context: SkillContext) -> YamlValue {
-    skill_context.constant(&*name).unwrap().clone()
+    match skill_context.constant(&*name) {
+        Some(v) => {
+            v.clone()
+        }
+        None => {
+            YamlValue(Yaml::Null)
+        }
+    }
 }}
 
 dyon_fn! {fn get_setting(name: String, skill_context: SkillContext) -> YamlValue {
-    skill_context.setting(&*name).unwrap().clone().value
+    match skill_context.setting(&*name) {
+        Some(v) => {
+            v.value.clone()
+        }
+        None => {
+            YamlValue(Yaml::Null)
+        }
+    }
 }}
 
 dyon_fn! {fn locale(id: String, skill_context: SkillContext) -> YamlValue {
-    skill_context.locale(&*RUNTIMECTX.get().unwrap().lang, &*id).unwrap()
+    match RUNTIMECTX.get() {
+        Some(v) => {
+            skill_context.locale(&*v.lang, &*id).unwrap()
+        }
+        None => {
+            YamlValue(Yaml::Null)
+        }
+    }
 }}
 
 dyon_obj! {Intent { input, intent, slots}}
