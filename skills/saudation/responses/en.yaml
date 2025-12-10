@@ -1,0 +1,5 @@
+code: en
+lang:
+  light_on_success: "Turning on the lights."
+  light_off_success: "Lights are off now."
+  light_error: "Sorry, I couldn't reach the light."

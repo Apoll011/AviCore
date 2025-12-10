@@ -49,24 +49,83 @@ pub struct SettingNamed {
     pub setting: Setting,
 }
 
-#[derive(Debug, Clone)]
-pub struct SkillConfig {
-    pub(crate) constants: Vec<ConstantNamed>,
-    pub(crate) settings: Vec<SettingNamed>,
+#[derive(Debug, Clone, Deserialize)]
+pub struct LanguageFile {
+    pub code: String,
+    pub lang: HashMap<String, YamlValue>,
 }
 
-impl SkillConfig {
+#[derive(Debug, Clone, Deserialize)]
+pub  struct IndividualLocale {
+    pub id: String,
+    pub value: YamlValue,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct Language {
+    pub code: String,
+    pub lang: Vec<IndividualLocale>,
+}
+
+#[derive(Debug, Clone)]
+pub struct SkillContext {
+    pub(crate) constants: Vec<ConstantNamed>,
+    pub(crate) settings: Vec<SettingNamed>,
+    pub(crate) languages: Vec<Language>,
+}
+
+
+impl SkillContext {
     pub fn from_yaml(path: &str) -> anyhow::Result<Self> {
         let content_const = fs::read_to_string(format!("{}/config/const.yaml", path))?;
         let parsed_const: ConstFile = serde_yaml::from_str(&content_const)?;
 
         let content_settings = fs::read_to_string(format!("{}/config/settings.yaml", path))?;
         let parsed_settings: SettingsFile = serde_yaml::from_str(&content_settings)?;
-
+        
+        // Load language response files from the `responses` directory (e.g., en.yaml, pt.yaml)
+        let languages = Self::load_languages(path)?;
+        
         Ok(Self {
             constants: Self::const_to_named(&parsed_const.constants),
             settings: Self::settings_to_named(&parsed_settings.settings),
+            languages,
         })
+    }
+
+    fn load_languages(path: &str) -> anyhow::Result<Vec<Language>> {
+        let mut languages: Vec<Language> = Vec::new();
+        let responses_dir = format!("{}/responses", path);
+
+        // If responses directory does not exist, just return empty languages
+        let read_dir = match fs::read_dir(&responses_dir) {
+            Ok(rd) => rd,
+            Err(_) => return Ok(languages),
+        };
+
+        for entry in read_dir {
+            let entry = match entry {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            let path_buf = entry.path();
+            if let Some(ext) = path_buf.extension() {
+                if ext == "yaml" || ext == "yml" {
+                    if let Ok(content) = fs::read_to_string(&path_buf) {
+                        if let Ok(parsed) = serde_yaml::from_str::<LanguageFile>(&content) {
+                            let lang_vec: Vec<IndividualLocale> = parsed
+                                .lang
+                                .into_iter()
+                                .map(|(id, value)| IndividualLocale { id, value })
+                                .collect();
+                            languages.push(Language { code: parsed.code, lang: lang_vec });
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(languages)
     }
 
     fn const_to_named(constants: &HashMap<String, YamlValue>) -> Vec<ConstantNamed> {
@@ -83,5 +142,13 @@ impl SkillConfig {
 
     pub fn constant(&self, name: &str) -> Option<&YamlValue> {
         self.constants.iter().find(|c| c.name == name).map(|c| &c.value)
+    }
+
+    pub fn locale(&self, code: &str, id: &str) -> Option<&YamlValue> {
+        self.languages
+            .iter()
+            .find(|l| l.code == code)
+            .and_then(|l| l.lang.iter().find(|i| i.id == id))
+            .map(|i| &i.value)
     }
 }

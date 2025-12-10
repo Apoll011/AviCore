@@ -1,7 +1,7 @@
 use std::sync::{Arc};
 use dyon::{error, load, Call, Module, Runtime};
 use serde::{Deserialize, Serialize};
-use crate::skills::config::SkillConfig;
+use crate::skills::skill_context::SkillContext;
 use crate::skills::dsl::avi_dsl::load_module;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -22,12 +22,12 @@ pub struct Skill {
     module: Arc<Module>,
     runtime: Runtime,
     manifest: Manifest,
-    config: SkillConfig
+    config: SkillContext
 }
 
 impl Skill {
     pub fn new(name: String) -> Self {
-        let config =  SkillConfig::from_yaml(&*Self::skill_path(name.clone())).unwrap();
+        let config =  SkillContext::from_yaml(&*Self::skill_path(name.clone())).unwrap();
         Self {
             pathname: Self::skill_path(name.clone()),
             name: name.clone(),

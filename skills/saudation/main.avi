@@ -1,7 +1,8 @@
-fn intent_hi(intent: Intent, cfg: SkillConfig) {
+fn intent_hi(intent: Intent, ctx: SkillContext) {
     println("Hello Tiago!")
-    println(get_constant("API_TOKEN", cfg))
-    println(get_setting("mode", cfg))
+    println(get_constant("API_TOKEN", ctx))
+    println(get_setting("mode", ctx))
+    println(ctx)
 }
 
 fn main() {

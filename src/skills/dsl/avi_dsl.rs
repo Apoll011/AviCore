@@ -5,7 +5,7 @@ use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
 use serde_json::Value;
 use serde_yaml::{Value as Yaml, Mapping, Sequence};
-use crate::skills::config::{ConstantNamed, Setting, SettingNamed, SkillConfig};
+use crate::skills::skill_context::{ConstantNamed, IndividualLocale, Language, Setting, SettingNamed, SkillContext};
 
 pub fn load_module() -> Option<dyon::Module> {
     use dyon::Type::*;
@@ -18,11 +18,11 @@ pub fn load_module() -> Option<dyon::Module> {
     Some(module)
 }
 
-dyon_fn! {fn get_constant(name: String, skill_config: SkillConfig) -> YamlValue {
+dyon_fn! {fn get_constant(name: String, skill_config: SkillContext) -> YamlValue {
     skill_config.constant(&*name).unwrap().clone()
 }}
 
-dyon_fn! {fn get_setting(name: String, skill_config: SkillConfig) -> YamlValue {
+dyon_fn! {fn get_setting(name: String, skill_config: SkillContext) -> YamlValue {
     skill_config.setting(&*name).unwrap().clone().value
 }}
 
@@ -33,7 +33,9 @@ dyon_obj! {SlotValue { kind, value, grain, precision }}
 dyon_obj! {SlotRange { start, end }}
 dyon_obj! {SettingNamed { name, setting }}
 dyon_obj! {ConstantNamed { name, value }}
-dyon_obj! {SkillConfig { settings, constants }}
+dyon_obj! {IndividualLocale { id, value }}
+dyon_obj! {Language { code, lang }}
+dyon_obj! {SkillContext { settings, constants, languages }}
 dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
 impl PopVariable for JsonValue {
     fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {
