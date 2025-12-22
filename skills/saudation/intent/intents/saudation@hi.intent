@@ -1,0 +1,7 @@
+type: intent
+name: saudation@hi
+utterances:
+  - Oi Alex
+  - Olá Alex
+  - Bom [timeOfDay] Alex
+  - Bom [timeOfDay]
