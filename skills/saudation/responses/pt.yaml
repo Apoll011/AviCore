@@ -1,5 +1,0 @@
-code: pt
-lang:
- light_on_success: "A acender as luzes."
- light_off_success: "As luzes foram apagadas."
- light_error: "Não consegui comunicar com a luz."

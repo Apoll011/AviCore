@@ -1,5 +1,0 @@
-# Constants and secrets
-constants:
-  HUE_BRIDGE_IP: "192.168.1.42"
-  API_TOKEN: "sk-0ae39..."
-  ENCRYPTION_KEY: "kdfj39f..."

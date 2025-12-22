@@ -1,14 +1,21 @@
-fn intent_hi(intent: Intent) {
-    if (get_setting("mode") == "eco") {
-        println(locale("light_error"))
+fn intent_hi(intent: Intent) { 
+    error_str := locale("light_error")
+
+    if (is_eco()) {
+        println(error_str)
     }
     else {
-        println("Hello Tiago!")
+        println("Oi Tiago!")
     }
+}
 
-    println(functions())
+fn is_eco() {
+    to_check := "eco"
+    get_constant("HUE_BRIDGE_IP")
+    has_setting(key: "motion_timeout")
+    return get_setting("mode") == to_check
 }
 
 fn main() {
-    println(" Skill Loaded!")
+    println("Skill Loaded!")
 }
