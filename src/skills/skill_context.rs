@@ -91,10 +91,10 @@ pub struct SkillContext {
 
 impl SkillContext {
     pub fn from_yaml(path: &str) -> anyhow::Result<Self> {
-        let content_const = fs::read_to_string(format!("{}/config/const.yaml", path))?;
+        let content_const = fs::read_to_string(format!("{}/config/const.config", path))?;
         let parsed_const: ConstFile = serde_yaml::from_str(&content_const)?;
 
-        let content_settings = fs::read_to_string(format!("{}/config/settings.yaml", path))?;
+        let content_settings = fs::read_to_string(format!("{}/config/settings.config", path))?;
         let parsed_settings: SettingsFile = serde_yaml::from_str(&content_settings)?;
         
         // Load language response files from the `responses` directory (e.g., en.yaml, pt.yaml)
@@ -130,7 +130,7 @@ impl SkillContext {
             };
             let path_buf = entry.path();
             if let Some(ext) = path_buf.extension() {
-                if ext == "yaml" || ext == "yml" {
+                if ext == "yaml" || ext == "lang" {
                     if let Ok(content) = fs::read_to_string(&path_buf) {
                         if let Ok(parsed) = serde_yaml::from_str::<LanguageFile>(&content) {
                             let lang_vec: Vec<IndividualLocale> = parsed

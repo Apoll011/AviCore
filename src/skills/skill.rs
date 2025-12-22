@@ -21,7 +21,7 @@ impl Skill {
         }
 
         let module: Arc<Module>;
-        match Self::create_module(&name) {
+        match Self::create_module(&name, &context) {
             Ok(v) => module = v,
             Err(e) => return Err(format!("Could not load skill module ({})", e.to_string()).into())
         }
@@ -39,14 +39,14 @@ impl Skill {
         format!("./skills/{}", name)
     }
 
-    fn create_module(name: &str) -> Result<Arc<Module>, Box<dyn std::error::Error>> {
+    fn create_module(name: &str, ctx: &SkillContext) -> Result<Arc<Module>, Box<dyn std::error::Error>> {
         let mut dyon_module;
         match load_module() {
             Some(v) => dyon_module = v,
             None => return Err("Could not load avi_dsl module".into())
         }
 
-        if error(load(&format!("{}/main.avi", Self::skill_path(name)), &mut dyon_module)) {
+        if error(load(&format!("{}/{}", Self::skill_path(name), ctx.info.entry), &mut dyon_module)) {
             return Err(format!("Error loading skill {}", name).into());
         } else {
             println!("{}", format!("Skill {} loaded", name))
