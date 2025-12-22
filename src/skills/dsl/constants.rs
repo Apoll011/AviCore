@@ -9,9 +9,9 @@ use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("constant");
-    module.add(Arc::new("get".into()), get_constant, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("list".into()), list_constants, Dfn::nl(vec![], Any));
-    module.add(Arc::new("has".into()), has_constant, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("get_constant".into()), get_constant, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("list_constants".into()), list_constants, Dfn::nl(vec![], Any));
+    module.add(Arc::new("has_constant".into()), has_constant, Dfn::nl(vec![Str], Any));
 }
 
 #[allow(non_snake_case)]

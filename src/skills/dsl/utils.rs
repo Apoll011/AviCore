@@ -7,8 +7,8 @@ use crate::intent::JsonValue;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("json");
-    module.add(Arc::new("parse".into()), json_parse, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("stringify".into()), json_stringify, Dfn::nl(vec![Any], Str));
+    module.add(Arc::new("json_parse".into()), json_parse, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("json_stringify".into()), json_stringify, Dfn::nl(vec![Any], Str));
 }
 
 #[allow(non_snake_case)]

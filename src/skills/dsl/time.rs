@@ -8,8 +8,8 @@ use humantime::parse_duration;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("time");
-    module.add(Arc::new("parse_duration".into()), time_parse_duration, Dfn::nl(vec![Str], F64));
-    module.add(Arc::new("format_date".into()), time_format_date, Dfn::nl(vec![F64, Str], Str));
+    module.add(Arc::new("time_parse_duration".into()), time_parse_duration, Dfn::nl(vec![Str], F64));
+    module.add(Arc::new("time_format_date".into()), time_format_date, Dfn::nl(vec![F64, Str], Str));
 }
 
 #[allow(non_snake_case)]

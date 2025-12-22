@@ -10,11 +10,11 @@ use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("setting");
-    module.add(Arc::new("get".into()), get_setting, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("get_full".into()), get_setting_full, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("validate".into()), validate_setting, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("list".into()), list_settings, Dfn::nl(vec![], Any));
-    module.add(Arc::new("has".into()), has_setting, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("get_setting".into()), get_setting, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("get_setting_full".into()), get_setting_full, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("validate_setting".into()), validate_setting, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("list_settings".into()), list_settings, Dfn::nl(vec![], Any));
+    module.add(Arc::new("has_setting".into()), has_setting, Dfn::nl(vec![Str], Any));
 }
 
 #[allow(non_snake_case)]

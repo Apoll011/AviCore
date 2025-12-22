@@ -10,8 +10,8 @@ use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("locale");
-    module.add(Arc::new("get".into()), locale, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("list".into()), list_locales, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("locale".into()), locale, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("list_locales".into()), list_locales, Dfn::nl(vec![Str], Any));
 }
 
 #[allow(non_snake_case)]
