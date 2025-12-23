@@ -1,10 +1,10 @@
 use setting as setting
-use locale as locale
+use locale as l
 use constant as constant
 use test as test
 
 fn intent_hi(intent: Intent) {
-    error_str := locale::locale("light_error")
+    error_str := l::locale("light_error")
 
     if (test::is_eco()) {
         println(error_str)

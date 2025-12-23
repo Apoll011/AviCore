@@ -10,11 +10,10 @@ use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("setting");
-    module.add(Arc::new("get_setting".into()), get_setting, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("get_setting_full".into()), get_setting_full, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("validate_setting".into()), validate_setting, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("list_settings".into()), list_settings, Dfn::nl(vec![], Any));
-    module.add(Arc::new("has_setting".into()), has_setting, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("get".into()), get_setting, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("full".into()), get_setting_full, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("list".into()), list_settings, Dfn::nl(vec![], Any));
+    module.add(Arc::new("has".into()), has_setting, Dfn::nl(vec![Str], Any));
 }
 
 #[allow(non_snake_case)]
@@ -46,34 +45,6 @@ pub fn get_setting_full(rt: &mut Runtime) -> Result<Variable, String> {
         });
 
     Ok(PushVariable::push_var(&val))
-}
-
-#[allow(non_snake_case)]
-pub fn validate_setting(rt: &mut Runtime) -> Result<Variable, String> {
-    let name: String = rt.pop()?;
-    let ctx = ctx(rt);
-
-    let Some(s) = ctx.settings.iter().find(|s| s.name == name) else {
-        return Ok(PushVariable::push_var(&false));
-    };
-
-    let Setting { min, max, value, .. } = &s.setting;
-
-    if let YamlValue(Yaml::Number(n)) = value {
-        if let Some(min) = min {
-            if n.as_i64().unwrap_or(0) < *min as i64 {
-                return Ok(PushVariable::push_var(&false));
-            }
-        }
-        if let Some(max) = max {
-            if n.as_i64().unwrap_or(0) > *max as i64 {
-                return Ok(PushVariable::push_var(&false));
-            }
-        }
-        return Ok(PushVariable::push_var(&true));
-    }
-
-    Ok(PushVariable::push_var(&false))
 }
 
 #[allow(non_snake_case)]

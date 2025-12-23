@@ -10,8 +10,8 @@ type HmacSha256 = Hmac<Sha256>;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("crypto");
-    module.add(Arc::new("crypto_hash".into()), crypto_hash, Dfn::nl(vec![Str, Str], Str));
-    module.add(Arc::new("crypto_hmac".into()), crypto_hmac, Dfn::nl(vec![Str, Str, Str], Str));
+    module.add(Arc::new("hash".into()), crypto_hash, Dfn::nl(vec![Str, Str], Str));
+    module.add(Arc::new("hmac".into()), crypto_hmac, Dfn::nl(vec![Str, Str, Str], Str));
 }
 
 #[allow(non_snake_case)]

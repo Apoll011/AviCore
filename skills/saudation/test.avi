@@ -1,6 +1,7 @@
 ns test
+use setting as setting
 
 fn is_eco() -> {
     to_check := "eco"
-    return get_setting("mode") == to_check
+    return setting::get("mode") == to_check
 }
