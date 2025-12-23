@@ -563,40 +563,40 @@ fn next(channel: in) -> opt[any] { ... }
 
 ns constant
 /// Gets a constant value by key.
-fn get_constant(key: str) -> any { ... }
+fn get(key: str) -> any { ... }
 
 /// Returns list of all available constants.
-fn list_constants() -> any { ... }
+fn list() -> any { ... }
 
 /// Returns `true` if constant exists.
-fn has_constant(key: str) -> any { ... }
+fn has(key: str) -> any { ... }
 
 ns settings
 /// Gets a setting value by key.
-fn get_setting(key: str) -> any { ... }
+fn get(key: str) -> any { ... }
 
 /// Gets full setting information by key.
-fn get_setting_full(key: str) -> any { ... }
-
-/// Validates a setting by key.
-fn validate_setting(key: str) -> any { ... }
+fn full(key: str) -> any { ... }
 
 /// Returns list of all available settings.
-fn list_settings() -> any { ... }
+fn list() -> any { ... }
 
 /// Returns `true` if setting exists.
-fn has_setting(key: str) -> any { ... }
+fn has(key: str) -> any { ... }
 
 ns locales
 /// Gets a localized string by key.
-fn locale(key: str) -> any { ... }
+fn get(key: str) -> any { ... }
 
 /// Returns list of available locales.
-fn list_locales(key: str) -> any { ... }
+fn list(key: str) -> any { ... }
+
+/// Returns `true` if locale exists.
+fn has(key: str) -> any { ... }
 
 ns manifest
 /// Returns the manifest data.
-fn get_manifest() -> any { ... }
+fn get() -> any { ... }
 
 /// Returns the permissions data.
 fn get_permissions() -> any { ... }
@@ -604,23 +604,23 @@ fn get_permissions() -> any { ... }
 /// Returns `true` if functionality is disabled.
 fn is_disabled() -> any { ... }
 
-ns util
+ns json
 /// Parses JSON string into data structure.
-fn json_parse(json: str) -> any { ... }
+fn parse(json: str) -> any { ... }
 
 /// Converts data structure to JSON string.
-fn json_stringify(data: any) -> str { ... }
+fn stringify(data: any) -> str { ... }
 
 ns crypto
 /// Computes cryptographic hash of data using specified algorithm.
-fn crypto_hash(algorithm: str, data: str) -> str { ... }
+fn hash(algorithm: str, data: str) -> str { ... }
 
 /// Computes HMAC of data using specified algorithm and key.
-fn crypto_hmac(algorithm: str, key: str, data: str) -> str { ... }
+fn hmac(algorithm: str, key: str, data: str) -> str { ... }
 
 ns time
 /// Parses duration string and returns seconds.
-fn time_parse_duration(duration: str) -> f64 { ... }
+fn parse_duration(duration: str) -> f64 { ... }
 
 /// Formats Unix timestamp as date string using format specifier.
-fn time_format_date(timestamp: f64, format: str) -> str { ... }\
+fn format_date(timestamp: f64, format: str) -> str { ... }\
