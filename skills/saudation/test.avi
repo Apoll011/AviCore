@@ -1,0 +1,6 @@
+ns test
+
+fn is_eco() -> {
+    to_check := "eco"
+    return get_setting("mode") == to_check
+}

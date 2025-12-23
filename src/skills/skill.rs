@@ -1,5 +1,8 @@
+use std::ffi::OsStr;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc};
-use dyon::{error, load, Call, FnIndex, Module, Runtime};
+use dyon::{error, load, load_str, Call, FnIndex, Module, Runtime};
 use crate::intent::Intent;
 use crate::skills::skill_context::SkillContext;
 use crate::skills::dsl::avi_dsl::load_module;
@@ -44,6 +47,29 @@ impl Skill {
         match load_module() {
             Some(v) => dyon_module = v,
             None => return Err("Could not load avi_dsl module".into())
+        }
+
+        let entry = ctx.info.entry.clone();
+
+
+        for item in fs::read_dir( Self::skill_path(name))? {
+            let item = item?;
+            let path = item.path();
+
+            let file_name = match path.file_name() {
+                Some(v) => v,
+                None => continue
+            };
+
+            if path.extension().and_then(|e| e.to_str()) == Some("avi") && file_name != OsStr::new(&entry)  {
+                let mut m = Module::new();
+                m.import_ext_prelude(&dyon_module);
+                if error(load(path.to_str().unwrap(), &mut m)) {
+                    return Err(format!("Error loading skill {}", name).into());
+                } else {
+                    dyon_module.import(&m)
+                }
+            }
         }
 
         if error(load(&format!("{}/{}", Self::skill_path(name), ctx.info.entry), &mut dyon_module)) {

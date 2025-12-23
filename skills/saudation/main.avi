@@ -1,19 +1,17 @@
-fn intent_hi(intent: Intent) { 
-    error_str := locale("light_error")
+use setting as setting
+use locale as locale
+use constant as constant
+use test as test
 
-    if (is_eco()) {
+fn intent_hi(intent: Intent) {
+    error_str := locale::locale("light_error")
+
+    if (test::is_eco()) {
         println(error_str)
     }
     else {
         println("Oi Tiago!")
     }
-}
-
-fn is_eco() {
-    to_check := "eco"
-    get_constant("HUE_BRIDGE_IP")
-    has_setting(key: "motion_timeout")
-    return get_setting("mode") == to_check
 }
 
 fn main() {
