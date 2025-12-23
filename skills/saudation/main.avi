@@ -4,7 +4,7 @@ use constant as constant
 use test as test
 
 fn intent_hi(intent: Intent) {
-    error_str := l::locale("light_error")
+    error_str := l::get("light_error")
 
     if (test::is_eco()) {
         println(error_str)

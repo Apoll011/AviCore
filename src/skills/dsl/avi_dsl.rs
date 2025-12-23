@@ -19,6 +19,7 @@ pub fn load_module() -> Option<dyon::Module> {
     super::utils::add_functions(&mut module);
     super::crypto::add_functions(&mut module);
     super::time::add_functions(&mut module);
+    module.no_ns();
 
     Some(module)
 }
