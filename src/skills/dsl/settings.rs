@@ -31,7 +31,7 @@ pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
     }
 }
 
-#[allow(non_snakeCase)]
+#[allow(non_snake_case)]
 pub fn get_setting_full(rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = rt.pop()?;
     let ctx = ctx(rt);

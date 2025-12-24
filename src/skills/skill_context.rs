@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::collections::HashMap;
 use std::fs;
+use rand::seq::IndexedRandom;
 use crate::intent::YamlValue;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
@@ -165,8 +166,6 @@ impl SkillContext {
     }
 
     pub fn locale(&self, code: &str, id: &str) -> Option<YamlValue> {
-        use rand::seq::SliceRandom;
-
         self.languages
             .iter()
             .find(|l| l.code == code)
@@ -174,7 +173,7 @@ impl SkillContext {
             .map(|i| {
                 match &i.value.0 {
                     serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
-                        let mut rng = rand::thread_rng();
+                        let mut rng = rand::rng();
                         seq.choose(&mut rng)
                             .map(|v| YamlValue(v.clone()))
                             .unwrap_or_else(|| i.value.clone())

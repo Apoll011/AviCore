@@ -6,7 +6,6 @@ use dyon::Type::*;
 use crate::intent::YamlValue;
 use serde_yaml::Value as Yaml;
 use crate::ctx::RUNTIMECTX;
-use crate::skills::dsl::constants::has_constant;
 use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
