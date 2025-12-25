@@ -4,6 +4,7 @@ use crate::ctx::RUNTIMECTX;
 use crate::intent::Intent;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Alive {
     pub(crate) alive: bool,
     pub(crate) version: String,
@@ -26,6 +27,7 @@ impl Api {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn alive(&mut self) -> Result<Alive, Box<dyn std::error::Error>> {
         let r = send_dict_to_server(&*self.get_url("/avi/alive"), HashMap::new()).await?;
         let response = r.response;

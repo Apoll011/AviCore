@@ -183,6 +183,7 @@ impl SkillContext {
             })
     }
 
+    #[allow(dead_code)]
     pub fn into_json(self) -> serde_json::Result<String> {
         serde_json::to_string(&self)
     }

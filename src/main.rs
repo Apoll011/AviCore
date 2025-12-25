@@ -6,25 +6,14 @@ mod intent;
 mod api;
 mod ctx;
 
-use std::io::{stdin, stdout, Write};
+use std::sync::Arc;
+use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
+use avi_device::DeviceCapabilities;
+use tokio::sync::Mutex;
 use crate::api::api::Api;
 use crate::ctx::RuntimeContext;
 use crate::ctx::RUNTIMECTX;
 use crate::skills::manager::SkillManager;
-
-fn input(prompt: &str) -> String {
-    let mut s = String::new();
-    print!("{}", prompt);
-    let _ = stdout().flush();
-    stdin().read_line(&mut s).expect("Did not enter a correct string");
-    if let Some('\n') = s.chars().next_back() {
-        s.pop();
-    }
-    if let Some('\r') = s.chars().next_back() {
-        s.pop();
-    }
-    s.trim().to_string()
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,18 +23,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         skill_path: "./skills".into(),
     });
 
-    let mut api = Api::new();
-    let mut manager = SkillManager::new();
+    let api = Arc::new(Mutex::new(Api::new()));
+    let manager = Arc::new(Mutex::new(SkillManager::new()));
+
+    let config = AviDeviceConfig {
+        node_name: "avi-core".to_string(),
+        device_type: AviDeviceType::CORE,
+        can_gateway_embedded: false,
+        capabilities: DeviceCapabilities::default(),
+    };
+
+    let device = AviDevice::new(config).await?;
+
+    let d_clone = device.clone();
+    tokio::spawn(async move {
+        d_clone.start_event_loop().await;
+    });
+
+    let api_clone = Arc::clone(&api);
+    let manager_clone = Arc::clone(&manager);
+
+    device.subscribe_async("intent/execute/text", move |_from, _topic, data| {
+        let api = Arc::clone(&api_clone);
+        let manager = Arc::clone(&manager_clone);
+
+        async move {
+            let msg = String::from_utf8_lossy(&data);
+
+            let maybe_intent = match api.lock().await.intent(&*msg).await {
+                Ok(intent) => Some(intent),
+                Err(e) => {
+                    println!("Failed to parse intent: {}", e);
+                    None
+                }
+            };
+
+            if let Some(intent) = maybe_intent {
+                let mut mg = manager.lock().await;
+                if let Err(e) = mg.run_intent(intent) {
+                    println!("Error executing intent: {}", e);
+                }
+            }
+        }    }).await.map_err(|e| e.to_string())?;
 
     loop {
-        let s = input("Please enter some text: ");
-        let intent = api.intent(s.as_str()).await?;
 
-        match manager.run_intent(intent) {
-            Ok(_) => (),
-            Err(e) => println!("Error: {}", e)
-        }
     }
 
+    #[allow(unreachable_code)]
     Ok(())
 }

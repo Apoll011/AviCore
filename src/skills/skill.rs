@@ -7,7 +7,9 @@ use crate::skills::skill_context::SkillContext;
 use crate::skills::dsl::avi_dsl::load_module;
 
 pub struct Skill {
+    #[allow(dead_code)]
     pathname: String,
+    #[allow(dead_code)]
     name: String,
     module: Arc<Module>,
     runtime: Runtime,
