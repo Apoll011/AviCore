@@ -13,6 +13,7 @@ pub fn add_functions(module: &mut Module) {
     module.add(Arc::new("get".into()), locale, Dfn::nl(vec![Str], Any));
     module.add(Arc::new("list".into()), list_locales, Dfn::nl(vec![Str], Any));
     module.add(Arc::new("has".into()), has_locale, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("current".into()), current_lang, Dfn::nl(vec![], Str));
 }
 
 #[allow(non_snake_case)]
@@ -29,6 +30,19 @@ pub fn locale(_rt: &mut Runtime) -> Result<Variable, String> {
         }
     }
 }
+
+#[allow(non_snake_case)]
+pub fn current_lang(_rt: &mut Runtime) -> Result<Variable, String> {
+    match RUNTIMECTX.get() {
+        Some(v) => {
+            Ok(PushVariable::push_var(&*v.lang))
+        }
+        None => {
+            Ok(PushVariable::push_var("en"))
+        }
+    }
+}
+
 
 #[allow(non_snake_case)]
 pub fn list_locales(rt: &mut Runtime) -> Result<Variable, String> {

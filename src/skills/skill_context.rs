@@ -68,6 +68,10 @@ pub struct Language {
     pub lang: Vec<IndividualLocale>,
 }
 
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Manifest {
     pub id: String,
@@ -78,12 +82,17 @@ pub struct Manifest {
     pub entry: String,
     pub capabilities: Vec<String>,
     pub permissions: Vec<String>,
+    #[serde(default = "default_true")]
+    pub can_repeat_last_response: bool,
+    #[serde(default = "default_true")]
+    pub can_go_again: bool,
     pub author: String,
     pub version: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SkillContext {
+    pub path: String,
     pub(crate) info: Manifest,
     pub(crate) constants: Vec<ConstantNamed>,
     pub(crate) settings: Vec<SettingNamed>,
@@ -102,6 +111,7 @@ impl SkillContext {
         let languages = Self::load_languages(path)?;
         
         Ok(Self {
+            path: path.to_string(),
             info:  Self::load_manifest(path.into()),
             constants: Self::const_to_named(&parsed_const.constants),
             settings: Self::settings_to_named(&parsed_settings.settings),

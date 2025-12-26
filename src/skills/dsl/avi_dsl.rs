@@ -37,8 +37,8 @@ dyon_obj! {SettingNamed { name, setting }}
 dyon_obj! {ConstantNamed { name, value }}
 dyon_obj! {IndividualLocale { id, value }}
 dyon_obj! {Language { code, lang }}
-dyon_obj! {Manifest { id, name, description, disabled, entry, capabilities, permissions, author, version }}
-dyon_obj! {SkillContext { info, settings, constants, languages }}
+dyon_obj! {Manifest { id, name, description, disabled, entry, capabilities, can_repeat_last_response, can_go_again, permissions, author, version }}
+dyon_obj! {SkillContext { path, info, settings, constants, languages }}
 dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
 impl PopVariable for JsonValue {
     fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {
