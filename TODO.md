@@ -1,0 +1,3 @@
+- [ ] Scheduler
+- [ ] Context
+- [ ] If skill can go again register it

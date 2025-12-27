@@ -6,3 +6,5 @@ pub mod manifest;
 pub mod utils;
 pub mod crypto;
 pub mod time;
+mod intent;
+mod dialogue;

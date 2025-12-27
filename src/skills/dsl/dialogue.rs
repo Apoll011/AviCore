@@ -7,10 +7,13 @@ use crate::intent::{JsonValue};
 use crate::skills::dsl::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
-    module.ns("json");
-    module.add(Arc::new("parse".into()), json_parse, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("stringify".into()), json_stringify, Dfn::nl(vec![Any], Str));
-    module.add(Arc::new("dir".into()), dir, Dfn::nl(vec![], Str));
+    module.ns("dialogue");
+    module.add(Arc::new("say".into()), json_parse, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("listen".into()), json_parse, Dfn::nl(vec![Str], Any)); // Last device that sent a utterance will start listening again
+    module.add(Arc::new("on_reply".into()), json_stringify, Dfn::nl(vec![Any], Str)); //Sets a handles for the next user sopke text
+    module.add(Arc::new("ask".into()), dir, Dfn::nl(vec![], Str)); //Ask a question with a list of asnwers, fuzzy the response or frist second trird etc
+    module.add(Arc::new("confirm".into()), dir, Dfn::nl(vec![], Str)); //Ask a yes or no question
+    module.add(Arc::new("repeat".into()), dir, Dfn::nl(vec![], Str)); //Repeats the last spoken utterance (Dont matter the skill)
 }
 
 #[allow(non_snake_case)]
