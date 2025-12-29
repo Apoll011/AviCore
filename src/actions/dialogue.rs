@@ -9,8 +9,10 @@ pub struct DialogueAction {
 }
 
 pub enum DialogueCapability {
+    #[allow(dead_code)]
     BOTH = 0,
     SPEAKER = 1,
+    #[allow(dead_code)]
     LISTENER = 2,
 }
 
@@ -27,7 +29,7 @@ impl DialogueAction {
     }
 
     async fn register_listener(&mut self) {
-        self.device.subscribe(&format!("listening/{}/start", self.device.get_id().await.to_string()), move |_from, _topic, data| {
+        self.device.subscribe(&format!("listening/{}/start", self.device.get_id().await.to_string()), move |_from, _topic, _data| {
             println!("Listening...");
         }).await.expect("Failed to subscribe to intent topic");
     }
