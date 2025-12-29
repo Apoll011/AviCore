@@ -1,10 +1,12 @@
 use std::sync::{Arc, OnceLock};
 use avi_device::device::AviDevice;
+use tokio::runtime::Handle;
 
 pub struct RuntimeContext {
     pub(crate) api_url: String,
     pub(crate) lang: String,
     pub(crate) skill_path: String,
+    pub rt: Handle,
     pub device: Arc<AviDevice>,
 }
 

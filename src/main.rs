@@ -11,6 +11,7 @@ mod utils;
 use std::sync::Arc;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use avi_device::DeviceCapabilities;
+use tokio::runtime::Handle;
 use tokio::sync::Mutex;
 use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfig};
@@ -40,7 +41,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         api_url: "http://127.0.0.1:1178".into(),
         lang: "pt".into(),
         skill_path: "./skills".into(),
-        device
+        device,
+        rt: Handle::current()
     })).unwrap_or_else(|_| panic!("Runtime context already initialized"));
 
     let api = Arc::new(Mutex::new(Api::new()));

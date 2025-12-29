@@ -7,10 +7,10 @@ fn intent_hi(intent: Intent) {
     error_str := l::get("light_error")
 
     if (test::is_eco()) {
-        println(error_str)
+        say(error_str)
     }
     else {
-        println("Oi Tiago!")
+        say("Oi Tiago!")
     }
 }
 

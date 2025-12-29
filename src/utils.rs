@@ -1,38 +1,56 @@
 use crate::ctx::runtime;
-use tokio::runtime::Handle;
 
 #[allow(dead_code)]
 pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
     match runtime().device.get_ctx("avi.dialogue.listener").await {
-        Ok(v) => Ok(v.to_string()),
+        Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
         Err(_) => Ok(runtime().device.get_core_id().await?)
     }
 }
 
 pub async fn get_speaker() -> Result<String, Box<dyn std::error::Error>> {
     match runtime().device.get_ctx("avi.dialogue.speaker").await {
-        Ok(v) => Ok(v.to_string()),
+        Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
         Err(_) => Ok(runtime().device.get_core_id().await?)
     }
 }
 pub fn speak(text: &str) {
-    let handle = Handle::current();
+    let text = text.to_string();
 
-    handle.block_on(async {
-        let speaker = get_speaker().await.unwrap();
-        runtime()
+    runtime().rt.spawn(async move {
+        let speaker = match get_speaker().await {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("speaker error: {e}");
+                return;
+            }
+        };
+
+        if let Err(e) = runtime()
             .device
-            .publish(&format!("speak/{}/text", speaker), Vec::from(text.as_bytes()))
+            .publish(
+                &format!("speak/{}/text", speaker),
+                text.into_bytes(),
+            )
             .await
-            .unwrap();
+        {
+            eprintln!("publish error: {e}");
+        }
     });
 }
 
+
 #[allow(dead_code)]
 pub fn listen() {
-    let handle = Handle::current();
-    handle.block_on(async {
-        let listener = get_last_listener().await.unwrap();
+    runtime().rt.spawn(async move {
+        let listener = match get_last_listener().await {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("listener error: {e}");
+                return;
+            }
+        };
+
         runtime()
             .device
             .publish(&format!("listening/{}/start", listener), Vec::new())

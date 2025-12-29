@@ -246,11 +246,12 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "avi-device"
-version = "0.1.0"
-source = "git+https://github.com/apoll011/avi-device#caaee7461775088097c18c0689404cfde94bf64e"
+version = "0.2.3"
+source = "git+https://github.com/apoll011/avi-device#145909d122d1838b852ec8358e859cc3ff9d8ad1"
 dependencies = [
  "async-trait",
  "avi-p2p",
+ "futures 0.3.31",
  "serde",
  "serde_json",
  "tokio 1.48.0",
@@ -259,7 +260,7 @@ dependencies = [
 [[package]]
 name = "avi-p2p"
 version = "0.1.1"
-source = "git+https://github.com/apoll011/avi-device#caaee7461775088097c18c0689404cfde94bf64e"
+source = "git+https://github.com/apoll011/avi-device#145909d122d1838b852ec8358e859cc3ff9d8ad1"
 dependencies = [
  "async-trait",
  "avi-p2p-protocol",
@@ -277,7 +278,7 @@ dependencies = [
 [[package]]
 name = "avi-p2p-protocol"
 version = "0.1.0"
-source = "git+https://github.com/apoll011/avi-device#caaee7461775088097c18c0689404cfde94bf64e"
+source = "git+https://github.com/apoll011/avi-device#145909d122d1838b852ec8358e859cc3ff9d8ad1"
 dependencies = [
  "serde",
  "serde_bytes",

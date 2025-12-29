@@ -9,7 +9,6 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::Mutex;
 use serde_json::json;
 
-// --- Stream Handler for Chat ---
 
 struct ChatStreamHandler {
     peer_id: Option<PeerId>,
@@ -56,14 +55,12 @@ impl StreamHandlerFactory for ChatStreamFactory {
     }
 }
 
-// --- Main CLI Application ---
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
     println!("🚀 AVI Device Full Feature CLI Example");
     println!("Type 'help' for available commands.");
 
-    // 1. Setup Device
     let caps = CapabilityBuilder::new()
         .sensor("microphone", SensorCapability::Microphone {
             present: true,
@@ -88,24 +85,15 @@ async fn main() -> Result<(), String> {
 
     let device = AviDevice::new(config).await?;
 
-    // Register the chat stream handler
     device.register_stream_handler("chat".to_string(), ChatStreamFactory).await;
 
-    // 2. Start Event Loop
     let device_clone = device.clone();
     tokio::spawn(async move {
         device_clone.start_event_loop().await;
     });
 
-    // 3. Subscription Handler
-    device.subscribe("global", move |from, topic, data| {
-        let msg = String::from_utf8_lossy(&data);
-        println!("\n[PubSub] {} on {}: {}", from, topic, msg);
-        print!("> ");
-        let _ = io::stdout().flush();
-    }).await.map_err(|e| e.to_string())?;
+    device.on_started(on_started).await;
 
-    // 4. CLI Loop
     let mut lines = BufReader::new(tokio::io::stdin()).lines();
     let active_stream: Arc<Mutex<Option<StreamId>>> = Arc::new(Mutex::new(None));
 
@@ -249,4 +237,18 @@ async fn main() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+async fn on_started(device: AviDevice, _peer_id: PeerId, _listening: Vec<String>) {
+    device.subscribe("global", move |from, topic, data| {
+        let msg = String::from_utf8_lossy(&data);
+        println!("\n[PubSub] {} on {}: {}", from, topic, msg);
+        print!("> ");
+        let _ = io::stdout().flush();
+    }).await.expect("Failed to subscribe to intent topic");
+
+    device.subscribe(&format!("speak/{}/text", device.get_id().await.to_string()), move |_from, _topic, data| {
+        let msg = String::from_utf8_lossy(&data);
+        println!("Speaker: {}", msg);
+    }).await.expect("Failed to subscribe to intent topic");
 }
