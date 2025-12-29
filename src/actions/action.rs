@@ -5,6 +5,8 @@ use crate::api::api::Api;
 use crate::skills::manager::SkillManager;
 
 pub trait Action {
-    fn new(device: &Arc<AviDevice>, api: &Arc<Mutex<Api>>, skill_manager: &Arc<Mutex<SkillManager>>) -> Self;
+    type Config;
+
+    fn new(device: &Arc<AviDevice>, config: Self::Config) -> Self;
     async fn register(&mut self);
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use avi_device::device::AviDevice;
 use tokio::sync::Mutex;
-use crate::actions::action::Action;
+use crate::actions::action::{Action, ActionConfig};
 use crate::api::api::Api;
 use crate::skills::manager::SkillManager;
 
@@ -11,12 +11,18 @@ pub struct IntentAction {
     skill_manager: Arc<Mutex<SkillManager>>,
 }
 
+pub struct IntentConfig {
+    pub(crate) api: Arc<Mutex<Api>>,
+    pub(crate) skill_manager: Arc<Mutex<SkillManager>>
+}
+
 impl Action for IntentAction {
-    fn new(device: &Arc<AviDevice>, api: &Arc<Mutex<Api>>, skill_manager: &Arc<Mutex<SkillManager>>) -> Self {
+    type Config = IntentConfig;
+    fn new(device: &Arc<AviDevice>, config: Self::Config) -> Self {
         Self {
             device: Arc::clone(device),
-            api: Arc::clone(api),
-            skill_manager: Arc::clone(skill_manager)
+            api: config.api,
+            skill_manager: config.skill_manager
         }
     }
 

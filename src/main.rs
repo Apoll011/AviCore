@@ -12,7 +12,8 @@ use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use avi_device::DeviceCapabilities;
 use tokio::sync::Mutex;
 use crate::actions::action::Action;
-use crate::actions::intent::IntentAction;
+use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfig};
+use crate::actions::intent::{IntentAction, IntentConfig};
 use crate::api::api::Api;
 use crate::ctx::RuntimeContext;
 use crate::ctx::RUNTIMECTX;
@@ -43,8 +44,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         device_clone.start_event_loop().await;
     });
 
-    let mut intent_action = IntentAction::new(&device, &api, &manager);
+    let mut intent_action = IntentAction::new(&device, IntentConfig {
+        api: Arc::clone(&api),
+        skill_manager: Arc::clone(&manager),
+    });
     intent_action.register().await;
+
+    let mut dialogue_action = DialogueAction::new(&device, DialogueConfig {
+        capability: DialogueCapability::SPEAKER
+    });
+    dialogue_action.register().await;
 
     tokio::signal::ctrl_c().await?;
     println!("Shutting down gracefully...");
