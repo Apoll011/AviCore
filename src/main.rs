@@ -21,15 +21,6 @@ use crate::skills::manager::SkillManager;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    RUNTIMECTX.set(RuntimeContext {
-        api_url: "http://127.0.0.1:1178".into(),
-        lang: "pt".into(),
-        skill_path: "./skills".into(),
-    }).expect("Failed to set runtime context");
-
-    let api = Arc::new(Mutex::new(Api::new()));
-    let manager = Arc::new(Mutex::new(SkillManager::new()));
-
     let config = AviDeviceConfig {
         node_name: "avi-core".to_string(),
         device_type: AviDeviceType::CORE,
@@ -44,13 +35,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         device_clone.start_event_loop().await;
     });
 
-    let mut intent_action = IntentAction::new(&device, IntentConfig {
+    RUNTIMECTX.set(Arc::from(RuntimeContext {
+        api_url: "http://127.0.0.1:1178".into(),
+        lang: "pt".into(),
+        skill_path: "./skills".into(),
+        device
+    })).unwrap_or_else(|_| panic!("Runtime context already initialized"));
+
+    let api = Arc::new(Mutex::new(Api::new()));
+    let manager = Arc::new(Mutex::new(SkillManager::new()));
+
+    let mut intent_action = IntentAction::new(IntentConfig {
         api: Arc::clone(&api),
         skill_manager: Arc::clone(&manager),
     });
     intent_action.register().await;
 
-    let mut dialogue_action = DialogueAction::new(&device, DialogueConfig {
+    let mut dialogue_action = DialogueAction::new(DialogueConfig {
         capability: DialogueCapability::SPEAKER
     });
     dialogue_action.register().await;

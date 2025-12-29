@@ -4,8 +4,7 @@ use dyon::{Dfn, Module, Runtime, Variable};
 use dyon::embed::PushVariable;
 use dyon::Type::*;
 use crate::intent::YamlValue;
-use serde_yaml::Value as Yaml;
-use crate::ctx::RUNTIMECTX;
+use crate::ctx::{runtime};
 use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
@@ -21,26 +20,12 @@ pub fn locale(_rt: &mut Runtime) -> Result<Variable, String> {
     let id: String = _rt.pop()?;
     let skill_context = ctx(_rt);
 
-    match RUNTIMECTX.get() {
-        Some(v) => {
-            Ok(PushVariable::push_var(&skill_context.locale(&*v.lang, &*id).unwrap()))
-        }
-        None => {
-            Ok(PushVariable::push_var(&YamlValue(Yaml::Null)))
-        }
-    }
+    Ok(PushVariable::push_var(&skill_context.locale(&*runtime().lang, &*id).unwrap()))
 }
 
 #[allow(non_snake_case)]
 pub fn current_lang(_rt: &mut Runtime) -> Result<Variable, String> {
-    match RUNTIMECTX.get() {
-        Some(v) => {
-            Ok(PushVariable::push_var(&*v.lang))
-        }
-        None => {
-            Ok(PushVariable::push_var("en"))
-        }
-    }
+    Ok(PushVariable::push_var(&*runtime().lang))
 }
 
 

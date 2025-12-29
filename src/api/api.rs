@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::api::send::send_dict_to_server;
-use crate::ctx::RUNTIMECTX;
+use crate::ctx::{runtime};
 use crate::intent::Intent;
 
 #[derive(Debug)]
@@ -17,14 +17,7 @@ impl Api {
         Self {}
     }
     fn get_url(&self, path: &str) -> String {
-        match RUNTIMECTX.get() {
-            Some(v) => {
-                format!("{}{}", v.api_url, path).into()
-            }
-            None => {
-                "http://127.0.0.1:1178".into()
-            }
-        }
+        format!("{}{}", runtime().api_url, path).into()
     }
 
     #[allow(dead_code)]

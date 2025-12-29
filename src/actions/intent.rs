@@ -3,6 +3,7 @@ use avi_device::device::AviDevice;
 use tokio::sync::Mutex;
 use crate::actions::action::{Action};
 use crate::api::api::Api;
+use crate::ctx::runtime;
 use crate::skills::manager::SkillManager;
 
 pub struct IntentAction {
@@ -18,9 +19,9 @@ pub struct IntentConfig {
 
 impl Action for IntentAction {
     type Config = IntentConfig;
-    fn new(device: &Arc<AviDevice>, config: Self::Config) -> Self {
+    fn new(config: Self::Config) -> Self {
         Self {
-            device: Arc::clone(device),
+            device: Arc::clone(&runtime().device),
             api: config.api,
             skill_manager: config.skill_manager
         }

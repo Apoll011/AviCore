@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use avi_device::device::AviDevice;
 use crate::actions::action::{Action};
+use crate::ctx::runtime;
 
 pub struct DialogueAction {
     device: Arc<AviDevice>,
@@ -29,9 +30,9 @@ impl DialogueAction {
 
 impl Action for DialogueAction {
     type Config = DialogueConfig;
-    fn new(device: &Arc<AviDevice>, config: Self::Config) -> Self {
+    fn new(config: Self::Config) -> Self {
         Self {
-            device: Arc::clone(device),
+            device: Arc::clone(&runtime().device),
             config
         }
     }
