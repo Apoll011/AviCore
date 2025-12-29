@@ -24,7 +24,12 @@ impl DialogueAction {
             let msg = String::from_utf8_lossy(&data);
             println!("Speaker: {}", msg);
         }).await.expect("Failed to subscribe to intent topic");
+    }
 
+    async fn register_listener(&mut self) {
+        self.device.subscribe(&format!("listening/{}/start", self.device.get_id().await.to_string()), move |_from, _topic, data| {
+            println!("Listening...");
+        }).await.expect("Failed to subscribe to intent topic");
     }
 }
 
@@ -39,9 +44,12 @@ impl Action for DialogueAction {
 
     async fn register(&mut self) {
         match self.config.capability {
-            DialogueCapability::BOTH => self.register_speaker().await,
+            DialogueCapability::BOTH => {
+                self.register_speaker().await;
+                self.register_listener().await;
+            },
             DialogueCapability::SPEAKER => self.register_speaker().await,
-            DialogueCapability::LISTENER => (),
+            DialogueCapability::LISTENER => self.register_listener().await,
         }
     }
 }

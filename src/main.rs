@@ -6,6 +6,7 @@ mod intent;
 mod api;
 mod ctx;
 mod actions;
+mod utils;
 
 use std::sync::Arc;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
