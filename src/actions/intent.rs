@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use avi_device::device::AviDevice;
 use tokio::sync::Mutex;
-use crate::actions::action::{Action, ActionConfig};
+use crate::actions::action::{Action};
 use crate::api::api::Api;
 use crate::skills::manager::SkillManager;
 
