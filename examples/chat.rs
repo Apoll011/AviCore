@@ -239,7 +239,8 @@ async fn main() -> Result<(), String> {
     Ok(())
 }
 
-async fn on_started(device: AviDevice, _peer_id: PeerId, _listening: Vec<String>) {
+async fn on_started(device: AviDevice, peer_id: PeerId, _listening: Vec<String>) {
+    println!("Peer {} started", peer_id);
     device.subscribe("global", move |from, topic, data| {
         let msg = String::from_utf8_lossy(&data);
         println!("\n[PubSub] {} on {}: {}", from, topic, msg);
