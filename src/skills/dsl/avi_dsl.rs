@@ -7,6 +7,7 @@ use serde_json::Value;
 use serde_yaml::{Value as Yaml, Mapping, Sequence};
 use crate::skills::skill_context::{ConstantNamed, IndividualLocale, Language, Manifest, Setting, SettingNamed, SkillContext};
 
+/// Loads and initializes the core Avi Dyon module with all sub-modules and functions.
 pub fn load_module() -> Option<dyon::Module> {
     use dyon::Module;
 
@@ -26,6 +27,17 @@ pub fn load_module() -> Option<dyon::Module> {
     Some(module)
 }
 
+/// Retrieves the `SkillContext` from the Dyon runtime stack.
+/// 
+/// # Arguments
+/// 
+/// * `rt` - The current Dyon runtime environment.
+/// 
+/// # Panics
+/// 
+/// Panics if the `SkillContext` is not found at the expected stack position or if it cannot be popped.
+/// 
+/// TODO: Avoid panicking; return an `Option` or `Result` instead.
 pub fn ctx(rt: &mut Runtime) -> SkillContext {
     SkillContext::pop_var(rt, &rt.stack[0]).unwrap()
 }
@@ -42,12 +54,21 @@ dyon_obj! {Language { code, lang }}
 dyon_obj! {Manifest { id, name, description, disabled, entry, capabilities, can_repeat_last_response, can_go_again, permissions, author, version }}
 dyon_obj! {SkillContext { path, info, settings, constants, languages }}
 dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
+
 impl PopVariable for JsonValue {
+    /// Pops a `JsonValue` from the Dyon runtime.
     fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {
         from_dyon_variable_json(var.clone())
     }
 }
 
+/// Converts a Dyon `Variable` to a `JsonValue`.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the Dyon variable is a complex type (Link/RustObject/UnsafeRef) that cannot be converted to JSON.
+/// 
+/// FIXME: `_ => todo!()` will cause a crash if an unhandled Dyon variable type is encountered.
 fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
     use dyon::Variable::*;
     match var {

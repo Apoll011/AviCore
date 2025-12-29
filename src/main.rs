@@ -21,6 +21,16 @@ use crate::ctx::RuntimeContext;
 use crate::ctx::RUNTIMECTX;
 use crate::skills::manager::SkillManager;
 
+/// Entry point for the AviCore application.
+/// 
+/// This function initializes the device, setup the runtime context,
+/// and registers actions like intent handling and dialogue management.
+/// 
+/// # Errors
+/// 
+/// Returns an error if device initialization, context setup, or signal handling fails.
+/// 
+/// TODO: Consider moving hardcoded configuration values (API URL, paths) to a configuration file or environment variables.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = AviDeviceConfig {
