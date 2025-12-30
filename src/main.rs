@@ -8,6 +8,7 @@ mod ctx;
 mod actions;
 mod utils;
 mod languages;
+mod config;
 
 use std::sync::Arc;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
