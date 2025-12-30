@@ -103,4 +103,20 @@ impl LanguageSystem {
                 }
             })
     }
+
+    pub fn list(&self, code: &str) -> Vec<(String, YamlValue)> {
+        let Some(lang) = self.languages.iter().find(|l| l.code == code) else {
+            return Vec::<(String, YamlValue)>::new();
+        };
+
+        lang.lang
+            .iter()
+            .map(|i| (i.id.clone(), i.value.clone()))
+            .collect()
+    }
+
+    pub fn has(&self, id: &str) -> bool {
+        self.languages.iter()
+            .any(|lang| lang.lang.iter().any(|l| l.id == id))
+    }
 }
