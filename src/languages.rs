@@ -1,0 +1,106 @@
+use std::collections::HashMap;
+use std::fs;
+use rand::prelude::IndexedRandom;
+use serde::{Deserialize, Serialize};
+use crate::intent::YamlValue;
+
+/// Represents the structure of a language resource file.
+#[derive(Debug, Clone, Deserialize)]
+pub struct LanguageFile {
+    /// The language code (e.g., "en", "pt").
+    pub code: String,
+    /// A map of resource IDs to their localized values.
+    pub lang: HashMap<String, YamlValue>,
+}
+
+/// A localized resource entry.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub  struct IndividualLocale {
+    /// The unique identifier for the localized resource.
+    pub id: String,
+    /// The localized value (can be a string or a list of strings for randomization).
+    pub value: YamlValue,
+}
+
+/// Represents a collection of localized resources for a specific language.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Language {
+    /// The language code.
+    pub code: String,
+    /// The list of localized resources.
+    pub lang: Vec<IndividualLocale>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LanguageSystem {
+    pub(crate) languages: Vec<Language>,
+}
+
+impl LanguageSystem {
+
+    /// Scans the `responses` directory and loads all available language resource files.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The skill's root directory path.
+    pub(crate) fn new(path: &str) -> Self {
+        let mut languages: Vec<Language> = Vec::new();
+
+        let read_dir = match fs::read_dir(path) {
+            Ok(rd) => rd,
+            Err(_) => return Self{ languages },
+        };
+
+        for entry in read_dir {
+            let entry = match entry {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            let path_buf = entry.path();
+            if let Some(ext) = path_buf.extension() {
+                if ext == "yaml" || ext == "lang" {
+                    if let Ok(content) = fs::read_to_string(&path_buf) {
+                        if let Ok(parsed) = serde_yaml::from_str::<LanguageFile>(&content) {
+                            let lang_vec: Vec<IndividualLocale> = parsed
+                                .lang
+                                .into_iter()
+                                .map(|(id, value)| IndividualLocale { id, value })
+                                .collect();
+                            languages.push(Language { code: parsed.code, lang: lang_vec });
+                        }
+                    }
+                }
+            }
+        }
+
+        Self {
+            languages
+        }
+    }
+
+    /// Retrieves a localized resource value.
+    ///
+    /// If the value is a list (sequence), it randomly selects one entry from the list.
+    ///
+    /// # Arguments
+    ///
+    /// * `code` - The language code.
+    /// * `id` - The resource identifier.
+    pub fn locale(&self, code: &str, id: &str) -> Option<YamlValue> {
+        self.languages
+            .iter()
+            .find(|l| l.code == code)
+            .and_then(|l| l.lang.iter().find(|i| i.id == id))
+            .map(|i| {
+                match &i.value.0 {
+                    serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
+                        let mut rng = rand::rng();
+                        seq.choose(&mut rng)
+                            .map(|v| YamlValue(v.clone()))
+                            .unwrap_or_else(|| i.value.clone())
+                    }
+                    _ => i.value.clone()
+                }
+            })
+    }
+}

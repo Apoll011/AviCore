@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use rand::seq::IndexedRandom;
 use crate::intent::YamlValue;
+use crate::languages::LanguageSystem;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.
@@ -71,33 +72,6 @@ pub struct SettingNamed {
     pub setting: Setting,
 }
 
-/// Represents the structure of a language resource file.
-#[derive(Debug, Clone, Deserialize)]
-pub struct LanguageFile {
-    /// The language code (e.g., "en", "pt").
-    pub code: String,
-    /// A map of resource IDs to their localized values.
-    pub lang: HashMap<String, YamlValue>,
-}
-
-/// A localized resource entry.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub  struct IndividualLocale {
-    /// The unique identifier for the localized resource.
-    pub id: String,
-    /// The localized value (can be a string or a list of strings for randomization).
-    pub value: YamlValue,
-}
-
-/// Represents a collection of localized resources for a specific language.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Language {
-    /// The language code.
-    pub code: String,
-    /// The list of localized resources.
-    pub lang: Vec<IndividualLocale>,
-}
-
 /// Helper function to provide a default value of `true` for serde.
 fn default_true() -> bool {
     true
@@ -145,7 +119,7 @@ pub struct SkillContext {
     /// Settings defined for the skill.
     pub(crate) settings: Vec<SettingNamed>,
     /// Localized resources for the skill.
-    pub(crate) languages: Vec<Language>,
+    pub(crate) languages: LanguageSystem,
 }
 
 impl SkillContext {
@@ -168,7 +142,7 @@ impl SkillContext {
         let parsed_settings: SettingsFile = serde_yaml::from_str(&content_settings)?;
         
         // Load language response files from the `responses` directory (e.g., en.yaml, pt.yaml)
-        let languages = Self::load_languages(path)?;
+        let languages = LanguageSystem::new(&format!("{}/responses", path));
         
         Ok(Self {
             path: path.to_string(),
@@ -190,45 +164,6 @@ impl SkillContext {
         let manifest_path = format!("{}/manifest.yaml", pathname);
         let manifest_file = fs::read_to_string(manifest_path).expect("Could not read manifest file");
         serde_yaml::from_str(&manifest_file).expect("Could not parse manifest file")
-    }
-
-    /// Scans the `responses` directory and loads all available language resource files.
-    /// 
-    /// # Arguments
-    /// 
-    /// * `path` - The skill's root directory path.
-    fn load_languages(path: &str) -> anyhow::Result<Vec<Language>> {
-        let mut languages: Vec<Language> = Vec::new();
-        let responses_dir = format!("{}/responses", path);
-
-        let read_dir = match fs::read_dir(&responses_dir) {
-            Ok(rd) => rd,
-            Err(_) => return Ok(languages),
-        };
-
-        for entry in read_dir {
-            let entry = match entry {
-                Ok(e) => e,
-                Err(_) => continue,
-            };
-            let path_buf = entry.path();
-            if let Some(ext) = path_buf.extension() {
-                if ext == "yaml" || ext == "lang" {
-                    if let Ok(content) = fs::read_to_string(&path_buf) {
-                        if let Ok(parsed) = serde_yaml::from_str::<LanguageFile>(&content) {
-                            let lang_vec: Vec<IndividualLocale> = parsed
-                                .lang
-                                .into_iter()
-                                .map(|(id, value)| IndividualLocale { id, value })
-                                .collect();
-                            languages.push(Language { code: parsed.code, lang: lang_vec });
-                        }
-                    }
-                }
-            }
-        }
-
-        Ok(languages)
     }
 
     /// Converts a map of constants to a vector of `ConstantNamed`.
@@ -260,21 +195,7 @@ impl SkillContext {
     /// * `code` - The language code.
     /// * `id` - The resource identifier.
     pub fn locale(&self, code: &str, id: &str) -> Option<YamlValue> {
-        self.languages
-            .iter()
-            .find(|l| l.code == code)
-            .and_then(|l| l.lang.iter().find(|i| i.id == id))
-            .map(|i| {
-                match &i.value.0 {
-                    serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
-                        let mut rng = rand::rng();
-                        seq.choose(&mut rng)
-                            .map(|v| YamlValue(v.clone()))
-                            .unwrap_or_else(|| i.value.clone())
-                    }
-                    _ => i.value.clone()
-                }
-            })
+        self.languages.locale(code, id)
     }
 
     /// Serializes the `SkillContext` into a JSON string.
