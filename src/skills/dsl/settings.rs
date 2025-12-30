@@ -19,7 +19,7 @@ pub fn add_functions(module: &mut Module) {
 #[allow(non_snake_case)]
 pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = _rt.pop()?;
-    let skill_context = ctx(_rt);
+    let skill_context = ctx(_rt)?;
 
     match skill_context.setting(&*name) {
         Some(v) => {
@@ -34,7 +34,7 @@ pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn get_setting_full(rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = rt.pop()?;
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
 
     let val = ctx.settings.iter()
         .find(|s| s.name == name)
@@ -49,7 +49,7 @@ pub fn get_setting_full(rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn list_settings(rt: &mut Runtime) -> Result<Variable, String> {
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
 
     let list: Vec<(String, YamlValue)> =
         ctx.settings.iter()
@@ -62,7 +62,7 @@ pub fn list_settings(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn has_setting(rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = rt.pop()?;
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
 
     let exists = ctx.settings.iter().any(|s| s.name == name);
     Ok(PushVariable::push_var(&exists))

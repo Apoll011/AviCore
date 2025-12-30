@@ -33,6 +33,6 @@ pub fn json_stringify(rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn dir(_rt: &mut Runtime) -> Result<Variable, String> {
-    let skill_context = ctx(_rt);
+    let skill_context = ctx(_rt)?;
     Ok(PushVariable::push_var(&skill_context.path))
 }

@@ -18,7 +18,7 @@ pub fn add_functions(module: &mut Module) {
 #[allow(non_snake_case)]
 pub fn locale(_rt: &mut Runtime) -> Result<Variable, String> {
     let id: String = _rt.pop()?;
-    let skill_context = ctx(_rt);
+    let skill_context = ctx(_rt)?;
 
     Ok(PushVariable::push_var(&skill_context.locale(&*runtime().lang, &*id).unwrap()))
 }
@@ -32,7 +32,7 @@ pub fn current_lang(_rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn list_locales(rt: &mut Runtime) -> Result<Variable, String> {
     let code: String = rt.pop()?;
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
 
     let Some(lang) = ctx.languages.iter().find(|l| l.code == code) else {
         return Ok(PushVariable::push_var(&Vec::<(String, YamlValue)>::new()));
@@ -49,7 +49,7 @@ pub fn list_locales(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn has_locale(rt: &mut Runtime) -> Result<Variable, String> {
     let id: String = rt.pop()?;
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
 
     let exists = ctx.languages.iter()
         .any(|lang| lang.lang.iter().any(|l| l.id == id));

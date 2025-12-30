@@ -100,8 +100,6 @@ impl SkillManager {
     /// # Errors
     /// 
     /// Returns an error if the intent is malformed or if the target skill is not found.
-    /// 
-    /// FIXME: The check `parts.is_empty() && parts.len() != 2` is logically flawed; it will never be true.
     pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
         let intent_info;
         match intent.intent.clone() {
@@ -116,7 +114,7 @@ impl SkillManager {
         }
 
         let parts: Vec<&str> = full_name.split("@").collect();
-        if parts.is_empty() && parts.len() != 2 {
+        if parts.is_empty() || parts.len() != 2 {
             return Err("Intent name must contain '@' separator".into());
         }
 

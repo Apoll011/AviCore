@@ -35,8 +35,6 @@ impl Action for IntentAction {
     /// # Arguments
     /// 
     /// * `config` - The configuration containing API and skill manager references.
-    /// 
-    /// TODO: Validate if `runtime().device` is already initialized before cloning.
     fn new(config: Self::Config) -> Self {
         Self {
             device: Arc::clone(&runtime().device),
@@ -49,13 +47,11 @@ impl Action for IntentAction {
     /// 
     /// When a message is received on this topic, it is processed as an intent
     /// using the API and then executed by the skill manager.
-    /// 
-    /// FIXME: `expect("Failed to subscribe to intent topic")` will panic the entire application if subscription fails. Consider returning a `Result`.
     async fn register(&mut self) {
         let api = Arc::clone(&self.api);
         let skill_manager = Arc::clone(&self.skill_manager);
 
-        self.device.subscribe_async("intent/execute/text", move |_from, _topic, data| {
+        match self.device.subscribe_async("intent/execute/text", move |_from, _topic, data| {
             let api = Arc::clone(&api);
             let skill_manager = Arc::clone(&skill_manager);
 
@@ -77,6 +73,9 @@ impl Action for IntentAction {
                     }
                 }
             }
-        }).await.expect("Failed to subscribe to intent topic");
+        }).await {
+            Ok(_) => (),
+            Err(e) => eprintln!("Failed to subscribe to intent topic: {}", e)
+        }
     }
 }

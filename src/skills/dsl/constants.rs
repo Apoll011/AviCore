@@ -17,7 +17,7 @@ pub fn add_functions(module: &mut Module) {
 #[allow(non_snake_case)]
 pub fn get_constant(_rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = _rt.pop()?;
-    let skill_context = ctx(_rt);
+    let skill_context = ctx(_rt)?;
 
     match skill_context.constant(&*name) {
         Some(v) => {
@@ -31,7 +31,7 @@ pub fn get_constant(_rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn list_constants(rt: &mut Runtime) -> Result<Variable, String> {
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
 
     let list: Vec<(String, YamlValue)> =
         ctx.constants.iter()
@@ -44,7 +44,7 @@ pub fn list_constants(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn has_constant(rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = rt.pop()?;
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
 
     let exists = ctx.constants.iter().any(|c| c.name == name);
     Ok(PushVariable::push_var(&exists))

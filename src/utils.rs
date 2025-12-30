@@ -52,10 +52,7 @@ pub fn speak(text: &str) {
 
         if let Err(e) = runtime()
             .device
-            .publish(
-                &format!("speak/{}/text", speaker),
-                text.into_bytes(),
-            )
+            .publish(&format!("speak/{}/text", speaker), text.into_bytes())
             .await
         {
             eprintln!("publish error: {e}");
@@ -66,8 +63,6 @@ pub fn speak(text: &str) {
 /// Commands the last active listener to start listening for voice input.
 /// 
 /// This function spawns an asynchronous task to publish the start command.
-/// 
-/// FIXME: `unwrap()` on publication might panic if the device communication fails.
 #[allow(dead_code)]
 pub fn listen() {
     runtime().rt.spawn(async move {
@@ -79,10 +74,12 @@ pub fn listen() {
             }
         };
 
-        runtime()
+        if let Err(e) = runtime()
             .device
             .publish(&format!("listening/{}/start", listener), Vec::new())
             .await
-            .unwrap();
+        {
+            eprintln!("publish error: {e}");
+        }
     });
 }

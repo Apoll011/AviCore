@@ -13,8 +13,6 @@ use crate::api::response::Response;
 /// # Errors
 /// 
 /// Returns an error if the network request fails or if the response body cannot be parsed as JSON.
-/// 
-/// TODO: Consider using a POST request if the arguments grow too large or contain sensitive data.
 pub async fn send_dict_to_server(
     url: &str,
     args: HashMap<&str, &str>,

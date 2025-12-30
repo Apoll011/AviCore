@@ -38,8 +38,6 @@ impl Api {
     /// # Errors
     /// 
     /// Returns an error if the server is unreachable or the response is invalid.
-    /// 
-    /// FIXME: The version string includes extra quotes due to improper conversion from JSON.
     #[allow(dead_code)]
     pub async fn alive(&mut self) -> Result<Alive, Box<dyn std::error::Error>> {
         let r = send_dict_to_server(&*self.get_url("/avi/alive"), HashMap::new()).await?;
@@ -47,7 +45,7 @@ impl Api {
         match response {
             Some(v) => Ok(Alive {
                     alive: v.get("on").expect("Expected a boolean").as_bool().unwrap_or(false),
-                    version: v.get("version").expect("Expected a version string").to_string(),
+                    version: v.get("version").expect("Expected a version string").as_str().unwrap_or("0.0").to_string(),
                     installed_lang: v.get("lang").expect("Expected a list of installed lang's").as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect(),
                 }),
             None => Err("No response from server".into())
@@ -64,11 +62,10 @@ impl Api {
     /// 
     /// Returns an error if the server is unreachable or the intent cannot be parsed.
     /// 
-    /// FIXME: `expect(":)")` will panic if the server communication fails. Should handle the error gracefully.
     pub async fn intent(&mut self, text: &str) -> Result<Intent, Box<dyn std::error::Error>> {
         let mut query = HashMap::new();
         query.insert("text", text);
-        let r = send_dict_to_server(&*self.get_url("/intent_recognition"), query).await.expect(":)");
+        let r = send_dict_to_server(&*self.get_url("/intent_recognition"), query).await?;
         let response = r.response;
 
         match response {

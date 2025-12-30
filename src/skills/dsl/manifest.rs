@@ -14,18 +14,18 @@ pub fn add_functions(module: &mut Module) {
 
 #[allow(non_snake_case)]
 pub fn get_manifest(rt: &mut Runtime) -> Result<Variable, String> {
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
     Ok(PushVariable::push_var(&ctx.info))
 }
 
 #[allow(non_snake_case)]
 pub fn get_permissions(rt: &mut Runtime) -> Result<Variable, String> {
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
     Ok(PushVariable::push_var(&ctx.info.permissions))
 }
 
 #[allow(non_snake_case)]
 pub fn is_disabled(rt: &mut Runtime) -> Result<Variable, String> {
-    let ctx = ctx(rt);
+    let ctx = ctx(rt)?;
     Ok(PushVariable::push_var(&ctx.info.disabled))
 }
