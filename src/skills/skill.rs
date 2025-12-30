@@ -35,11 +35,7 @@ impl Skill {
     /// 
     /// Returns an error if the skill context or module fails to load.
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
-        let context : SkillContext;
-        match SkillContext::from_yaml(&*Self::skill_path(&name)) {
-            Ok(v) => context = v,
-            Err(e) => return Err(format!("Could not load skill context ({})", e.to_string()).into())
-        }
+        let context = SkillContext::new(&*Self::skill_path(&name));
 
         let module: Arc<Module>;
         match Self::create_module(&name, &context) {

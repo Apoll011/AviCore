@@ -5,7 +5,9 @@ use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
 use serde_json::Value;
 use serde_yaml::{Value as Yaml, Mapping, Sequence};
-use crate::skills::skill_context::{ConstantNamed, IndividualLocale, Language, Manifest, Setting, SettingNamed, SkillContext};
+use crate::config::{ConfigSystem, ConstantNamed, Setting, SettingNamed};
+use crate::languages::{IndividualLocale, Language, LanguageSystem};
+use crate::skills::skill_context::{Manifest, SkillContext};
 
 /// Loads and initializes the core Avi Dyon module with all sub-modules and functions.
 pub fn load_module() -> Option<dyon::Module> {
@@ -52,7 +54,9 @@ dyon_obj! {ConstantNamed { name, value }}
 dyon_obj! {IndividualLocale { id, value }}
 dyon_obj! {Language { code, lang }}
 dyon_obj! {Manifest { id, name, description, disabled, entry, capabilities, can_repeat_last_response, can_go_again, permissions, author, version }}
-dyon_obj! {SkillContext { path, info, settings, constants, languages }}
+dyon_obj! {LanguageSystem { languages }}
+dyon_obj! {ConfigSystem { settings, constants }}
+dyon_obj! {SkillContext { path, info, config, languages }}
 dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
 
 impl PopVariable for JsonValue {
