@@ -113,7 +113,10 @@ async fn main() -> Result<(), String> {
                 println!("Available commands:");
                 println!("  peers              - List connected peers");
                 println!("  status             - Show local node info");
-                println!("  pub <msg>          - Publish to 'global' topic");
+                println!("  pub <topic> <msg>  - Publish to topic");
+                println!("  sub <topic>        - Subscribes to topic");
+                println!("  intent <msg>       - Sends A texts to be Processed");
+                println!("  speaker            - Sets its self as speaker");
                 println!("  set <path> <val>   - Update context (e.g. set user.name \"Alice\")");
                 println!("  get <path>         - Get context value");
                 println!("  query              - Find other CLI nodes");
@@ -169,6 +172,12 @@ async fn main() -> Result<(), String> {
                     if let Err(e) = device.update_ctx(path, json_val).await {
                         println!("Failed to update context: {}", e);
                     }
+                }
+            }
+            "speaker" => {
+                let json_val = serde_json::from_str(&device.get_id().await.to_string()).unwrap_or(json!(device.get_id().await.to_string()));
+                if let Err(e) = device.update_ctx("avi.dialogue.speaker", json_val).await {
+                    println!("Failed to update context: {}", e);
                 }
             }
             "get" => {
