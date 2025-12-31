@@ -18,6 +18,7 @@ use tokio::sync::Mutex;
 use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfig};
 use crate::actions::intent::{IntentAction, IntentConfig};
+use crate::actions::mesh::{MeshAction, MeshConfig};
 use crate::api::api::Api;
 use crate::ctx::RuntimeContext;
 use crate::ctx::RUNTIMECTX;
@@ -70,6 +71,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         capability: DialogueCapability::SPEAKER
     });
     dialogue_action.register().await;
+
+    let mut mesh_action = MeshAction::new(MeshConfig {});
+    mesh_action.register().await;
 
     tokio::signal::ctrl_c().await?;
     println!("Shutting down gracefully...");
