@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValidationError {
@@ -31,9 +30,9 @@ impl ResponseValidator for AnyValidator {
 }
 
 pub struct ListOrNoneValidator {
-    allowed_values: Vec<String>,
-    none_text: String,
-    case_sensitive: bool,
+    pub(crate) allowed_values: Vec<String>,
+    pub(crate) none_text: String,
+    pub(crate) case_sensitive: bool,
 }
 
 impl ListOrNoneValidator {
@@ -92,7 +91,7 @@ impl ResponseValidator for ListOrNoneValidator {
 }
 
 pub struct OptionalValidator {
-    none_text: String,
+    pub(crate) none_text: String,
 }
 
 impl OptionalValidator {
@@ -117,11 +116,11 @@ impl ResponseValidator for OptionalValidator {
 }
 
 pub struct BoolValidator {
-    yes_text: String,
-    no_text: String,
-    always_text: String,
-    never_text: String,
-    hard_search: bool,
+    pub(crate) yes_text: String,
+    pub(crate) no_text: String,
+    pub(crate) always_text: String,
+    pub(crate) never_text: String,
+    pub(crate) hard_search: bool,
 }
 
 impl BoolValidator {
@@ -139,15 +138,6 @@ impl BoolValidator {
         self.hard_search = enabled;
         self
     }
-
-    fn get_mappings(&self) -> HashMap<String, bool> {
-        let mut mappings = HashMap::new();
-        mappings.insert(self.yes_text.to_lowercase(), true);
-        mappings.insert(self.no_text.to_lowercase(), false);
-        mappings.insert(self.always_text.to_lowercase(), true);
-        mappings.insert(self.never_text.to_lowercase(), false);
-        mappings
-    }
 }
 
 impl ResponseValidator for BoolValidator {
@@ -155,34 +145,40 @@ impl ResponseValidator for BoolValidator {
 
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text).to_lowercase();
-        let mappings = self.get_mappings();
+        
+        let mappings = [
+            (&self.yes_text, true),
+            (&self.no_text, false),
+            (&self.always_text, true),
+            (&self.never_text, false),
+        ];
 
         if self.hard_search {
-            // Exact match required
-            mappings
-                .get(&cleaned)
-                .copied()
-                .ok_or(ValidationError::NotAccepted)
-        } else {
-            // Partial match allowed
-            for (key, &value) in &mappings {
-                if cleaned.contains(key) {
+            for (key, value) in mappings {
+                if cleaned == key.to_lowercase() {
                     return Ok(value);
                 }
             }
-            Err(ValidationError::NotAccepted)
+        } else {
+            for (key, value) in mappings {
+                if cleaned.contains(&key.to_lowercase()) {
+                    return Ok(value);
+                }
+            }
         }
+        
+        Err(ValidationError::NotAccepted)
     }
 }
 
 pub struct MappedValidator<T: Clone> {
-    mappings: HashMap<String, T>,
-    default: Option<T>,
-    hard_search: bool,
+    pub(crate) mappings: Vec<(String, T)>,
+    pub(crate) default: Option<T>,
+    pub(crate) hard_search: bool,
 }
 
 impl<T: Clone> MappedValidator<T> {
-    pub fn new(mappings: HashMap<String, T>) -> Self {
+    pub fn new(mappings: Vec<(String, T)>) -> Self {
         Self {
             mappings,
             default: None,
@@ -208,11 +204,14 @@ impl<T: Clone> ResponseValidator for MappedValidator<T> {
         let cleaned = self.clear_text(text).to_lowercase();
 
         let result = if self.hard_search {
-            self.mappings.get(&cleaned)
+            self.mappings
+                .iter()
+                .find(|(key, _)| cleaned == key.to_lowercase())
+                .map(|(_, v)| v)
         } else {
             self.mappings
                 .iter()
-                .find(|(key, _)| cleaned.contains(key.as_str()))
+                .find(|(key, _)| cleaned.contains(&key.to_lowercase()))
                 .map(|(_, v)| v)
         };
 
@@ -415,10 +414,11 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_basic() {
-        let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
-        mappings.insert("green".to_string(), 3);
+        let mappings = vec![
+            ("red".to_string(), 1),
+            ("blue".to_string(), 2),
+            ("green".to_string(), 3),
+        ];
 
         let validator = MappedValidator::new(mappings);
 
@@ -429,9 +429,10 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_with_default() {
-        let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
+        let mappings = vec![
+            ("red".to_string(), 1),
+            ("blue".to_string(), 2),
+        ];
 
         let validator = MappedValidator::new(mappings).with_default(0);
 
@@ -442,8 +443,9 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_without_default() {
-        let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
+        let mappings = vec![
+            ("red".to_string(), 1),
+        ];
 
         let validator = MappedValidator::new(mappings);
 
@@ -453,9 +455,10 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_partial_match() {
-        let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
+        let mappings = vec![
+            ("red".to_string(), 1),
+            ("blue".to_string(), 2),
+        ];
 
         let validator = MappedValidator::new(mappings);
 
@@ -465,9 +468,10 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_hard_search() {
-        let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
+        let mappings = vec![
+            ("red".to_string(), 1),
+            ("blue".to_string(), 2),
+        ];
 
         let validator = MappedValidator::new(mappings).hard_search(true);
 
@@ -478,8 +482,9 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_case_insensitive() {
-        let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
+        let mappings = vec![
+            ("red".to_string(), 1),
+        ];
 
         let validator = MappedValidator::new(mappings);
 
@@ -489,10 +494,11 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_with_strings() {
-        let mut mappings = HashMap::new();
-        mappings.insert("small".to_string(), "S".to_string());
-        mappings.insert("medium".to_string(), "M".to_string());
-        mappings.insert("large".to_string(), "L".to_string());
+        let mappings = vec![
+            ("small".to_string(), "S".to_string()),
+            ("medium".to_string(), "M".to_string()),
+            ("large".to_string(), "L".to_string()),
+        ];
 
         let validator = MappedValidator::new(mappings).with_default("?".to_string());
 
