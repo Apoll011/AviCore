@@ -1,6 +1,6 @@
 use std::result::Result;
 use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime};
+use dyon::{Dfn, Module};
 use dyon::Type::*;
 use crate::dialogue::utils::{speak, listen as device_listen};
 
@@ -20,8 +20,5 @@ dyon_fn! {fn say(text: String) {
 }}
 
 dyon_fn! {fn listen() {
-    match device_listen() {
-        Ok(_) => (),
-        Err(e) => println!("Error listening: {e}")
-    };
+    device_listen();
 }}

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
+use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
 
 /// Represents the structure of a language resource file.
@@ -102,6 +103,16 @@ impl LanguageSystem {
                     _ => i.value.clone()
                 }
             })
+    }
+
+    pub fn get_translation(&self, id: &str) -> String {
+        match self.locale(&*runtime().lang, id) {
+            Some(value) => match value.0 {
+                serde_yaml::Value::String(s) => s,
+                _ => id.to_string()
+            },
+            None => id.to_string()
+        }
     }
 
     pub fn list(&self, code: &str) -> Vec<(String, YamlValue)> {
