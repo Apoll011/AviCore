@@ -2,7 +2,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::sync::{Arc};
 use dyon::{error, load, Call, FnIndex, Module, Runtime};
-use crate::intent::Intent;
+use crate::dialogue::intent::Intent;
 use crate::skills::skill_context::SkillContext;
 use crate::skills::dsl::avi_dsl::load_module;
 

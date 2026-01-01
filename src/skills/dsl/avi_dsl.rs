@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use dyon::{Runtime, Variable};
-use crate::intent::{Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue, YamlValue};
+use crate::dialogue::intent::{Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue, YamlValue};
 use dyon::embed::{PopVariable, PushVariable};
 use std::sync::Arc;
 use serde_json::Value;
 use serde_yaml::{Value as Yaml, Mapping, Sequence};
 use crate::config::{ConfigSystem, ConstantNamed, Setting, SettingNamed};
-use crate::languages::{IndividualLocale, Language, LanguageSystem};
+use crate::dialogue::languages::{IndividualLocale, Language, LanguageSystem};
 use crate::skills::skill_context::{Manifest, SkillContext};
 
 /// Loads and initializes the core Avi Dyon module with all sub-modules and functions.

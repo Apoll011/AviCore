@@ -3,7 +3,7 @@ use std::sync::Arc;
 use dyon::{Dfn, Module, Runtime, Variable};
 use dyon::embed::PushVariable;
 use dyon::Type::*;
-use crate::intent::{JsonValue};
+use crate::dialogue::intent::{JsonValue};
 use crate::skills::dsl::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {

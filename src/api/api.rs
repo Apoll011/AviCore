@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::api::send::send_dict_to_server;
 use crate::ctx::{runtime};
-use crate::intent::Intent;
+use crate::dialogue::intent::Intent;
 
 /// Represents the status and basic information of the server.
 #[derive(Debug)]

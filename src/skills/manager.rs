@@ -2,7 +2,7 @@ use std::fs;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::ctx::{runtime};
-use crate::intent::Intent;
+use crate::dialogue::intent::Intent;
 use crate::skills::skill::Skill;
 
 /// Manages the lifecycle and execution of skills.

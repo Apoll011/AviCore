@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use serde::{Deserialize, Serialize};
-use crate::intent::YamlValue;
+use crate::dialogue::intent::YamlValue;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.

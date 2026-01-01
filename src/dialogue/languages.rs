@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
-use crate::intent::YamlValue;
+use crate::dialogue::intent::YamlValue;
 
 /// Represents the structure of a language resource file.
 #[derive(Debug, Clone, Deserialize)]
