@@ -19,6 +19,7 @@ pub trait ResponseValidator {
     }
 }
 
+#[derive(Clone)]
 pub struct AnyValidator;
 
 impl ResponseValidator for AnyValidator {
@@ -29,6 +30,7 @@ impl ResponseValidator for AnyValidator {
     }
 }
 
+#[derive(Clone)]
 pub struct ListOrNoneValidator {
     pub(crate) allowed_values: Vec<String>,
     pub(crate) none_text: String,
@@ -90,6 +92,7 @@ impl ResponseValidator for ListOrNoneValidator {
     }
 }
 
+#[derive(Clone)]
 pub struct OptionalValidator {
     pub(crate) none_text: String,
 }
@@ -115,6 +118,7 @@ impl ResponseValidator for OptionalValidator {
     }
 }
 
+#[derive(Clone)]
 pub struct BoolValidator {
     pub(crate) yes_text: String,
     pub(crate) no_text: String,
@@ -171,6 +175,7 @@ impl ResponseValidator for BoolValidator {
     }
 }
 
+#[derive(Clone)]
 pub struct MappedValidator<T: Clone> {
     pub(crate) mappings: Vec<(String, T)>,
     pub(crate) default: Option<T>,

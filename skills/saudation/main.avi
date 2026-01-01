@@ -2,8 +2,10 @@ use setting as setting
 use locale as locale
 use constant as constant
 use test as test
+use dialogue as d
 
 fn intent_hi(intent: Intent) {
+    d::on_reply("main", d::any_validator())
     if (test::is_eco()) {
         say(locale::get("hello"))
     }

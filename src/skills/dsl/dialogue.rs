@@ -2,14 +2,14 @@ use std::result::Result;
 use std::sync::Arc;
 use dyon::{Dfn, Module, Variable};
 use dyon::Type::*;
-use crate::dialogue::response::{AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator};
+use crate::dialogue::response::{AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator, ResponseValidator};
 use crate::dialogue::utils::{speak, listen as device_listen};
 
 pub fn add_functions(module: &mut Module) {
     module.ns("dialogue");
     module.add(Arc::new("say".into()), say, Dfn::nl(vec![Str], Void));
-    module.add(Arc::new("listen".into()), listen, Dfn::nl(vec![Any], Any)); // Last device that sent a utterance will start listening again
-    module.add(Arc::new("on_reply".into()), on_reply, Dfn::nl(vec![Any], Str)); //Sets a handles for the next user sopke text
+    module.add(Arc::new("listen".into()), listen, Dfn::nl(vec![Any], Void)); // Last device that sent a utterance will start listening again
+    module.add(Arc::new("on_reply".into()), on_reply, Dfn::nl(vec![Str, Any], Void)); //Sets a handles for the next user sopke text
     module.add(Arc::new("any_validator".into()), any_validator, Dfn::nl(vec![], Any));
     module.add(Arc::new("list_or_none_validator".into()), list_or_none_validator, Dfn::nl(vec![Any, Str], Any));
     module.add(Arc::new("optional_validator".into()), optional_validator, Dfn::nl(vec![Str], Any));
@@ -72,9 +72,64 @@ dyon_fn!{fn mapped_validator_num(mappings: Vec<(String, f64)>, default: std::opt
         validator
     }}
 
-dyon_fn!{fn on_reply(callback_name: String, _validator: Variable) {
-        println!("on_reply registered:");
-        println!("  Callback function: {}", callback_name);
-        println!("  Validator: <validator object>");
-        // TODO: Store callback_name and validator for when user input arrives
-}}
+#[derive(Clone)]
+pub enum AnyValidatorType {
+    Any(AnyValidator),
+    ListOrNone(ListOrNoneValidator),
+    Optional(OptionalValidator),
+    Bool(BoolValidator),
+    MappedStr(MappedValidatorString),
+    MappedNum(MappedValidatorF64),
+}
+
+ #[allow(non_snake_case)]
+    pub fn on_reply(rt: &mut ::dyon::Runtime) -> Result<(), String> {
+        fn inner(callback_name: String, validator: Variable) -> Result<(), String> {
+            {
+                println!("on_reply registered:");
+                println!("  Callback function: {}", callback_name);
+
+                let validator_type = match &validator {
+                    Variable::RustObject(obj) => {
+                        let guard = obj.lock().unwrap();
+                        if let Some(v) = guard.downcast_ref::<AnyValidator>() {
+                            println!("  Validator type: AnyValidator");
+                            AnyValidatorType::Any(v.clone())
+                        } else if let Some(v) = guard.downcast_ref::<ListOrNoneValidator>() {
+                            println!("  Validator type: ListOrNoneValidator");
+                            println!("    - Allowed values: {:?}", v.allowed_values);
+                            println!("    - None text: {}", v.none_text);
+                            AnyValidatorType::ListOrNone(v.clone())
+                        } else if let Some(v) = guard.downcast_ref::<OptionalValidator>() {
+                            println!("  Validator type: OptionalValidator");
+                            println!("    - None text: {}", v.none_text);
+                            AnyValidatorType::Optional(v.clone())
+                        } else if let Some(v) = guard.downcast_ref::<BoolValidator>() {
+                            println!("  Validator type: BoolValidator");
+                            println!("    - Yes: {}, No: {}", v.yes_text, v.no_text);
+                            println!("    - Always: {}, Never: {}", v.always_text, v.never_text);
+                            AnyValidatorType::Bool(v.clone())
+                        } else if let Some(v) = guard.downcast_ref::<MappedValidatorString>() {
+                            println!("  Validator type: MappedValidator<String>");
+                            println!("    - Mappings count: {}", v.mappings.len());
+                            AnyValidatorType::MappedStr(v.clone())
+                        } else if let Some(v) = guard.downcast_ref::<MappedValidatorF64>() {
+                            println!("  Validator type: MappedValidator<f64>");
+                            println!("    - Mappings count: {}", v.mappings.len());
+                            AnyValidatorType::MappedNum(v.clone())
+                        } else {
+                            return Err("Unknown validator type".to_string());
+                        }
+                    }
+                    _ => return Err("Validator must be a RustObject".to_string()),
+                };
+
+                Ok(())
+            }
+        }
+
+        let validator: Variable = rt.pop()?;
+        let callback_name: String = rt.pop()?;
+        inner(callback_name, validator)?;
+        Ok(())
+    }
