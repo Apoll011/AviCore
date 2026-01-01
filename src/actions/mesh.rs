@@ -33,6 +33,19 @@ pub async fn on_peer_disconnected(
         }
     }
 
+    if let Some(speaker) = data
+        .get("avi")
+        .and_then(|v| v.get("dialogue"))
+        .and_then(|v| v.get("listener"))
+        .and_then(|v| v.as_str())
+    {
+        if speaker == peer_id {
+            if let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut()) {
+                avi.remove("listener");
+            }
+        }
+    }
+
     match data.get("avi") {
         Some(v) =>  avi_device.update_ctx("avi", v.clone()).await.unwrap(),
         None => println!("No avi data"),
