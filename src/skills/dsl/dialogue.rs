@@ -72,64 +72,10 @@ dyon_fn!{fn mapped_validator_num(mappings: Vec<(String, f64)>, default: std::opt
         validator
     }}
 
-#[derive(Clone)]
-pub enum AnyValidatorType {
-    Any(AnyValidator),
-    ListOrNone(ListOrNoneValidator),
-    Optional(OptionalValidator),
-    Bool(BoolValidator),
-    MappedStr(MappedValidatorString),
-    MappedNum(MappedValidatorF64),
-}
-
- #[allow(non_snake_case)]
-    pub fn on_reply(rt: &mut ::dyon::Runtime) -> Result<(), String> {
-        fn inner(callback_name: String, validator: Variable) -> Result<(), String> {
-            {
-                println!("on_reply registered:");
-                println!("  Callback function: {}", callback_name);
-
-                let validator_type = match &validator {
-                    Variable::RustObject(obj) => {
-                        let guard = obj.lock().unwrap();
-                        if let Some(v) = guard.downcast_ref::<AnyValidator>() {
-                            println!("  Validator type: AnyValidator");
-                            AnyValidatorType::Any(v.clone())
-                        } else if let Some(v) = guard.downcast_ref::<ListOrNoneValidator>() {
-                            println!("  Validator type: ListOrNoneValidator");
-                            println!("    - Allowed values: {:?}", v.allowed_values);
-                            println!("    - None text: {}", v.none_text);
-                            AnyValidatorType::ListOrNone(v.clone())
-                        } else if let Some(v) = guard.downcast_ref::<OptionalValidator>() {
-                            println!("  Validator type: OptionalValidator");
-                            println!("    - None text: {}", v.none_text);
-                            AnyValidatorType::Optional(v.clone())
-                        } else if let Some(v) = guard.downcast_ref::<BoolValidator>() {
-                            println!("  Validator type: BoolValidator");
-                            println!("    - Yes: {}, No: {}", v.yes_text, v.no_text);
-                            println!("    - Always: {}, Never: {}", v.always_text, v.never_text);
-                            AnyValidatorType::Bool(v.clone())
-                        } else if let Some(v) = guard.downcast_ref::<MappedValidatorString>() {
-                            println!("  Validator type: MappedValidator<String>");
-                            println!("    - Mappings count: {}", v.mappings.len());
-                            AnyValidatorType::MappedStr(v.clone())
-                        } else if let Some(v) = guard.downcast_ref::<MappedValidatorF64>() {
-                            println!("  Validator type: MappedValidator<f64>");
-                            println!("    - Mappings count: {}", v.mappings.len());
-                            AnyValidatorType::MappedNum(v.clone())
-                        } else {
-                            return Err("Unknown validator type".to_string());
-                        }
-                    }
-                    _ => return Err("Validator must be a RustObject".to_string()),
-                };
-
-                Ok(())
-            }
-        }
-
-        let validator: Variable = rt.pop()?;
-        let callback_name: String = rt.pop()?;
-        inner(callback_name, validator)?;
-        Ok(())
-    }
+dyon_fn!{fn on_reply(callback_name: String, _validator: Variable) {
+        println!("on_reply registered:");
+        println!("  Callback function: {}", callback_name);
+        println!("  Validator: <validator object>");
+        
+        // TODO: Store callback_name and validator for when user input arrives
+}}
