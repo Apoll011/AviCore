@@ -10,6 +10,12 @@ pub fn add_functions(module: &mut Module) {
     module.add(Arc::new("say".into()), say, Dfn::nl(vec![Str], Void));
     module.add(Arc::new("listen".into()), listen, Dfn::nl(vec![Any], Any)); // Last device that sent a utterance will start listening again
     module.add(Arc::new("on_reply".into()), on_reply, Dfn::nl(vec![Any], Str)); //Sets a handles for the next user sopke text
+    module.add(Arc::new("any_validator".into()), any_validator, Dfn::nl(vec![], Any));
+    module.add(Arc::new("list_or_none_validator".into()), list_or_none_validator, Dfn::nl(vec![Any, Str], Any));
+    module.add(Arc::new("optional_validator".into()), optional_validator, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("bool_validator".into()), bool_validator, Dfn::nl(vec![Str, Str, Str, Str], Any));
+    module.add(Arc::new("mapped_validator_str".into()), mapped_validator_str, Dfn::nl(vec![Any, Any], Any));
+    module.add(Arc::new("mapped_validator_num".into()), mapped_validator_num, Dfn::nl(vec![Any, Any], Any));
     /*module.add(Arc::new("ask".into()), dir, Dfn::nl(vec![], Str)); //Ask a question with a list of asnwers, fuzzy the response or frist second trird etc
     module.add(Arc::new("confirm".into()), dir, Dfn::nl(vec![], Str)); //Ask a yes or no question
     module.add(Arc::new("repeat".into()), dir, Dfn::nl(vec![], Str)); //Repeats the last spoken utterance (Dont matter the skill)
