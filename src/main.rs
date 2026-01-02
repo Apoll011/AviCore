@@ -20,6 +20,7 @@ use crate::actions::mesh::{MeshAction, MeshConfig};
 use crate::api::api::Api;
 use crate::ctx::RuntimeContext;
 use crate::ctx::RUNTIMECTX;
+use crate::dialogue::reply::{ReplyConfig, ReplyManager};
 use crate::skills::manager::SkillManager;
 
 /// Entry point for the AviCore application.
@@ -53,7 +54,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         lang: "pt".into(),
         skill_path: "./skills".into(),
         device,
-        rt: Handle::current()
+        rt: Handle::current(),
+        reply_manager: ReplyManager::new(Option::from(ReplyConfig {
+            timeout_secs: 60,
+            max_retries: Some(5),
+        })),
     })).unwrap_or_else(|_| panic!("Runtime context already initialized"));
 
     let api = Arc::new(Mutex::new(Api::new()));
