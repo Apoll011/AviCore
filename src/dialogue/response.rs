@@ -222,6 +222,18 @@ impl<T: Clone> ResponseValidator for MappedValidator<T> {
     }
 }
 
+pub struct RequestReply {
+    pub skill_request: String,
+    pub handler: String,
+    pub validator: Box<dyn ResponseValidator<Output=()>>,
+}
+
+impl RequestReply {
+    pub fn new(skill_request: String, handler: String, validator: impl ResponseValidator<Output=()> + 'static) -> Self {
+        Self { skill_request, handler, validator: Box::new(validator) }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
