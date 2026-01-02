@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValidationError {
     ParseError(String),
@@ -17,6 +16,8 @@ pub trait ResponseValidator {
     fn clear_text(&self, text: &str) -> String {
         text.trim().to_string()
     }
+
+    fn get_error_txt(&self, error: &ValidationError) -> String;
 }
 
 pub struct AnyValidator;
@@ -26,6 +27,10 @@ impl ResponseValidator for AnyValidator {
 
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         Ok(self.clear_text(text))
+    }
+
+    fn get_error_txt(&self, _error: &ValidationError) -> String {
+        todo!()
     }
 }
 
@@ -88,6 +93,10 @@ impl ResponseValidator for ListOrNoneValidator {
 
         Err(ValidationError::NotAccepted)
     }
+
+    fn get_error_txt(&self, _error: &ValidationError) -> String {
+        todo!()
+    }
 }
 
 pub struct OptionalValidator {
@@ -112,6 +121,10 @@ impl ResponseValidator for OptionalValidator {
         } else {
             Ok(Some(cleaned))
         }
+    }
+
+    fn get_error_txt(&self, _error: &ValidationError) -> String {
+        todo!()
     }
 }
 
@@ -169,6 +182,10 @@ impl ResponseValidator for BoolValidator {
         
         Err(ValidationError::NotAccepted)
     }
+
+    fn get_error_txt(&self, _error: &ValidationError) -> String {
+        todo!()
+    }
 }
 
 pub struct MappedValidator<T: Clone> {
@@ -220,17 +237,9 @@ impl<T: Clone> ResponseValidator for MappedValidator<T> {
             None => self.default.clone().ok_or(ValidationError::NotAccepted),
         }
     }
-}
 
-pub struct RequestReply {
-    pub skill_request: String,
-    pub handler: String,
-    pub validator: Box<dyn ResponseValidator<Output=()>>,
-}
-
-impl RequestReply {
-    pub fn new(skill_request: String, handler: String, validator: impl ResponseValidator<Output=()> + 'static) -> Self {
-        Self { skill_request, handler, validator: Box::new(validator) }
+    fn get_error_txt(&self, _error: &ValidationError) -> String {
+        todo!()
     }
 }
 

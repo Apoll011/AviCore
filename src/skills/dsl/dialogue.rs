@@ -1,9 +1,10 @@
 use std::result::Result;
 use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime, Variable};
-use dyon::embed::PushVariable;
+use dyon::{Dfn, Module, Runtime};
 use dyon::Type::*;
-use crate::dialogue::response::{AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator, RequestReply, ResponseValidator};
+use crate::ctx::runtime;
+use crate::dialogue::reply::RequestReply;
+use crate::dialogue::response::{AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator, ResponseValidator};
 use crate::dialogue::utils::{speak, listen as device_listen};
 use crate::skills::dsl::avi_dsl::ctx;
 
@@ -81,9 +82,22 @@ dyon_fn!{fn mapped_validator_num(mappings: Vec<(String, f64)>, default: std::opt
         validator
 }}
 
-fn handle_on_reply<V: ResponseValidator + 'static>(handler: String, validator: V, skill_name: String) {
-    let request = RequestReply::new(skill_name, handler, validator);
-    
+fn handle_on_reply<V>(
+    handler: String,
+    validator: V,
+    skill_name: String
+)
+where
+    V: ResponseValidator + Send + Sync + 'static,
+    V::Output: std::fmt::Debug,
+{
+    runtime().rt.spawn(async move {
+        runtime().reply_manager.set_reply(RequestReply {
+            skill_request: skill_name,
+            handler,
+            validator: Box::new(validator),
+        }).await;
+    });
 }
 
 #[allow(non_snake_case)]

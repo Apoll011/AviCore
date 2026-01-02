@@ -1,6 +1,7 @@
 use std::sync::{Arc, OnceLock};
 use avi_device::device::AviDevice;
 use tokio::runtime::Handle;
+use crate::dialogue::reply::ReplyManager;
 
 /// Holds the runtime configuration and shared resources for the AviCore application.
 pub struct RuntimeContext {
@@ -14,6 +15,8 @@ pub struct RuntimeContext {
     pub rt: Handle,
     /// A shared reference to the Avi device.
     pub device: Arc<AviDevice>,
+
+    pub reply_manager: ReplyManager,
 }
 
 /// Global static storage for the `RuntimeContext`.
