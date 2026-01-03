@@ -8,3 +8,4 @@ pub mod crypto;
 pub mod time;
 mod intent;
 mod dialogue;
+mod context;
