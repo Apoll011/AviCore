@@ -5,17 +5,18 @@ use test as test
 use dialogue as d
 
 fn intent_hi(intent: Intent) {
-    d::on_reply_any("testw", d::any_validator())
     if (test::is_eco()) {
         say(locale::get("hello"))
+        say(locale::get("ask"))
+        d::on_reply_bool("reply", d::bool_validator("yes", "no", "always", "never"))
     }
     else {
         say("Oi!")
     }
 }
 
-fn testw() {
-
+fn reply(response) {
+    say(response)
 }
 
 fn main() {

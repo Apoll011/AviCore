@@ -1,6 +1,7 @@
 code: en
 lang:
   hello: "Hi Tiago!"
+  ask: "How can I help you?"
   light_on_success: "Turning on the lights."
   light_off_success: "Lights are off now."
   light_error: "Sorry, I couldn't reach the light."
