@@ -1,5 +1,5 @@
 id: "saudation"
-name: "Saudation"
+name: "saudation"
 description: "A skill to say hello in various languages."
 entry: "main.avi"
 capabilities:
