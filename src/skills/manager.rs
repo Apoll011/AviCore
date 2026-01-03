@@ -1,7 +1,7 @@
 use std::fs;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use dyon::embed::{PopVariable, PushVariable};
+use dyon::embed::{PushVariable};
 use crate::ctx::{runtime};
 use crate::dialogue::intent::Intent;
 use crate::skills::skill::Skill;
