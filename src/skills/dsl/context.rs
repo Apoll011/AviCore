@@ -5,14 +5,10 @@ use crate::skills::dsl::avi_dsl::ctx;
 use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
-use hmac::{Hmac, KeyInit, Mac};
 use serde_json::Value;
-use sha2::{Digest, Sha256};
 use std::result::Result;
+
 use std::sync::Arc;
-
-type HmacSha256 = Hmac<Sha256>;
-
 pub fn add_functions(module: &mut Module) {
     module.ns("context");
     module.add(Arc::new("get".into()), get, Dfn::nl(vec![Str], Any));

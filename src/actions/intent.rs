@@ -47,8 +47,8 @@ impl Action for IntentAction {
                         Ok(replay) => {
                             let mut mg = skill_manager.lock().await;
                             if let Err(e) = mg.run_skill_function(
-                                &*replay.pending_reply.skill_request,
-                                &*replay.pending_reply.handler,
+                                &replay.pending_reply.skill_request,
+                                &replay.pending_reply.handler,
                                 vec![replay.parsed_output],
                             ) {
                                 println!("Error executing replay: {}", e);
@@ -56,7 +56,7 @@ impl Action for IntentAction {
                             processed = true;
                         }
                         Err(e) => {
-                            if e != "" {
+                            if !e.is_empty() {
                                 speak(&e)
                             }
                         }
@@ -66,7 +66,7 @@ impl Action for IntentAction {
                         return;
                     }
 
-                    let maybe_intent = match api.lock().await.intent(&*msg).await {
+                    let maybe_intent = match api.lock().await.intent(&msg).await {
                         Ok(intent) => Some(intent),
                         Err(e) => {
                             println!("Failed to parse intent: {}", e);

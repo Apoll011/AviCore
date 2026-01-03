@@ -24,7 +24,7 @@ pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = _rt.pop()?;
     let skill_context = ctx(_rt)?;
 
-    match skill_context.config.setting(&*name) {
+    match skill_context.config.setting(&name) {
         Some(v) => Ok(PushVariable::push_var(&v.value.clone())),
         None => Ok(PushVariable::push_var(&YamlValue(Yaml::Null))),
     }
@@ -35,7 +35,7 @@ pub fn get_setting_full(rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = rt.pop()?;
     let ctx = ctx(rt)?;
 
-    Ok(PushVariable::push_var(&ctx.config.get_setting_full(&*name)))
+    Ok(PushVariable::push_var(&ctx.config.get_setting_full(&name)))
 }
 
 #[allow(non_snake_case)]
@@ -50,5 +50,5 @@ pub fn has_setting(rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = rt.pop()?;
     let ctx = ctx(rt)?;
 
-    Ok(PushVariable::push_var(&ctx.config.has_setting(&*name)))
+    Ok(PushVariable::push_var(&ctx.config.has_setting(&name)))
 }

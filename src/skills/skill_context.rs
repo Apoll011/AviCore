@@ -1,7 +1,6 @@
 use crate::config::ConfigSystem;
 use crate::dialogue::languages::LanguageSystem;
 use serde::{Deserialize, Serialize};
-use serde_yaml;
 use std::fs;
 
 /// Helper function to provide a default value of `true` for serde.

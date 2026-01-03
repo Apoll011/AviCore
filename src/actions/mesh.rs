@@ -25,12 +25,8 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         .and_then(|v| v.get("dialogue"))
         .and_then(|v| v.get("speaker"))
         .and_then(|v| v.as_str())
-    {
-        if speaker == peer_id {
-            if let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut()) {
-                avi.remove("speaker");
-            }
-        }
+    && speaker == peer_id && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut()) {
+        avi.remove("speaker");
     }
 
     if let Some(speaker) = data
@@ -38,12 +34,8 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         .and_then(|v| v.get("dialogue"))
         .and_then(|v| v.get("listener"))
         .and_then(|v| v.as_str())
-    {
-        if speaker == peer_id {
-            if let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut()) {
-                avi.remove("listener");
-            }
-        }
+    && speaker == peer_id && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut()) {
+        avi.remove("listener");
     }
 
     match data.get("avi") {

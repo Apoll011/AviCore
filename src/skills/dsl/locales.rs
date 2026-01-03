@@ -3,7 +3,6 @@ use crate::ctx::runtime;
 use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
-use std::collections::HashMap;
 use std::result::Result;
 use std::sync::Arc;
 
@@ -36,7 +35,7 @@ pub fn locale(_rt: &mut Runtime) -> Result<Variable, String> {
     Ok(PushVariable::push_var(
         &skill_context
             .languages
-            .locale(&*runtime().lang, &*id)
+            .locale(&runtime().lang, &id)
             .unwrap(),
     ))
 }
@@ -46,10 +45,9 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
     let obj = _rt.stack.pop();
     let id: String = _rt.pop()?;
     let skill_context = ctx(_rt)?;
-    let hashmap: HashMap<String, String>;
-    match obj {
+    let hashmap = match obj {
         Some(Variable::Object(v)) => {
-            hashmap = v
+            v
                 .iter()
                 .filter_map(|(k, v)| match v {
                     Variable::Str(text) => Some((k.clone().to_string(), text.as_ref().clone())),
@@ -58,27 +56,27 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
                         k.clone().to_string(),
                         runtime()
                             .language_system
-                            .get_translation(&*bool.to_string())
+                            .get_translation(&bool.to_string())
                             .unwrap_or("Erro".to_string()),
                     )),
                     _ => None,
                 })
-                .collect();
+                .collect()
         }
         _ => return Err(format!("Expected object, got {:?}", obj)),
-    }
+    };
 
     Ok(PushVariable::push_var(
         &skill_context
             .languages
-            .locale_fmt(&*runtime().lang, &*id, &hashmap)
+            .locale_fmt(&runtime().lang, &id, &hashmap)
             .unwrap(),
     ))
 }
 
 #[allow(non_snake_case)]
 pub fn current_lang(_rt: &mut Runtime) -> Result<Variable, String> {
-    Ok(PushVariable::push_var(&*runtime().lang))
+    Ok(PushVariable::push_var(&runtime().lang))
 }
 
 #[allow(non_snake_case)]
@@ -86,7 +84,7 @@ pub fn list_locales(rt: &mut Runtime) -> Result<Variable, String> {
     let code: String = rt.pop()?;
     let ctx = ctx(rt)?;
 
-    Ok(PushVariable::push_var(&ctx.languages.list(&*code)))
+    Ok(PushVariable::push_var(&ctx.languages.list(&code)))
 }
 
 #[allow(non_snake_case)]
@@ -94,5 +92,5 @@ pub fn has_locale(rt: &mut Runtime) -> Result<Variable, String> {
     let id: String = rt.pop()?;
     let ctx = ctx(rt)?;
 
-    Ok(PushVariable::push_var(&ctx.languages.has(&*id)))
+    Ok(PushVariable::push_var(&ctx.languages.has(&id)))
 }

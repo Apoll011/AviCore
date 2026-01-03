@@ -33,18 +33,16 @@ impl SkillManager {
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
-        let entries;
-        match fs::read_dir(runtime().skill_path.clone()) {
-            Ok(v) => entries = v,
+        let entries= match fs::read_dir(runtime().skill_path.clone()) {
+            Ok(v) =>  v,
             Err(_) => return skills,
-        }
+        };
 
         for entry_dir in entries {
-            let entry;
-            match entry_dir {
-                Ok(v) => entry = v,
+            let entry = match entry_dir {
+                Ok(v) => v,
                 Err(_) => continue,
-            }
+            };
 
             let path = entry.path();
 
@@ -75,11 +73,10 @@ impl SkillManager {
             return Err("Not a directory".into());
         }
 
-        let dir_name;
-        match path.file_name() {
-            Some(v) => dir_name = v,
+        let dir_name = match path.file_name() {
+            Some(v) => v,
             None => return Err("Could not get directory name".into()),
-        }
+        };
 
         let dir_name_str;
         match dir_name.to_str() {
@@ -102,17 +99,15 @@ impl SkillManager {
     ///
     /// Returns an error if the intent is malformed or if the target skill is not found.
     pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
-        let intent_info;
-        match intent.intent.clone() {
-            Some(v) => intent_info = v,
+        let intent_info = match intent.intent.clone() {
+            Some(v) => v,
             None => return Err("Intent is not defined".into()),
-        }
+        };
 
-        let full_name;
-        match intent_info.intent_name {
-            Some(v) => full_name = v,
+        let full_name= match intent_info.intent_name {
+            Some(v) => v,
             None => return Err("Intent name is not defined".into()),
-        }
+        };
 
         let parts: Vec<&str> = full_name.split("@").collect();
         if parts.is_empty() || parts.len() != 2 {

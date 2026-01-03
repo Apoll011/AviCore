@@ -54,8 +54,8 @@ pub struct Replayed {
 impl Replayed {
     pub fn new(parsed_output: String, pending_reply: PendingReply) -> Self {
         Self {
-            parsed_output: parsed_output,
-            pending_reply: pending_reply,
+            parsed_output,
+            pending_reply,
         }
     }
 }
@@ -116,10 +116,8 @@ impl ReplyManager {
                 return Err("Request timed out. Please try again.".to_string());
             }
 
-            if let Some(max) = self.config.max_retries {
-                if pending.retry_count >= max {
-                    return Err("Too many invalid attempts. Cancelling request.".to_string());
-                }
+            if let Some(max) = self.config.max_retries && pending.retry_count >= max {
+                return Err("Too many invalid attempts. Cancelling request.".to_string());
             }
 
             let cleaned = pending.validator.clear_text(text);
@@ -130,12 +128,8 @@ impl ReplyManager {
                     pending.retry_count += 1;
                     let error_msg = pending.validator.get_error_txt(&error);
 
-                    if let Some(max) = self.config.max_retries {
-                        if pending.retry_count >= max {
-                            return Err(
-                                "Too many invalid attempts. Cancelling request.".to_string()
-                            );
-                        }
+                    if let Some(max) = self.config.max_retries && pending.retry_count >= max {
+                        return Err("Too many invalid attempts. Cancelling request.".to_string());
                     }
 
                     *pending_lock = Some(pending);

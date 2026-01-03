@@ -102,7 +102,7 @@ impl ResponseValidator for OptionalValidator {
         runtime()
             .language_system
             .get_translation("error_validator_optional")
-            .unwrap_or_else(|| "".to_string())
+            .unwrap_or_default()
     }
 }
 
@@ -155,7 +155,7 @@ impl ResponseValidator for BoolValidator {
         runtime()
             .language_system
             .get_translation("error_validator_bool")
-            .unwrap_or_else(|| "".to_string())
+            .unwrap_or_default()
     }
 }
 

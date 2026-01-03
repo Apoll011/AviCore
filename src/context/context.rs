@@ -89,7 +89,7 @@ impl ContextManager {
             let mut store = self.memory_store.write().unwrap();
             store
                 .entry(scope.clone())
-                .or_insert_with(HashMap::new)
+                .or_default()
                 .insert(key.clone(), ctx_value.clone());
         }
 
@@ -112,7 +112,7 @@ impl ContextManager {
                 let mut store = self.memory_store.write().unwrap();
                 store
                     .entry(scope.clone())
-                    .or_insert_with(HashMap::new)
+                    .or_default()
                     .insert(key.to_string(), ctx_value.clone());
                 return Some(ctx_value.value);
             } else {
@@ -156,12 +156,8 @@ impl ContextManager {
 
     pub fn get_memory(&self, scope: &ContextScope, key: &str) -> Option<serde_json::Value> {
         let store = self.memory_store.read().unwrap();
-        if let Some(scope_map) = store.get(scope) {
-            if let Some(ctx_value) = scope_map.get(key) {
-                if !ctx_value.is_expired() {
-                    return Some(ctx_value.value.clone());
-                }
-            }
+        if let Some(scope_map) = store.get(scope) && let Some(ctx_value) = scope_map.get(key) && !ctx_value.is_expired() {
+            return Some(ctx_value.value.clone());
         }
         None
     }
@@ -207,18 +203,11 @@ impl ContextManager {
         // Also cleanup persistent files
         if let Ok(entries) = fs::read_dir(&self.persistence_path) {
             for entry in entries.flatten() {
-                if entry.path().is_dir() {
-                    if let Ok(sub_entries) = fs::read_dir(entry.path()) {
-                        for sub_entry in sub_entries.flatten() {
-                            if let Ok(content) = fs::read_to_string(sub_entry.path()) {
-                                if let Ok(ctx_value) =
-                                    serde_json::from_str::<ContextValue>(&content)
-                                {
-                                    if ctx_value.is_expired() {
-                                        let _ = fs::remove_file(sub_entry.path());
-                                    }
-                                }
-                            }
+                if entry.path().is_dir() && let Ok(sub_entries) = fs::read_dir(entry.path()) {
+                    for sub_entry in sub_entries.flatten() {
+                        if let Ok(content) = fs::read_to_string(sub_entry.path()) && let Ok(ctx_value) = serde_json::from_str::<ContextValue>(&content)
+                            && ctx_value.is_expired() {
+                            let _ = fs::remove_file(sub_entry.path());
                         }
                     }
                 }

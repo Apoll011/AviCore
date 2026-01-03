@@ -224,7 +224,7 @@ pub fn confirm(_rt: &mut Runtime) -> Result<(), String> {
     speak(
         &skill_context
             .languages
-            .get_translation(&*question_locale_id)
+            .get_translation(&question_locale_id)
             .unwrap(),
     );
 

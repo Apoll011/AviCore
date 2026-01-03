@@ -30,7 +30,7 @@ impl Api {
     ///
     /// * `path` - The specific API endpoint path (e.g., "/avi/alive").
     fn get_url(&self, path: &str) -> String {
-        format!("{}{}", runtime().api_url, path).into()
+        format!("{}{}", runtime().api_url, path)
     }
 
     /// Checks if the server is alive and retrieves basic server information.
@@ -40,7 +40,7 @@ impl Api {
     /// Returns an error if the server is unreachable or the response is invalid.
     #[allow(dead_code)]
     pub async fn alive(&mut self) -> Result<Alive, Box<dyn std::error::Error>> {
-        let r = send_dict_to_server(&*self.get_url("/avi/alive"), HashMap::new()).await?;
+        let r = send_dict_to_server(&self.get_url("/avi/alive"), HashMap::new()).await?;
         let response = r.response;
         match response {
             Some(v) => Ok(Alive {
@@ -81,7 +81,7 @@ impl Api {
     pub async fn intent(&mut self, text: &str) -> Result<Intent, Box<dyn std::error::Error>> {
         let mut query = HashMap::new();
         query.insert("text", text);
-        let r = send_dict_to_server(&*self.get_url("/intent_recognition"), query).await?;
+        let r = send_dict_to_server(&self.get_url("/intent_recognition"), query).await?;
         let response = r.response;
 
         match response {

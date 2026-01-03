@@ -31,7 +31,7 @@ pub fn get_constant(_rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = _rt.pop()?;
     let skill_context = ctx(_rt)?;
 
-    match skill_context.config.constant(&*name) {
+    match skill_context.config.constant(&name) {
         Some(v) => Ok(PushVariable::push_var(v)),
         None => Ok(PushVariable::push_var(&YamlValue(Yaml::Null))),
     }
@@ -49,5 +49,5 @@ pub fn has_constant(rt: &mut Runtime) -> Result<Variable, String> {
     let name: String = rt.pop()?;
     let ctx = ctx(rt)?;
 
-    Ok(PushVariable::push_var(&ctx.config.has_constant(&*name)))
+    Ok(PushVariable::push_var(&ctx.config.has_constant(&name)))
 }

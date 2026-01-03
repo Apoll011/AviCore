@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     intent_action.register().await;
 
     let mut dialogue_action = DialogueAction::new(DialogueConfig {
-        capability: DialogueCapability::SPEAKER,
+        capability: DialogueCapability::Speaker,
     });
     dialogue_action.register().await;
 

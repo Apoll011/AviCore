@@ -36,13 +36,12 @@ impl Skill {
     ///
     /// Returns an error if the skill context or module fails to load.
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
-        let context = SkillContext::new(&*Self::skill_path(&name));
+        let context = SkillContext::new(&Self::skill_path(&name));
 
-        let module: Arc<Module>;
-        match Self::create_module(&name, &context) {
-            Ok(v) => module = v,
-            Err(e) => return Err(format!("Could not load skill module ({})", e.to_string()).into()),
-        }
+        let module: Arc<Module> = match Self::create_module(&name, &context) {
+            Ok(v) => v,
+            Err(e) => return Err(format!("Could not load skill module ({})", e).into()),
+        };
 
         Ok(Self {
             pathname: Self::skill_path(&name),
@@ -110,7 +109,7 @@ impl Skill {
         )) {
             return Err(format!("Error loading skill {}", name).into());
         } else {
-            println!("{}", format!("Skill {} loaded", name))
+            println!("Skill {} loaded", name)
         }
 
         Ok(Arc::new(dyon_module))

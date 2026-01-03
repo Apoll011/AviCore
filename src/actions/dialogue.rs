@@ -15,12 +15,12 @@ pub struct DialogueAction {
 pub enum DialogueCapability {
     /// Both speaker and listener capabilities are enabled.
     #[allow(dead_code)]
-    BOTH = 0,
+    Both = 0,
     /// Only speaker capability is enabled.
-    SPEAKER = 1,
+    Speaker = 1,
     /// Only listener capability is enabled.
     #[allow(dead_code)]
-    LISTENER = 2,
+    Listener = 2,
 }
 
 /// Configuration for the `DialogueAction`.
@@ -36,7 +36,7 @@ impl DialogueAction {
     async fn register_speaker(&mut self) {
         self.device
             .subscribe(
-                &format!("speak/{}/text", self.device.get_id().await.to_string()),
+                &format!("speak/{}/text", self.device.get_id().await),
                 move |_from, _topic, data| {
                     let msg = String::from_utf8_lossy(&data);
                     println!("Speaker: {}", msg);
@@ -52,7 +52,7 @@ impl DialogueAction {
     async fn register_listener(&mut self) {
         self.device
             .subscribe(
-                &format!("listening/{}/start", self.device.get_id().await.to_string()),
+                &format!("listening/{}/start", self.device.get_id().await),
                 move |_from, _topic, _data| {
                     println!("Listening...");
                 },
@@ -76,12 +76,12 @@ impl Action for DialogueAction {
     /// Registers the dialogue action based on its configured capabilities.
     async fn register(&mut self) {
         match self.config.capability {
-            DialogueCapability::BOTH => {
+            DialogueCapability::Both => {
                 self.register_speaker().await;
                 self.register_listener().await;
             }
-            DialogueCapability::SPEAKER => self.register_speaker().await,
-            DialogueCapability::LISTENER => self.register_listener().await,
+            DialogueCapability::Speaker => self.register_speaker().await,
+            DialogueCapability::Listener => self.register_listener().await,
         }
     }
 }
