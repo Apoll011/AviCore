@@ -1,6 +1,7 @@
 use std::fs;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use dyon::embed::{PopVariable, PushVariable};
 use crate::ctx::{runtime};
 use crate::dialogue::intent::Intent;
 use crate::skills::skill::Skill;
@@ -123,6 +124,17 @@ impl SkillManager {
         match self.skills.get_mut(skill_name) {
             Some(v) => {
                 Ok(v.run_intent(intent)?)
+            }
+            None => {
+                Err(format!("Skill {} not found", skill_name).into())
+            }
+        }
+    }
+
+    pub fn run_skill_function<T: PushVariable>(&mut self, skill_name: &str, function_name: &str, args: Vec<T>) -> Result<bool, Box<dyn std::error::Error>> {
+        match self.skills.get_mut(skill_name) {
+            Some(v) => {
+                Ok(v.run_function(function_name, args)?)
             }
             None => {
                 Err(format!("Skill {} not found", skill_name).into())

@@ -2,6 +2,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::sync::{Arc};
 use dyon::{error, load, Call, FnIndex, Module, Runtime};
+use dyon::embed::{PopVariable, PushVariable};
 use crate::dialogue::intent::Intent;
 use crate::skills::skill_context::SkillContext;
 use crate::skills::dsl::avi_dsl::load_module;
@@ -156,16 +157,23 @@ impl Skill {
             }
             None => return Err("Intent is not defined".into())
         }
+        
+        self.run_function(&name, vec![intent])
+    }
 
-        let call = Call::new(&name).arg(intent);
-        let f_index = self.module.find_function(&Arc::new(name.clone()), 0);
+    pub fn run_function<T: PushVariable>(&mut self, function_name: &str, args: Vec<T>) -> Result<bool, Box<dyn std::error::Error>> {
+        let mut call = Call::new(function_name);
+        for arg in args {
+            call = call.arg(arg);
+        }
+        let f_index = self.module.find_function(&Arc::new(function_name.to_string()), 0);
 
         match f_index {
             FnIndex::Loaded(_f_index) => {
                 Ok(error(call.run(&mut self.runtime, &self.module)))
             }
             _ => {
-                Err(format!("Could not find function `{}`", name).into())
+                Err(format!("Could not find function `{}`", function_name).into())
             }
         }
     }

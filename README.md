@@ -126,3 +126,4 @@ Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 - Inspired by [ELIZA](https://en.wikipedia.org/wiki/ELIZA), reimagined for the future
 - Uses Neon modules by [Neon Gecko](https://github.com/neongeckocom)
 - Successor of [ALEX](https://github.com/Apoll011/Alex)
+

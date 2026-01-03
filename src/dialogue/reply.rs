@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 use crate::dialogue::response::{ResponseValidator, ValidationError};
-use crate::dialogue::utils::speak;
 
 pub struct ReplyManager {
     pending_reply: Arc<Mutex<Option<PendingReply>>>,
@@ -40,11 +39,23 @@ pub struct RequestReply {
 }
 
 struct PendingReply {
-    skill_request: String,
-    handler: String,
+    pub skill_request: String,
+    pub handler: String,
     validator: Box<dyn ValidatorErasure>,
     created_at: Instant,
     retry_count: usize,
+}
+
+pub struct Replayed {
+    pub parsed_output: String,
+    pub pending_reply: PendingReply,
+}
+
+impl Replayed {
+
+    pub fn new(parsed_output: String, pending_reply: PendingReply) -> Self {
+        Self { parsed_output: parsed_output, pending_reply: pending_reply }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -82,7 +93,6 @@ impl ReplyManager {
         };
 
         *self.pending_reply.lock().await = Some(pending);
-        speak(&request.skill_request);
     }
 
     pub async fn cancel(&self) {
@@ -95,63 +105,42 @@ impl ReplyManager {
 
     /// Processes incoming text against pending reply
     /// Returns true if text was consumed by reply handler
-    pub async fn process_text(&self, text: &str) -> bool {
+    pub async fn process_text(&self, text: &str) -> Result<Replayed, dyn std::error::Error> {
         let mut pending_lock = self.pending_reply.lock().await;
 
         if let Some(mut pending) = pending_lock.take() {
-            // Check timeout
             if pending.created_at.elapsed() > Duration::from_secs(self.config.timeout_secs) {
-                println!("Reply timed out after {} seconds", self.config.timeout_secs);
-                speak("Request timed out. Please try again.");
-                return true;
+                return Err("Request timed out. Please try again.");
             }
 
-            // Check max retries
             if let Some(max) = self.config.max_retries {
                 if pending.retry_count >= max {
-                    println!("Max retries ({}) exceeded", max);
-                    speak("Too many invalid attempts. Cancelling request.");
-                    return true;
+                    return Err("Too many invalid attempts. Cancelling request.");
                 }
             }
 
-            // Validate
             let cleaned = pending.validator.clear_text(text);
 
             match pending.validator.validate_erased(&cleaned) {
                 Ok(parsed_output) => {
-                    // Success! Call handler
-                    println!("✓ Validation successful");
-                    println!("  Handler: {}", pending.handler);
-                    println!("  Parsed output: {}", parsed_output);
-                    speak(&format!("Received: {}", parsed_output));
-                    true
+                    Ok(Replayed::new(parsed_output, pending))
                 }
                 Err(error) => {
-                    // Failed, retry
                     pending.retry_count += 1;
                     let error_msg = pending.validator.get_error_txt(&error);
 
-                    println!("✗ Validation failed (attempt {}/{})",
-                             pending.retry_count,
-                             self.config.max_retries.map_or("∞".to_string(), |m| m.to_string())
-                    );
-
-                    // Check if should continue
                     if let Some(max) = self.config.max_retries {
                         if pending.retry_count >= max {
-                            speak("Too many invalid attempts. Cancelling request.");
-                            return true;
+                            return Err("Too many invalid attempts. Cancelling request.");
                         }
                     }
 
-                    speak(&error_msg);
                     *pending_lock = Some(pending);
-                    true
+                    Err(&error_msg)
                 }
             }
         } else {
-            false // No pending reply
+            Err("No pending request.")
         }
     }
 }

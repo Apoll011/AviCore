@@ -40,12 +40,17 @@ impl Action for IntentAction {
                 let msg = String::from_utf8_lossy(&data);
                 let text = msg.trim();
 
-                // Check if reply manager wants to handle this
-                if runtime().reply_manager.process_text(text).await {
-                    return; // Reply manager consumed the text
+                match runtime().reply_manager.process_text(text).await {
+                    Ok(replay) => {
+                        let mut mg = skill_manager.lock().await;
+                        if let Err(e) = mg.run_skill_function(&*replay.pending_reply.skill_request, &*replay.pending_reply.handler, vec![replay.parsed_output]) {
+                            println!("Error executing replay: {}", e);
+                        }
+                        return;
+                    }
+                    Err(e) => speak(&e)
                 }
 
-                // Normal intent processing
                 let maybe_intent = match api.lock().await.intent(&*msg).await {
                     Ok(intent) => Some(intent),
                     Err(e) => {
@@ -62,7 +67,7 @@ impl Action for IntentAction {
                 }
             }
         }).await {
-            Ok(_) => println!("✓ Registered intent/execute/text handler"),
+            Ok(_) => (),
             Err(e) => eprintln!("Failed to subscribe to intent topic: {}", e)
         }
 
@@ -70,11 +75,10 @@ impl Action for IntentAction {
         match self.device.subscribe_async("intent/reply/cancel", move |_from, _topic, _data| {
             async move {
                 runtime().reply_manager.cancel().await;
-                println!("Reply cancelled via topic");
                 speak("Request cancelled.");
             }
         }).await {
-            Ok(_) => println!("✓ Registered intent/reply/cancel handler"),
+            Ok(_) => (),
             Err(e) => eprintln!("Failed to subscribe to cancel topic: {}", e)
         }
     }
