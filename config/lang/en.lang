@@ -67,3 +67,4 @@ lang:
      - "ignore it"
      - "skip it"
    error_validator_optional: "Expected something or none."
+   error_validator_bool: "Espected a yes or no answer."

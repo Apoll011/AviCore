@@ -151,7 +151,7 @@ impl ResponseValidator for BoolValidator {
         Err(ValidationError::NotAccepted)
     }
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        todo!()
+        runtime().language_system.get_translation("error_validator_bool")
     }
 }
 

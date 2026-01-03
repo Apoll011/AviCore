@@ -123,11 +123,21 @@ impl LanguageSystem {
             .map(|i| {
                 match &i.value.0 {
                     serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
-                        seq.map(|v: YamlValue| match v { _=> v.to_string()})
+                        seq.iter()
+                            .filter_map(|v| {
+                                if let serde_yaml::Value::String(s) = v {
+                                    Some(s.clone())
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect()
                     }
-                    _ => vec![i.value.clone().to_string()]
+                    serde_yaml::Value::String(s) => vec![s.clone()],
+                    _ => Vec::new()
                 }
             })
+            .unwrap_or_else(Vec::new)
     }
 
     pub fn list(&self, code: &str) -> Vec<(String, YamlValue)> {

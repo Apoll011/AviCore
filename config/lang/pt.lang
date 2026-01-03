@@ -65,3 +65,4 @@ lang:
       - "passa"
       - "ignora"
     error_validator_optional: "Estava a espera de qualquer coisa ou nada."
+    error_validator_bool: "Estava a espera de uma resposta de sim ou não."

@@ -8,7 +8,7 @@ fn intent_hi(intent: Intent) {
     if (test::is_eco()) {
         say(locale::get("hello"))
         say(locale::get("ask"))
-        d::on_reply_bool("reply", d::bool_validator("yes", "no", "always", "never"))
+        d::on_reply_bool("reply", d::bool_validator(false))
     }
     else {
         say("Oi!")
