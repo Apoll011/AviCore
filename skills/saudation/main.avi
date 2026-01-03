@@ -7,8 +7,7 @@ use dialogue as d
 fn intent_hi(intent: Intent) {
     if (test::is_eco()) {
         say(locale::get("hello"))
-        say(locale::get("ask"))
-        d::on_reply_bool("reply", d::bool_validator(false))
+        d::confirm("ask", "reply")
     }
     else {
         say("Oi!")
@@ -16,7 +15,12 @@ fn intent_hi(intent: Intent) {
 }
 
 fn reply(response) {
-    say(response)
+    if (response == "true") {
+        say("Okkkk!!!!!")
+    }
+    else {
+        say("Sorry")
+    }
 }
 
 fn main() {

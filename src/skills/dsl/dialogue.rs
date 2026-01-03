@@ -1,6 +1,7 @@
 use std::result::Result;
 use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime};
+use dyon::{Dfn, Module, Runtime, Variable};
+use dyon::embed::PushVariable;
 use dyon::Type::*;
 use crate::ctx::runtime;
 use crate::dialogue::reply::RequestReply;
@@ -26,8 +27,9 @@ pub fn add_functions(module: &mut Module) {
     module.add(Arc::new("bool_validator".into()), bool_validator, Dfn::nl(vec![Bool], Any));
     module.add(Arc::new("mapped_validator_str".into()), mapped_validator_str, Dfn::nl(vec![Any, Any], Any));
     module.add(Arc::new("mapped_validator_num".into()), mapped_validator_num, Dfn::nl(vec![Any, Any], Any));
+
+    module.add(Arc::new("confirm".into()), confirm, Dfn::nl(vec![Str, Str], Void));
     /*module.add(Arc::new("ask".into()), dir, Dfn::nl(vec![], Str)); //Ask a question with a list of asnwers, fuzzy the response or frist second trird etc
-    module.add(Arc::new("confirm".into()), dir, Dfn::nl(vec![], Str)); //Ask a yes or no question
     module.add(Arc::new("repeat".into()), dir, Dfn::nl(vec![], Str)); //Repeats the last spoken utterance (Dont matter the skill)
     module.add(Arc::new("request_attention".into()), dir, Dfn::nl(vec![], Str)); //Call the user name without leaving the current skill */
 }
@@ -157,5 +159,19 @@ pub fn on_reply_mapped_num(rt: &mut Runtime) -> Result<(), String> {
     let skill_name = ctx(rt)?.info.name.clone();
 
     handle_on_reply(handler, validator, skill_name);
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub fn confirm(_rt: &mut Runtime) -> Result<(), String> {
+    let handler: String = _rt.pop()?;
+    let question_locale_id: String = _rt.pop()?;
+    let skill_context = ctx(_rt)?;
+    let skill_name = ctx(_rt)?.info.name.clone();
+
+    speak(&skill_context.languages.get_translation(&*question_locale_id).unwrap());
+
+    handle_on_reply(handler, BoolValidator::new(false), skill_name);
+
     Ok(())
 }
