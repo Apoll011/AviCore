@@ -44,9 +44,7 @@ pub struct ListOrNoneValidator {
 
 impl ListOrNoneValidator {
     pub fn new(allowed_values: Vec<String>) -> Self {
-        Self {
-            allowed_values
-        }
+        Self { allowed_values }
     }
 }
 
@@ -96,12 +94,15 @@ impl ResponseValidator for OptionalValidator {
                 return Ok(None);
             }
         }
-    
+
         Ok(Some(cleaned))
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        runtime().language_system.get_translation("error_validator_optional").unwrap_or_else(|| "".to_string())
+        runtime()
+            .language_system
+            .get_translation("error_validator_optional")
+            .unwrap_or_else(|| "".to_string())
     }
 }
 
@@ -111,9 +112,7 @@ pub struct BoolValidator {
 
 impl BoolValidator {
     pub fn new(hard_search: bool) -> Self {
-        Self {
-            hard_search
-        }
+        Self { hard_search }
     }
 }
 
@@ -153,7 +152,10 @@ impl ResponseValidator for BoolValidator {
         Err(ValidationError::NotAccepted)
     }
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        runtime().language_system.get_translation("error_validator_bool").unwrap_or_else(|| "".to_string())
+        runtime()
+            .language_system
+            .get_translation("error_validator_bool")
+            .unwrap_or_else(|| "".to_string())
     }
 }
 
@@ -221,7 +223,10 @@ mod tests {
     fn test_any_validator_basic() {
         let validator = AnyValidator;
         assert_eq!(validator.validate_and_parse("hello").unwrap(), "hello");
-        assert_eq!(validator.validate_and_parse("  spaces  ").unwrap(), "spaces");
+        assert_eq!(
+            validator.validate_and_parse("  spaces  ").unwrap(),
+            "spaces"
+        );
         assert!(validator.is_accepted("anything works"));
     }
 
@@ -235,9 +240,7 @@ mod tests {
 
     #[test]
     fn test_list_or_none_validator_with_none() {
-        let validator = ListOrNoneValidator::new(
-            vec!["apple".to_string(), "banana".to_string()],
-        );
+        let validator = ListOrNoneValidator::new(vec!["apple".to_string(), "banana".to_string()]);
 
         assert_eq!(validator.validate_and_parse("none").unwrap(), None);
         assert_eq!(validator.validate_and_parse("NONE").unwrap(), None);
@@ -246,9 +249,7 @@ mod tests {
 
     #[test]
     fn test_list_or_none_validator_with_values() {
-        let validator = ListOrNoneValidator::new(
-            vec!["apple".to_string(), "banana".to_string()],
-        );
+        let validator = ListOrNoneValidator::new(vec!["apple".to_string(), "banana".to_string()]);
 
         assert_eq!(
             validator.validate_and_parse("apple").unwrap(),
@@ -266,9 +267,7 @@ mod tests {
 
     #[test]
     fn test_list_or_none_validator_case_sensitive() {
-        let validator = ListOrNoneValidator::new(
-            vec!["Apple".to_string()],
-        );
+        let validator = ListOrNoneValidator::new(vec!["Apple".to_string()]);
 
         assert!(validator.validate_and_parse("apple").is_err());
         assert_eq!(
@@ -281,9 +280,7 @@ mod tests {
 
     #[test]
     fn test_list_or_none_validator_not_accepted() {
-        let validator = ListOrNoneValidator::new(
-            vec!["apple".to_string()],
-        );
+        let validator = ListOrNoneValidator::new(vec!["apple".to_string()]);
 
         assert!(validator.validate_and_parse("orange").is_err());
         assert!(validator.validate_and_parse("random text").is_err());
@@ -338,7 +335,10 @@ mod tests {
 
         assert_eq!(validator.validate_and_parse("oh yes please").unwrap(), true);
         assert_eq!(validator.validate_and_parse("no way").unwrap(), false);
-        assert_eq!(validator.validate_and_parse("I will always do it").unwrap(), true);
+        assert_eq!(
+            validator.validate_and_parse("I will always do it").unwrap(),
+            true
+        );
     }
 
     #[test]
@@ -376,10 +376,7 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_with_default() {
-        let mappings = vec![
-            ("red".to_string(), 1),
-            ("blue".to_string(), 2),
-        ];
+        let mappings = vec![("red".to_string(), 1), ("blue".to_string(), 2)];
 
         let validator = MappedValidator::new(mappings).with_default(0);
 
@@ -390,9 +387,7 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_without_default() {
-        let mappings = vec![
-            ("red".to_string(), 1),
-        ];
+        let mappings = vec![("red".to_string(), 1)];
 
         let validator = MappedValidator::new(mappings);
 
@@ -402,10 +397,7 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_partial_match() {
-        let mappings = vec![
-            ("red".to_string(), 1),
-            ("blue".to_string(), 2),
-        ];
+        let mappings = vec![("red".to_string(), 1), ("blue".to_string(), 2)];
 
         let validator = MappedValidator::new(mappings);
 
@@ -415,10 +407,7 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_hard_search() {
-        let mappings = vec![
-            ("red".to_string(), 1),
-            ("blue".to_string(), 2),
-        ];
+        let mappings = vec![("red".to_string(), 1), ("blue".to_string(), 2)];
 
         let validator = MappedValidator::new(mappings).hard_search(true);
 
@@ -429,9 +418,7 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_case_insensitive() {
-        let mappings = vec![
-            ("red".to_string(), 1),
-        ];
+        let mappings = vec![("red".to_string(), 1)];
 
         let validator = MappedValidator::new(mappings);
 

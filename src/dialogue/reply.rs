@@ -1,7 +1,7 @@
+use crate::dialogue::response::{ResponseValidator, ValidationError};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
-use crate::dialogue::response::{ResponseValidator, ValidationError};
 
 pub struct ReplyManager {
     pending_reply: Arc<Mutex<Option<PendingReply>>>,
@@ -16,7 +16,7 @@ pub trait ValidatorErasure: Send + Sync {
 
 impl<V: ResponseValidator + Send + Sync> ValidatorErasure for V
 where
-    V::Output: std::fmt::Debug
+    V::Output: std::fmt::Debug,
 {
     fn validate_erased(&self, text: &str) -> Result<String, ValidationError> {
         self.validate_and_parse(text)
@@ -52,9 +52,11 @@ pub struct Replayed {
 }
 
 impl Replayed {
-
     pub fn new(parsed_output: String, pending_reply: PendingReply) -> Self {
-        Self { parsed_output: parsed_output, pending_reply: pending_reply }
+        Self {
+            parsed_output: parsed_output,
+            pending_reply: pending_reply,
+        }
     }
 }
 
@@ -123,16 +125,16 @@ impl ReplyManager {
             let cleaned = pending.validator.clear_text(text);
 
             match pending.validator.validate_erased(&cleaned) {
-                Ok(parsed_output) => {
-                    Ok(Replayed::new(parsed_output, pending))
-                }
+                Ok(parsed_output) => Ok(Replayed::new(parsed_output, pending)),
                 Err(error) => {
                     pending.retry_count += 1;
                     let error_msg = pending.validator.get_error_txt(&error);
 
                     if let Some(max) = self.config.max_retries {
                         if pending.retry_count >= max {
-                            return Err("Too many invalid attempts. Cancelling request.".to_string());
+                            return Err(
+                                "Too many invalid attempts. Cancelling request.".to_string()
+                            );
                         }
                     }
 

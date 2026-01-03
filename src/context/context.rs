@@ -1,10 +1,10 @@
+use crate::dialogue::intent::JsonValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use crate::dialogue::intent::JsonValue;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextValue {
@@ -19,9 +19,9 @@ impl ContextValue {
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
             .as_secs();
-        
+
         let expires_at = ttl.map(|d| now + d.as_secs());
-        
+
         Self {
             value,
             expires_at,
@@ -74,13 +74,21 @@ impl ContextManager {
         }
     }
 
-    pub fn set(&self, scope: ContextScope, key: String, value: serde_json::Value, ttl: Option<Duration>, persistent: bool) {
+    pub fn set(
+        &self,
+        scope: ContextScope,
+        key: String,
+        value: serde_json::Value,
+        ttl: Option<Duration>,
+        persistent: bool,
+    ) {
         let ctx_value = ContextValue::new(value, ttl);
 
         // Save to memory
         {
             let mut store = self.memory_store.write().unwrap();
-            store.entry(scope.clone())
+            store
+                .entry(scope.clone())
                 .or_insert_with(HashMap::new)
                 .insert(key.clone(), ctx_value.clone());
         }
@@ -102,7 +110,8 @@ impl ContextManager {
             if !ctx_value.is_expired() {
                 // Cache it back to memory
                 let mut store = self.memory_store.write().unwrap();
-                store.entry(scope.clone())
+                store
+                    .entry(scope.clone())
                     .or_insert_with(HashMap::new)
                     .insert(key.to_string(), ctx_value.clone());
                 return Some(ctx_value.value);
@@ -114,20 +123,33 @@ impl ContextManager {
 
         None
     }
-    pub fn set_skill_save(&self, scope: ContextScope, key: String, value: JsonValue, ttl: f64, persistent: bool) {
+    pub fn set_skill_save(
+        &self,
+        scope: ContextScope,
+        key: String,
+        value: JsonValue,
+        ttl: f64,
+        persistent: bool,
+    ) {
         let ttl_duration = if ttl == 0.0 {
             None
         } else {
             Some(Duration::from_secs_f64(ttl))
         };
 
-        self.set(scope, key, serde_json::json!(value), ttl_duration, persistent);
+        self.set(
+            scope,
+            key,
+            serde_json::json!(value),
+            ttl_duration,
+            persistent,
+        );
     }
 
     pub fn remove(&self, scope: &ContextScope, key: &str) {
         self.delete_persistent(scope, key);
     }
-    
+
     pub fn has(&self, scope: &ContextScope, key: &str) -> bool {
         self.get(scope, key).is_some()
     }
@@ -181,7 +203,7 @@ impl ContextManager {
         for scope_map in store.values_mut() {
             scope_map.retain(|_, v| !v.is_expired());
         }
-        
+
         // Also cleanup persistent files
         if let Ok(entries) = fs::read_dir(&self.persistence_path) {
             for entry in entries.flatten() {
@@ -189,7 +211,9 @@ impl ContextManager {
                     if let Ok(sub_entries) = fs::read_dir(entry.path()) {
                         for sub_entry in sub_entries.flatten() {
                             if let Ok(content) = fs::read_to_string(sub_entry.path()) {
-                                if let Ok(ctx_value) = serde_json::from_str::<ContextValue>(&content) {
+                                if let Ok(ctx_value) =
+                                    serde_json::from_str::<ContextValue>(&content)
+                                {
                                     if ctx_value.is_expired() {
                                         let _ = fs::remove_file(sub_entry.path());
                                     }
@@ -219,7 +243,7 @@ mod tests {
         let value = json!({"foo": "bar"});
 
         manager.set(scope.clone(), key.clone(), value.clone(), None, false);
-        
+
         assert_eq!(manager.get_memory(&scope, &key), Some(value.clone()));
         assert_eq!(manager.get(&scope, &key), Some(value));
     }
@@ -233,7 +257,7 @@ mod tests {
         let value = json!(42);
 
         manager.set(scope.clone(), key.clone(), value.clone(), None, true);
-        
+
         // Clear memory to force load from disk
         {
             let mut store = manager.memory_store.write().unwrap();
@@ -255,12 +279,18 @@ mod tests {
         let value = json!("will_expire");
 
         // Use 2 seconds TTL to avoid precision issues with seconds-based TTL
-        manager.set(scope.clone(), key.clone(), value.clone(), Some(Duration::from_secs(2)), false);
-        
+        manager.set(
+            scope.clone(),
+            key.clone(),
+            value.clone(),
+            Some(Duration::from_secs(2)),
+            false,
+        );
+
         assert_eq!(manager.get(&scope, &key), Some(value));
-        
+
         thread::sleep(Duration::from_secs(3));
-        
+
         assert_eq!(manager.get(&scope, &key), None);
     }
 
@@ -272,8 +302,20 @@ mod tests {
         let skill_scope = ContextScope::Skill("my_skill".to_string());
         let key = "key".to_string();
 
-        manager.set(global_scope.clone(), key.clone(), json!("global"), None, false);
-        manager.set(skill_scope.clone(), key.clone(), json!("skill"), None, false);
+        manager.set(
+            global_scope.clone(),
+            key.clone(),
+            json!("global"),
+            None,
+            false,
+        );
+        manager.set(
+            skill_scope.clone(),
+            key.clone(),
+            json!("skill"),
+            None,
+            false,
+        );
 
         assert_eq!(manager.get(&global_scope, &key), Some(json!("global")));
         assert_eq!(manager.get(&skill_scope, &key), Some(json!("skill")));

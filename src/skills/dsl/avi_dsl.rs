@@ -1,13 +1,15 @@
-use std::collections::HashMap;
-use dyon::{Runtime, Variable};
-use crate::dialogue::intent::{Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue, YamlValue};
-use dyon::embed::{PopVariable, PushVariable};
-use std::sync::Arc;
-use serde_json::Value;
-use serde_yaml::{Value as Yaml, Mapping, Sequence};
 use crate::config::{ConfigSystem, ConstantNamed, Setting, SettingNamed};
+use crate::dialogue::intent::{
+    Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue, YamlValue,
+};
 use crate::dialogue::languages::{IndividualLocale, Language, LanguageSystem};
 use crate::skills::skill_context::{Manifest, SkillContext};
+use dyon::embed::{PopVariable, PushVariable};
+use dyon::{Runtime, Variable};
+use serde_json::Value;
+use serde_yaml::{Mapping, Sequence, Value as Yaml};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Loads and initializes the core Avi Dyon module with all sub-modules and functions.
 pub fn load_module() -> Option<dyon::Module> {
@@ -31,15 +33,15 @@ pub fn load_module() -> Option<dyon::Module> {
 }
 
 /// Retrieves the `SkillContext` from the Dyon runtime stack.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `rt` - The current Dyon runtime environment.
-/// 
+///
 /// # Panics
-/// 
+///
 /// Panics if the `SkillContext` is not found at the expected stack position or if it cannot be popped.
-/// 
+///
 /// TODO: Avoid panicking; return an `Option` or `Result` instead.
 pub fn ctx(rt: &mut Runtime) -> Result<SkillContext, String> {
     SkillContext::pop_var(rt, &rt.stack[0])
@@ -68,19 +70,20 @@ impl PopVariable for JsonValue {
 }
 
 /// Converts a Dyon `Variable` to a `JsonValue`.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns an error if the Dyon variable is a complex type (Link/RustObject/UnsafeRef) that cannot be converted to JSON.
-/// 
+///
 /// FIXME: `_ => todo!()` will cause a crash if an unhandled Dyon variable type is encountered.
 fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
     use dyon::Variable::*;
     match var {
         F64(n, ..) => {
             // Dyon’s F64 can be either integer-like or float.
-            Ok(JsonValue(Value::Number(serde_json::Number::from_f64(n)
-                .ok_or_else(|| format!("Invalid f64: {}", n))?)))
+            Ok(JsonValue(Value::Number(
+                serde_json::Number::from_f64(n).ok_or_else(|| format!("Invalid f64: {}", n))?,
+            )))
         }
         Bool(b, _) => Ok(JsonValue(Value::Bool(b))),
         Str(s) => Ok(JsonValue(Value::String(s.clone().to_string()))),
@@ -98,16 +101,14 @@ fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
             }
             Ok(JsonValue(Value::Object(map)))
         }
-        Option(opt) => {
-            match opt {
-                Some(v) => from_dyon_variable_json(*v.clone()),
-                None => Ok(JsonValue(Value::Null)),
-            }
-        }
+        Option(opt) => match opt {
+            Some(v) => from_dyon_variable_json(*v.clone()),
+            None => Ok(JsonValue(Value::Null)),
+        },
         Link(_) | RustObject(_) | UnsafeRef(_) => {
             Err("Cannot convert complex Dyon types (Link/RustObject/UnsafeRef) to Value".into())
-        },
-        _ => todo!()
+        }
+        _ => todo!(),
     }
 }
 
@@ -133,7 +134,10 @@ fn to_dyon_variable_json(value: JsonValue) -> Variable {
         }
         JsonValue(Value::String(s)) => Str(Arc::new(s)),
         JsonValue(Value::Array(vec)) => {
-            let arr: Vec<Variable> = vec.into_iter().map(|arg0: Value| to_dyon_variable_json(JsonValue(arg0))).collect();
+            let arr: Vec<Variable> = vec
+                .into_iter()
+                .map(|arg0: Value| to_dyon_variable_json(JsonValue(arg0)))
+                .collect();
             Array(Arc::new(arr))
         }
         JsonValue(Value::Object(map)) => {
@@ -195,8 +199,9 @@ fn from_dyon_variable(var: Variable) -> Result<YamlValue, String> {
             None => Ok(YamlValue(Yaml::Null)),
         },
 
-        Link(_) | RustObject(_) | UnsafeRef(_) =>
-            Err("Cannot convert Dyon complex types (Link/RustObject/UnsafeRef) to YamlValue".into()),
+        Link(_) | RustObject(_) | UnsafeRef(_) => {
+            Err("Cannot convert Dyon complex types (Link/RustObject/UnsafeRef) to YamlValue".into())
+        }
 
         _ => Err("Unsupported Dyon type for YAML".into()),
     }

@@ -1,33 +1,88 @@
-use std::result::Result;
-use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime};
-use dyon::Type::*;
 use crate::ctx::runtime;
 use crate::dialogue::reply::RequestReply;
-use crate::dialogue::response::{AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator, ResponseValidator};
-use crate::dialogue::utils::{speak, listen as device_listen};
+use crate::dialogue::response::{
+    AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator,
+    ResponseValidator,
+};
+use crate::dialogue::utils::{listen as device_listen, speak};
 use crate::skills::dsl::avi_dsl::ctx;
+use dyon::Type::*;
+use dyon::{Dfn, Module, Runtime};
+use std::result::Result;
+use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("dialogue");
     module.add(Arc::new("say".into()), say, Dfn::nl(vec![Str], Void));
     module.add(Arc::new("listen".into()), listen, Dfn::nl(vec![Any], Void)); // Last device that sent a utterance will start listening again
 
-    module.add(Arc::new("on_reply_any".into()), on_reply_any, Dfn::nl(vec![Str, Any], Void));
-    module.add(Arc::new("on_reply_list_or_none".into()), on_reply_list_or_none, Dfn::nl(vec![Str, Any], Void));
-    module.add(Arc::new("on_reply_optional".into()), on_reply_optional, Dfn::nl(vec![Str, Any], Void));
-    module.add(Arc::new("on_reply_bool".into()), on_reply_bool, Dfn::nl(vec![Str, Any], Void));
-    module.add(Arc::new("on_reply_mapped_str".into()), on_reply_mapped_str, Dfn::nl(vec![Str, Any], Void));
-    module.add(Arc::new("on_reply_mapped_num".into()), on_reply_mapped_num, Dfn::nl(vec![Str, Any], Void));
+    module.add(
+        Arc::new("on_reply_any".into()),
+        on_reply_any,
+        Dfn::nl(vec![Str, Any], Void),
+    );
+    module.add(
+        Arc::new("on_reply_list_or_none".into()),
+        on_reply_list_or_none,
+        Dfn::nl(vec![Str, Any], Void),
+    );
+    module.add(
+        Arc::new("on_reply_optional".into()),
+        on_reply_optional,
+        Dfn::nl(vec![Str, Any], Void),
+    );
+    module.add(
+        Arc::new("on_reply_bool".into()),
+        on_reply_bool,
+        Dfn::nl(vec![Str, Any], Void),
+    );
+    module.add(
+        Arc::new("on_reply_mapped_str".into()),
+        on_reply_mapped_str,
+        Dfn::nl(vec![Str, Any], Void),
+    );
+    module.add(
+        Arc::new("on_reply_mapped_num".into()),
+        on_reply_mapped_num,
+        Dfn::nl(vec![Str, Any], Void),
+    );
 
-    module.add(Arc::new("any_validator".into()), any_validator, Dfn::nl(vec![], Any));
-    module.add(Arc::new("list_or_none_validator".into()), list_or_none_validator, Dfn::nl(vec![Any], Any));
-    module.add(Arc::new("optional_validator".into()), optional_validator, Dfn::nl(vec![], Any));
-    module.add(Arc::new("bool_validator".into()), bool_validator, Dfn::nl(vec![Bool], Any));
-    module.add(Arc::new("mapped_validator_str".into()), mapped_validator_str, Dfn::nl(vec![Any, Any], Any));
-    module.add(Arc::new("mapped_validator_num".into()), mapped_validator_num, Dfn::nl(vec![Any, Any], Any));
+    module.add(
+        Arc::new("any_validator".into()),
+        any_validator,
+        Dfn::nl(vec![], Any),
+    );
+    module.add(
+        Arc::new("list_or_none_validator".into()),
+        list_or_none_validator,
+        Dfn::nl(vec![Any], Any),
+    );
+    module.add(
+        Arc::new("optional_validator".into()),
+        optional_validator,
+        Dfn::nl(vec![], Any),
+    );
+    module.add(
+        Arc::new("bool_validator".into()),
+        bool_validator,
+        Dfn::nl(vec![Bool], Any),
+    );
+    module.add(
+        Arc::new("mapped_validator_str".into()),
+        mapped_validator_str,
+        Dfn::nl(vec![Any, Any], Any),
+    );
+    module.add(
+        Arc::new("mapped_validator_num".into()),
+        mapped_validator_num,
+        Dfn::nl(vec![Any, Any], Any),
+    );
 
-    module.add(Arc::new("confirm".into()), confirm, Dfn::nl(vec![Str, Str], Void));
+    module.add(
+        Arc::new("confirm".into()),
+        confirm,
+        Dfn::nl(vec![Str, Str], Void),
+    );
     /*module.add(Arc::new("repeat".into()), dir, Dfn::nl(vec![], Str)); //Repeats the last spoken utterance (Dont matter the skill)
     module.add(Arc::new("request_attention".into()), dir, Dfn::nl(vec![], Str)); //Call the user name without leaving the current skill */
 }
@@ -40,41 +95,41 @@ dyon_fn! {fn listen() {
     device_listen();
 }}
 
-dyon_obj!{AnyValidator { }}
-dyon_obj!{ListOrNoneValidator { allowed_values }}
-dyon_obj!{OptionalValidator { }}
-dyon_obj!{BoolValidator { hard_search }}
-dyon_obj!{MappedValidatorString { mappings, default, hard_search }}
-dyon_obj!{MappedValidatorF64 { mappings, default, hard_search }}
+dyon_obj! {AnyValidator { }}
+dyon_obj! {ListOrNoneValidator { allowed_values }}
+dyon_obj! {OptionalValidator { }}
+dyon_obj! {BoolValidator { hard_search }}
+dyon_obj! {MappedValidatorString { mappings, default, hard_search }}
+dyon_obj! {MappedValidatorF64 { mappings, default, hard_search }}
 
 pub type MappedValidatorString = MappedValidator<String>;
 pub type MappedValidatorF64 = MappedValidator<f64>;
 
-dyon_fn!{fn any_validator() -> AnyValidator {
-        AnyValidator
-    }}
+dyon_fn! {fn any_validator() -> AnyValidator {
+    AnyValidator
+}}
 
-dyon_fn!{fn list_or_none_validator(allowed: Vec<String>) -> ListOrNoneValidator {
-        ListOrNoneValidator::new(allowed)
-    }}
+dyon_fn! {fn list_or_none_validator(allowed: Vec<String>) -> ListOrNoneValidator {
+    ListOrNoneValidator::new(allowed)
+}}
 
-dyon_fn!{fn optional_validator() -> OptionalValidator {
-        OptionalValidator
-    }}
+dyon_fn! {fn optional_validator() -> OptionalValidator {
+    OptionalValidator
+}}
 
-dyon_fn!{fn bool_validator(hard_search: bool) -> BoolValidator {
-        BoolValidator::new(hard_search)
-    }}
+dyon_fn! {fn bool_validator(hard_search: bool) -> BoolValidator {
+    BoolValidator::new(hard_search)
+}}
 
-dyon_fn!{fn mapped_validator_str(mappings: Vec<(String, String)>, default: std::option::Option<String>) -> MappedValidatorString {
-        let mut validator = MappedValidator::new(mappings);
-        if let Some(def) = default {
-            validator = validator.with_default(def);
-        }
-        validator
-    }}
+dyon_fn! {fn mapped_validator_str(mappings: Vec<(String, String)>, default: std::option::Option<String>) -> MappedValidatorString {
+    let mut validator = MappedValidator::new(mappings);
+    if let Some(def) = default {
+        validator = validator.with_default(def);
+    }
+    validator
+}}
 
-dyon_fn!{fn mapped_validator_num(mappings: Vec<(String, f64)>, default: std::option::Option<f64>) -> MappedValidatorF64 {
+dyon_fn! {fn mapped_validator_num(mappings: Vec<(String, f64)>, default: std::option::Option<f64>) -> MappedValidatorF64 {
         let mut validator = MappedValidator::new(mappings);
         if let Some(def) = default {
             validator = validator.with_default(def);
@@ -82,21 +137,20 @@ dyon_fn!{fn mapped_validator_num(mappings: Vec<(String, f64)>, default: std::opt
         validator
 }}
 
-fn handle_on_reply<V>(
-    handler: String,
-    validator: V,
-    skill_name: String
-)
+fn handle_on_reply<V>(handler: String, validator: V, skill_name: String)
 where
     V: ResponseValidator + Send + Sync + 'static,
     V::Output: std::fmt::Debug,
 {
     runtime().rt.spawn(async move {
-        runtime().reply_manager.set_reply(RequestReply {
-            skill_request: skill_name,
-            handler,
-            validator: Box::new(validator),
-        }).await;
+        runtime()
+            .reply_manager
+            .set_reply(RequestReply {
+                skill_request: skill_name,
+                handler,
+                validator: Box::new(validator),
+            })
+            .await;
     });
 }
 
@@ -167,7 +221,12 @@ pub fn confirm(_rt: &mut Runtime) -> Result<(), String> {
     let skill_context = ctx(_rt)?;
     let skill_name = ctx(_rt)?.info.name.clone();
 
-    speak(&skill_context.languages.get_translation(&*question_locale_id).unwrap());
+    speak(
+        &skill_context
+            .languages
+            .get_translation(&*question_locale_id)
+            .unwrap(),
+    );
 
     handle_on_reply(handler, BoolValidator::new(false), skill_name);
 

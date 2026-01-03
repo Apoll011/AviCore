@@ -1,16 +1,20 @@
+use super::avi_dsl::ctx;
+use crate::dialogue::intent::YamlValue;
+use dyon::Type::*;
+use dyon::embed::PushVariable;
+use dyon::{Dfn, Module, Runtime, Variable};
+use serde_yaml::Value as Yaml;
 use std::result::Result;
 use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime, Variable};
-use dyon::embed::PushVariable;
-use dyon::Type::*;
-use crate::dialogue::intent::YamlValue;
-use serde_yaml::Value as Yaml;
-use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("setting");
     module.add(Arc::new("get".into()), get_setting, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("full".into()), get_setting_full, Dfn::nl(vec![Str], Any));
+    module.add(
+        Arc::new("full".into()),
+        get_setting_full,
+        Dfn::nl(vec![Str], Any),
+    );
     module.add(Arc::new("list".into()), list_settings, Dfn::nl(vec![], Any));
     module.add(Arc::new("has".into()), has_setting, Dfn::nl(vec![Str], Any));
 }
@@ -21,12 +25,8 @@ pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
     let skill_context = ctx(_rt)?;
 
     match skill_context.config.setting(&*name) {
-        Some(v) => {
-            Ok(PushVariable::push_var(&v.value.clone()))
-        }
-        None => {
-            Ok(PushVariable::push_var(&YamlValue(Yaml::Null)))
-        }
+        Some(v) => Ok(PushVariable::push_var(&v.value.clone())),
+        None => Ok(PushVariable::push_var(&YamlValue(Yaml::Null))),
     }
 }
 

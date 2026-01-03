@@ -1,5 +1,5 @@
 /// A trait defining the behavior of an action in the Avi system.
-/// 
+///
 /// Actions are responsible for registering themselves and handling specific tasks
 /// such as intent execution or dialogue management.
 pub trait Action {

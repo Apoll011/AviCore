@@ -1,15 +1,23 @@
+use crate::dialogue::intent::JsonValue;
+use crate::skills::dsl::avi_dsl::ctx;
+use dyon::Type::*;
+use dyon::embed::PushVariable;
+use dyon::{Dfn, Module, Runtime, Variable};
 use std::result::Result;
 use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime, Variable};
-use dyon::embed::PushVariable;
-use dyon::Type::*;
-use crate::dialogue::intent::{JsonValue};
-use crate::skills::dsl::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("json");
-    module.add(Arc::new("parse".into()), json_parse, Dfn::nl(vec![Str], Any));
-    module.add(Arc::new("stringify".into()), json_stringify, Dfn::nl(vec![Any], Str));
+    module.add(
+        Arc::new("parse".into()),
+        json_parse,
+        Dfn::nl(vec![Str], Any),
+    );
+    module.add(
+        Arc::new("stringify".into()),
+        json_stringify,
+        Dfn::nl(vec![Any], Str),
+    );
     module.add(Arc::new("dir".into()), dir, Dfn::nl(vec![], Str));
 }
 

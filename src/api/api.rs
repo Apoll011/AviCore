@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use crate::api::send::send_dict_to_server;
-use crate::ctx::{runtime};
+use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
+use std::collections::HashMap;
 
 /// Represents the status and basic information of the server.
 #[derive(Debug)]
@@ -25,18 +25,18 @@ impl Api {
     }
 
     /// Constructs a full URL for a given API path using the runtime's base API URL.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `path` - The specific API endpoint path (e.g., "/avi/alive").
     fn get_url(&self, path: &str) -> String {
         format!("{}{}", runtime().api_url, path).into()
     }
 
     /// Checks if the server is alive and retrieves basic server information.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns an error if the server is unreachable or the response is invalid.
     #[allow(dead_code)]
     pub async fn alive(&mut self) -> Result<Alive, Box<dyn std::error::Error>> {
@@ -44,24 +44,40 @@ impl Api {
         let response = r.response;
         match response {
             Some(v) => Ok(Alive {
-                    alive: v.get("on").expect("Expected a boolean").as_bool().unwrap_or(false),
-                    version: v.get("version").expect("Expected a version string").as_str().unwrap_or("0.0").to_string(),
-                    installed_lang: v.get("lang").expect("Expected a list of installed lang's").as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect(),
-                }),
-            None => Err("No response from server".into())
+                alive: v
+                    .get("on")
+                    .expect("Expected a boolean")
+                    .as_bool()
+                    .unwrap_or(false),
+                version: v
+                    .get("version")
+                    .expect("Expected a version string")
+                    .as_str()
+                    .unwrap_or("0.0")
+                    .to_string(),
+                installed_lang: v
+                    .get("lang")
+                    .expect("Expected a list of installed lang's")
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|x| x.as_str().unwrap().to_string())
+                    .collect(),
+            }),
+            None => Err("No response from server".into()),
         }
     }
 
     /// Sends a text message to the server for intent recognition.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `text` - The text to be processed for intent recognition.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns an error if the server is unreachable or the intent cannot be parsed.
-    /// 
+    ///
     pub async fn intent(&mut self, text: &str) -> Result<Intent, Box<dyn std::error::Error>> {
         let mut query = HashMap::new();
         query.insert("text", text);
@@ -69,13 +85,8 @@ impl Api {
         let response = r.response;
 
         match response {
-            Some(v) => {
-                Ok(serde_json::from_value(v)?)
-            },
-            None => {
-                Err("No response from server".into())
-            }
+            Some(v) => Ok(serde_json::from_value(v)?),
+            None => Err("No response from server".into()),
         }
-
     }
 }

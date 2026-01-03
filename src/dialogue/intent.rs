@@ -21,8 +21,7 @@ pub struct Intent {
 }
 
 /// Detailed information about a recognized intent.
-#[derive(Debug, Serialize, Deserialize)]
-#[derive(Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct IntentInfo {
     /// The name of the intent.
     #[serde(rename = "intentName")]
@@ -52,7 +51,7 @@ pub struct Slot {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SlotValue {
     /// The kind of value (e.g., "Custom" or a built-in type like "Instant").
-    pub kind: String, 
+    pub kind: String,
     /// The actual resolved value of the slot.
     pub value: JsonValue,
     /// The grain of the value (optional, e.g., for time values).

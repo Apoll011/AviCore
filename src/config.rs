@@ -1,7 +1,7 @@
+use crate::dialogue::intent::YamlValue;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use serde::{Deserialize, Serialize};
-use crate::dialogue::intent::YamlValue;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.
@@ -53,7 +53,7 @@ pub struct ConstFile {
 
 /// A named constant value.
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub  struct ConstantNamed {
+pub struct ConstantNamed {
     /// The name of the constant.
     pub name: String,
     /// The value of the constant.
@@ -97,32 +97,51 @@ impl ConfigSystem {
 
         Self {
             constants: Self::const_to_named(&parsed_const.constants),
-            settings: Self::settings_to_named(&parsed_settings.settings)
+            settings: Self::settings_to_named(&parsed_settings.settings),
         }
     }
 
     /// Converts a map of constants to a vector of `ConstantNamed`.
     fn const_to_named(constants: &HashMap<String, YamlValue>) -> Vec<ConstantNamed> {
-        constants.iter().map(|(k, v)| ConstantNamed { name: k.clone(), value: v.clone() }).collect()
+        constants
+            .iter()
+            .map(|(k, v)| ConstantNamed {
+                name: k.clone(),
+                value: v.clone(),
+            })
+            .collect()
     }
 
     /// Converts a map of settings to a vector of `SettingNamed`.
     fn settings_to_named(settings: &HashMap<String, Setting>) -> Vec<SettingNamed> {
-        settings.iter().map(|(k, v)| SettingNamed { name: k.clone(), setting: v.clone() }).collect()
+        settings
+            .iter()
+            .map(|(k, v)| SettingNamed {
+                name: k.clone(),
+                setting: v.clone(),
+            })
+            .collect()
     }
 
     /// Retrieves a setting by its name.
     pub fn setting(&self, name: &str) -> Option<&Setting> {
-        self.settings.iter().find(|s| s.name == name).map(|s| &s.setting)
+        self.settings
+            .iter()
+            .find(|s| s.name == name)
+            .map(|s| &s.setting)
     }
 
     /// Retrieves a constant value by its name.
     pub fn constant(&self, name: &str) -> Option<&YamlValue> {
-        self.constants.iter().find(|c| c.name == name).map(|c| &c.value)
+        self.constants
+            .iter()
+            .find(|c| c.name == name)
+            .map(|c| &c.value)
     }
 
     pub fn list_constants(&self) -> Vec<(String, YamlValue)> {
-        self.constants.iter()
+        self.constants
+            .iter()
             .map(|c| (c.name.clone(), c.value.clone()))
             .collect()
     }
@@ -132,7 +151,8 @@ impl ConfigSystem {
     }
 
     pub fn list_settings(&self) -> Vec<(String, YamlValue)> {
-        self.settings.iter()
+        self.settings
+            .iter()
             .map(|s| (s.name.clone(), s.setting.value.clone()))
             .collect()
     }
@@ -142,12 +162,13 @@ impl ConfigSystem {
     }
 
     pub fn get_setting_full(&self, name: &str) -> SettingNamed {
-        self.settings.iter()
+        self.settings
+            .iter()
             .find(|s| s.name == name)
             .cloned()
             .unwrap_or(SettingNamed {
                 name: name.to_string(),
-                setting: Setting::default()
+                setting: Setting::default(),
             })
     }
 }

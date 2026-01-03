@@ -1,9 +1,8 @@
+use crate::config::ConfigSystem;
+use crate::dialogue::languages::LanguageSystem;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::fs;
-use crate::config::ConfigSystem;
-use crate::dialogue::languages::LanguageSystem;
-
 
 /// Helper function to provide a default value of `true` for serde.
 fn default_true() -> bool {
@@ -56,33 +55,34 @@ pub struct SkillContext {
 
 impl SkillContext {
     /// Initializes a `SkillContext` by loading configuration files from the specified path.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `path` - The directory path containing the skill's configuration.
-    /// 
-   pub fn new(path: &str) -> Self {
+    ///
+    pub fn new(path: &str) -> Self {
         Self {
             path: path.to_string(),
-            info:  Self::load_manifest(path.into()),
+            info: Self::load_manifest(path.into()),
             config: ConfigSystem::new(&format!("{}/config", path)),
-            languages: LanguageSystem::new(&format!("{}/responses", path))
+            languages: LanguageSystem::new(&format!("{}/responses", path)),
         }
     }
 
     /// Loads the skill manifest from the filesystem.
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// Panics if the manifest file cannot be read or parsed.
-    /// 
+    ///
     /// TODO: Handle manifest loading errors gracefully instead of panicking.
     fn load_manifest(pathname: String) -> Manifest {
         let manifest_path = format!("{}/manifest.yaml", pathname);
-        let manifest_file = fs::read_to_string(manifest_path).expect("Could not read manifest file");
+        let manifest_file =
+            fs::read_to_string(manifest_path).expect("Could not read manifest file");
         serde_yaml::from_str(&manifest_file).expect("Could not parse manifest file")
     }
-    
+
     /// Serializes the `SkillContext` into a JSON string.
     #[allow(dead_code)]
     pub fn into_json(self) -> serde_json::Result<String> {

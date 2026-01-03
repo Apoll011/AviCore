@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::fs;
-use rand::prelude::IndexedRandom;
-use serde::{Deserialize, Serialize};
 use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
+use rand::prelude::IndexedRandom;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs;
 use strfmt::strfmt;
 
 /// Represents the structure of a language resource file.
@@ -17,7 +17,7 @@ pub struct LanguageFile {
 
 /// A localized resource entry.
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub  struct IndividualLocale {
+pub struct IndividualLocale {
     /// The unique identifier for the localized resource.
     pub id: String,
     /// The localized value (can be a string or a list of strings for randomization).
@@ -39,7 +39,6 @@ pub struct LanguageSystem {
 }
 
 impl LanguageSystem {
-
     /// Scans the `responses` directory and loads all available language resource files.
     ///
     /// # Arguments
@@ -50,7 +49,7 @@ impl LanguageSystem {
 
         let read_dir = match fs::read_dir(path) {
             Ok(rd) => rd,
-            Err(_) => return Self{ languages },
+            Err(_) => return Self { languages },
         };
 
         for entry in read_dir {
@@ -68,16 +67,17 @@ impl LanguageSystem {
                                 .into_iter()
                                 .map(|(id, value)| IndividualLocale { id, value })
                                 .collect();
-                            languages.push(Language { code: parsed.code, lang: lang_vec });
+                            languages.push(Language {
+                                code: parsed.code,
+                                lang: lang_vec,
+                            });
                         }
                     }
                 }
             }
         }
 
-        Self {
-            languages
-        }
+        Self { languages }
     }
 
     /// Retrieves a localized resource value.
@@ -93,42 +93,43 @@ impl LanguageSystem {
             .iter()
             .find(|l| l.code == code)
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
-            .map(|i| {
-                match &i.value.0 {
-                    serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
-                        let mut rng = rand::rng();
-                        seq.choose(&mut rng)
-                            .map(|v| YamlValue(v.clone()))
-                            .unwrap_or_else(|| i.value.clone())
-                    }
-                    _ => i.value.clone()
+            .map(|i| match &i.value.0 {
+                serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
+                    let mut rng = rand::rng();
+                    seq.choose(&mut rng)
+                        .map(|v| YamlValue(v.clone()))
+                        .unwrap_or_else(|| i.value.clone())
                 }
+                _ => i.value.clone(),
             })
     }
 
-    pub fn locale_fmt(&self, code: &str, id: &str, fmt: &HashMap<String, String>) -> Option<String> {
+    pub fn locale_fmt(
+        &self,
+        code: &str,
+        id: &str,
+        fmt: &HashMap<String, String>,
+    ) -> Option<String> {
         match self.locale(code, id) {
-            Some(value) => {
-                match self.value_to_string(&value) {
-                    Some(v) => Some(strfmt(&v,  fmt).unwrap_or_else(|_| v.clone())),
-                    None => None
-                }
+            Some(value) => match self.value_to_string(&value) {
+                Some(v) => Some(strfmt(&v, fmt).unwrap_or_else(|_| v.clone())),
+                None => None,
             },
-            None => None
+            None => None,
         }
     }
 
     fn value_to_string(&self, value: &YamlValue) -> Option<String> {
         match &value.0 {
             serde_yaml::Value::String(s) => Some(s.clone()),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn get_translation(&self, id: &str) -> Option<String> {
         match self.locale(&*runtime().lang, id) {
             Some(value) => self.value_to_string(&value),
-            None => None
+            None => None,
         }
     }
 
@@ -137,22 +138,19 @@ impl LanguageSystem {
             .iter()
             .find(|l| l.code == &*runtime().lang)
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
-            .map(|i| {
-                match &i.value.0 {
-                    serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
-                        seq.iter()
-                            .filter_map(|v| {
-                                if let serde_yaml::Value::String(s) = v {
-                                    Some(s.clone())
-                                } else {
-                                    None
-                                }
-                            })
-                            .collect()
-                    }
-                    serde_yaml::Value::String(s) => vec![s.clone()],
-                    _ => Vec::new()
-                }
+            .map(|i| match &i.value.0 {
+                serde_yaml::Value::Sequence(seq) if !seq.is_empty() => seq
+                    .iter()
+                    .filter_map(|v| {
+                        if let serde_yaml::Value::String(s) = v {
+                            Some(s.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+                serde_yaml::Value::String(s) => vec![s.clone()],
+                _ => Vec::new(),
             })
             .unwrap_or_else(Vec::new)
     }
@@ -169,7 +167,8 @@ impl LanguageSystem {
     }
 
     pub fn has(&self, id: &str) -> bool {
-        self.languages.iter()
+        self.languages
+            .iter()
             .any(|lang| lang.lang.iter().any(|l| l.id == id))
     }
 }

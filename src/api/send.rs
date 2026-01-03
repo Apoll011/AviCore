@@ -1,17 +1,17 @@
-use reqwest::Client;
-use serde_json::{Value};
-use std::collections::HashMap;
 use crate::api::response::Response;
+use reqwest::Client;
+use serde_json::Value;
+use std::collections::HashMap;
 
 /// Sends a GET request to the specified server URL with the provided arguments.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `url` - The full target URL for the API request.
 /// * `args` - A map of query parameters to be included in the request.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns an error if the network request fails or if the response body cannot be parsed as JSON.
 pub async fn send_dict_to_server(
     url: &str,
@@ -19,11 +19,7 @@ pub async fn send_dict_to_server(
 ) -> Result<Response, Box<dyn std::error::Error>> {
     let client = Client::new();
 
-    let resp = client
-        .get(url)
-        .query(&args)
-        .send()
-        .await?;
+    let resp = client.get(url).query(&args).send().await?;
 
     let json: Value = resp.json().await?;
     let response = Response::new(json);

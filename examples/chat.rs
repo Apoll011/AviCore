@@ -1,14 +1,13 @@
-use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
-use avi_device::capability::{CapabilityBuilder, SensorCapability};
-use avi_device::stream::{StreamContext, StreamHandler, StreamHandlerFactory};
-use avi_p2p::{PeerId, StreamId, StreamCloseReason};
 use async_trait::async_trait;
+use avi_device::capability::{CapabilityBuilder, SensorCapability};
+use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
+use avi_device::stream::{StreamContext, StreamHandler, StreamHandlerFactory};
+use avi_p2p::{PeerId, StreamCloseReason, StreamId};
+use serde_json::json;
 use std::io::{self, Write};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::Mutex;
-use serde_json::json;
-
 
 struct ChatStreamHandler {
     peer_id: Option<PeerId>,
@@ -24,7 +23,10 @@ impl StreamHandler for ChatStreamHandler {
     }
 
     async fn on_rejected(&mut self, peer_id: PeerId, _stream_id: StreamId, reason: String) {
-        println!("\n[Stream] Chat request to {} rejected: {}", peer_id, reason);
+        println!(
+            "\n[Stream] Chat request to {} rejected: {}",
+            peer_id, reason
+        );
         print!("> ");
         io::stdout().flush().unwrap();
     }
@@ -39,7 +41,12 @@ impl StreamHandler for ChatStreamHandler {
         io::stdout().flush().unwrap();
     }
 
-    async fn on_closed(&mut self, peer_id: PeerId, _stream_id: StreamId, reason: StreamCloseReason) {
+    async fn on_closed(
+        &mut self,
+        peer_id: PeerId,
+        _stream_id: StreamId,
+        reason: StreamCloseReason,
+    ) {
         println!("\n[Stream] Chat with {} closed ({:?})", peer_id, reason);
         print!("> ");
         io::stdout().flush().unwrap();
@@ -55,24 +62,29 @@ impl StreamHandlerFactory for ChatStreamFactory {
     }
 }
 
-
 #[tokio::main]
 async fn main() -> Result<(), String> {
     println!("🚀 AVI Device Full Feature CLI Example");
     println!("Type 'help' for available commands.");
 
     let caps = CapabilityBuilder::new()
-        .sensor("microphone", SensorCapability::Microphone {
-            present: true,
-            array_size: 2,
-            sampling_rate_khz: 44,
-            max_spl_db: 110,
-        })
-        .sensor("cli_node", SensorCapability::Temperature {
-            present: true,
-            accuracy_celsius: 0.1,
-            current_value: Some(1.0),
-        })
+        .sensor(
+            "microphone",
+            SensorCapability::Microphone {
+                present: true,
+                array_size: 2,
+                sampling_rate_khz: 44,
+                max_spl_db: 110,
+            },
+        )
+        .sensor(
+            "cli_node",
+            SensorCapability::Temperature {
+                present: true,
+                accuracy_celsius: 0.1,
+                current_value: Some(1.0),
+            },
+        )
         .build();
 
     let node_name = format!("cli-node-{}", std::process::id());
@@ -85,7 +97,9 @@ async fn main() -> Result<(), String> {
 
     let device = AviDevice::new(config).await?;
 
-    device.register_stream_handler("chat".to_string(), ChatStreamFactory).await;
+    device
+        .register_stream_handler("chat".to_string(), ChatStreamFactory)
+        .await;
 
     let device_clone = device.clone();
     tokio::spawn(async move {
@@ -125,12 +139,10 @@ async fn main() -> Result<(), String> {
                 println!("  hangup             - Close active stream");
                 println!("  exit               - Quit");
             }
-            "peers" => {
-                match device.get_peers().await {
-                    Ok(p) => println!("Connected peers: {:?}", p),
-                    Err(e) => println!("Error: {}", e),
-                }
-            }
+            "peers" => match device.get_peers().await {
+                Ok(p) => println!("Connected peers: {:?}", p),
+                Err(e) => println!("Error: {}", e),
+            },
             "status" => {
                 if let Ok(id) = device.get_core_id().await {
                     println!("Core ID: {}", id);
@@ -140,28 +152,39 @@ async fn main() -> Result<(), String> {
                 // Note: local peer id is not directly exposed in AviDevice yet,
                 // but we can see it from events or context.
                 if let Ok(ctx) = device.get_ctx("").await {
-                    println!("Local Context Keys: {:?}", ctx.as_object().map(|o| o.keys().collect::<Vec<_>>()));
+                    println!(
+                        "Local Context Keys: {:?}",
+                        ctx.as_object().map(|o| o.keys().collect::<Vec<_>>())
+                    );
                 }
             }
             "sub" if parts.len() > 1 => {
-                if let Err(e) = device.subscribe(parts[1], |from, _topic, data| println!("Got from {from} data: {:?}", data)).await {
+                if let Err(e) = device
+                    .subscribe(parts[1], |from, _topic, data| {
+                        println!("Got from {from} data: {:?}", data)
+                    })
+                    .await
+                {
                     println!("Failed to subscribe: {}", e);
                 }
                 println!("Subscribed to '{}'", parts[1]);
-            },
+            }
             "pub" if parts.len() > 2 => {
                 let topic = parts[1];
                 let content = parts[2..].join(" ");
                 if let Err(e) = device.publish(topic, content.into_bytes()).await {
                     println!("Failed to publish: {}", e);
                 }
-            },
+            }
             "intent" if parts.len() > 1 => {
                 let content = parts[1..].join(" ");
-                if let Err(e) = device.publish("intent/execute/text", content.into_bytes()).await {
+                if let Err(e) = device
+                    .publish("intent/execute/text", content.into_bytes())
+                    .await
+                {
                     println!("Failed to publish: {}", e);
                 }
-            },
+            }
             "set" => {
                 if parts.len() < 3 {
                     println!("Usage: set <path> <value>");
@@ -175,7 +198,8 @@ async fn main() -> Result<(), String> {
                 }
             }
             "speaker" => {
-                let json_val = serde_json::from_str(&device.get_id().await.to_string()).unwrap_or(json!(device.get_id().await.to_string()));
+                let json_val = serde_json::from_str(&device.get_id().await.to_string())
+                    .unwrap_or(json!(device.get_id().await.to_string()));
                 if let Err(e) = device.update_ctx("avi.dialogue.speaker", json_val).await {
                     println!("Failed to update context: {}", e);
                 }
@@ -250,15 +274,24 @@ async fn main() -> Result<(), String> {
 
 async fn on_started(device: AviDevice, peer_id: String, _listening: Vec<String>) {
     println!("Peer {} started", peer_id);
-    device.subscribe("global", move |from, topic, data| {
-        let msg = String::from_utf8_lossy(&data);
-        println!("\n[PubSub] {} on {}: {}", from, topic, msg);
-        print!("> ");
-        let _ = io::stdout().flush();
-    }).await.expect("Failed to subscribe to intent topic");
+    device
+        .subscribe("global", move |from, topic, data| {
+            let msg = String::from_utf8_lossy(&data);
+            println!("\n[PubSub] {} on {}: {}", from, topic, msg);
+            print!("> ");
+            let _ = io::stdout().flush();
+        })
+        .await
+        .expect("Failed to subscribe to intent topic");
 
-    device.subscribe(&format!("speak/{}/text", device.get_id().await.to_string()), move |_from, _topic, data| {
-        let msg = String::from_utf8_lossy(&data);
-        println!("Speaker: {}", msg);
-    }).await.expect("Failed to subscribe to intent topic");
+    device
+        .subscribe(
+            &format!("speak/{}/text", device.get_id().await.to_string()),
+            move |_from, _topic, data| {
+                let msg = String::from_utf8_lossy(&data);
+                println!("Speaker: {}", msg);
+            },
+        )
+        .await
+        .expect("Failed to subscribe to intent topic");
 }

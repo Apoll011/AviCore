@@ -1,15 +1,23 @@
+use super::avi_dsl::ctx;
+use dyon::Type::*;
+use dyon::embed::PushVariable;
+use dyon::{Dfn, Module, Runtime, Variable};
 use std::result::Result;
 use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime, Variable};
-use dyon::embed::PushVariable;
-use dyon::Type::*;
-use super::avi_dsl::ctx;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("manifest");
     module.add(Arc::new("get".into()), get_manifest, Dfn::nl(vec![], Any));
-    module.add(Arc::new("get_permissions".into()), get_permissions, Dfn::nl(vec![], Any));
-    module.add(Arc::new("is_disabled".into()), is_disabled, Dfn::nl(vec![], Any));
+    module.add(
+        Arc::new("get_permissions".into()),
+        get_permissions,
+        Dfn::nl(vec![], Any),
+    );
+    module.add(
+        Arc::new("is_disabled".into()),
+        is_disabled,
+        Dfn::nl(vec![], Any),
+    );
 }
 
 #[allow(non_snake_case)]
