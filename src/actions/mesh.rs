@@ -25,7 +25,9 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         .and_then(|v| v.get("dialogue"))
         .and_then(|v| v.get("speaker"))
         .and_then(|v| v.as_str())
-    && speaker == peer_id && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut()) {
+        && speaker == peer_id
+        && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut())
+    {
         avi.remove("speaker");
     }
 
@@ -34,7 +36,9 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         .and_then(|v| v.get("dialogue"))
         .and_then(|v| v.get("listener"))
         .and_then(|v| v.as_str())
-    && speaker == peer_id && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut()) {
+        && speaker == peer_id
+        && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut())
+    {
         avi.remove("listener");
     }
 

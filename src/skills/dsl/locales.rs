@@ -46,23 +46,21 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
     let id: String = _rt.pop()?;
     let skill_context = ctx(_rt)?;
     let hashmap = match obj {
-        Some(Variable::Object(v)) => {
-            v
-                .iter()
-                .filter_map(|(k, v)| match v {
-                    Variable::Str(text) => Some((k.clone().to_string(), text.as_ref().clone())),
-                    Variable::F64(number, ..) => Some((k.clone().to_string(), number.to_string())),
-                    Variable::Bool(bool, ..) => Some((
-                        k.clone().to_string(),
-                        runtime()
-                            .language_system
-                            .get_translation(&bool.to_string())
-                            .unwrap_or("Erro".to_string()),
-                    )),
-                    _ => None,
-                })
-                .collect()
-        }
+        Some(Variable::Object(v)) => v
+            .iter()
+            .filter_map(|(k, v)| match v {
+                Variable::Str(text) => Some((k.clone().to_string(), text.as_ref().clone())),
+                Variable::F64(number, ..) => Some((k.clone().to_string(), number.to_string())),
+                Variable::Bool(bool, ..) => Some((
+                    k.clone().to_string(),
+                    runtime()
+                        .language_system
+                        .get_translation(&bool.to_string())
+                        .unwrap_or("Erro".to_string()),
+                )),
+                _ => None,
+            })
+            .collect(),
         _ => return Err(format!("Expected object, got {:?}", obj)),
     };
 

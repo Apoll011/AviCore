@@ -58,7 +58,11 @@ impl LanguageSystem {
                 Err(_) => continue,
             };
             let path_buf = entry.path();
-            if let Some(ext) = path_buf.extension() && (ext == "yaml" || ext == "lang") && let Ok(content) = fs::read_to_string(&path_buf) && let Ok(parsed) = serde_yaml::from_str::<LanguageFile>(&content) {
+            if let Some(ext) = path_buf.extension()
+                && (ext == "yaml" || ext == "lang")
+                && let Ok(content) = fs::read_to_string(&path_buf)
+                && let Ok(parsed) = serde_yaml::from_str::<LanguageFile>(&content)
+            {
                 let lang_vec: Vec<IndividualLocale> = parsed
                     .lang
                     .into_iter()
@@ -105,7 +109,9 @@ impl LanguageSystem {
         fmt: &HashMap<String, String>,
     ) -> Option<String> {
         match self.locale(code, id) {
-            Some(value) => self.value_to_string(&value).map(|v| strfmt(&v, fmt).unwrap_or_else(|_| v.clone())),
+            Some(value) => self
+                .value_to_string(&value)
+                .map(|v| strfmt(&v, fmt).unwrap_or_else(|_| v.clone())),
             None => None,
         }
     }

@@ -33,8 +33,8 @@ impl SkillManager {
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
-        let entries= match fs::read_dir(runtime().skill_path.clone()) {
-            Ok(v) =>  v,
+        let entries = match fs::read_dir(runtime().skill_path.clone()) {
+            Ok(v) => v,
             Err(_) => return skills,
         };
 
@@ -78,11 +78,10 @@ impl SkillManager {
             None => return Err("Could not get directory name".into()),
         };
 
-        let dir_name_str;
-        match dir_name.to_str() {
-            Some(v) => dir_name_str = v,
+        let dir_name_str = match dir_name.to_str() {
+            Some(v) => v,
             None => return Err("Could not get directory name as string".into()),
-        }
+        };
 
         Ok((dir_name_str.into(), Skill::new(dir_name_str.to_string())?))
     }
@@ -104,7 +103,7 @@ impl SkillManager {
             None => return Err("Intent is not defined".into()),
         };
 
-        let full_name= match intent_info.intent_name {
+        let full_name = match intent_info.intent_name {
             Some(v) => v,
             None => return Err("Intent name is not defined".into()),
         };

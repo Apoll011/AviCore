@@ -116,7 +116,9 @@ impl ReplyManager {
                 return Err("Request timed out. Please try again.".to_string());
             }
 
-            if let Some(max) = self.config.max_retries && pending.retry_count >= max {
+            if let Some(max) = self.config.max_retries
+                && pending.retry_count >= max
+            {
                 return Err("Too many invalid attempts. Cancelling request.".to_string());
             }
 
@@ -128,7 +130,9 @@ impl ReplyManager {
                     pending.retry_count += 1;
                     let error_msg = pending.validator.get_error_txt(&error);
 
-                    if let Some(max) = self.config.max_retries && pending.retry_count >= max {
+                    if let Some(max) = self.config.max_retries
+                        && pending.retry_count >= max
+                    {
                         return Err("Too many invalid attempts. Cancelling request.".to_string());
                     }
 
