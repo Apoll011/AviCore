@@ -23,7 +23,7 @@ pub fn add_functions(module: &mut Module) {
     module.add(Arc::new("any_validator".into()), any_validator, Dfn::nl(vec![], Any));
     module.add(Arc::new("list_or_none_validator".into()), list_or_none_validator, Dfn::nl(vec![Any], Any));
     module.add(Arc::new("optional_validator".into()), optional_validator, Dfn::nl(vec![], Any));
-    module.add(Arc::new("bool_validator".into()), bool_validator, Dfn::nl(vec![Str, Str, Str, Str], Any));
+    module.add(Arc::new("bool_validator".into()), bool_validator, Dfn::nl(vec![Bool], Any));
     module.add(Arc::new("mapped_validator_str".into()), mapped_validator_str, Dfn::nl(vec![Any, Any], Any));
     module.add(Arc::new("mapped_validator_num".into()), mapped_validator_num, Dfn::nl(vec![Any, Any], Any));
     /*module.add(Arc::new("ask".into()), dir, Dfn::nl(vec![], Str)); //Ask a question with a list of asnwers, fuzzy the response or frist second trird etc
@@ -62,8 +62,8 @@ dyon_fn!{fn optional_validator() -> OptionalValidator {
         OptionalValidator
     }}
 
-dyon_fn!{fn bool_validator(yes: String, no: String, always: String, never: String) -> BoolValidator {
-        BoolValidator::new(yes, no, always, never)
+dyon_fn!{fn bool_validator(hard_search: bool) -> BoolValidator {
+        BoolValidator::new(hard_search)
     }}
 
 dyon_fn!{fn mapped_validator_str(mappings: Vec<(String, String)>, default: std::option::Option<String>) -> MappedValidatorString {

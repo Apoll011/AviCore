@@ -62,7 +62,6 @@ impl ResponseValidator for ListOrNoneValidator {
             }
         }
 
-        // Check against allowed values
         for allowed in &self.allowed_values {
             let compare_allowed = allowed.to_lowercase();
 
@@ -105,27 +104,14 @@ impl ResponseValidator for OptionalValidator {
 }
 
 pub struct BoolValidator {
-    pub(crate) yes_text: String,
-    pub(crate) no_text: String,
-    pub(crate) always_text: String,
-    pub(crate) never_text: String,
     pub(crate) hard_search: bool,
 }
 
 impl BoolValidator {
-    pub fn new(yes_text: String, no_text: String, always_text: String, never_text: String) -> Self {
+    pub fn new(hard_search: bool) -> Self {
         Self {
-            yes_text,
-            no_text,
-            always_text,
-            never_text,
-            hard_search: false,
+            hard_search
         }
-    }
-
-    pub fn hard_search(mut self, enabled: bool) -> Self {
-        self.hard_search = enabled;
-        self
     }
 }
 
@@ -134,31 +120,36 @@ impl ResponseValidator for BoolValidator {
 
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text).to_lowercase();
-        
-        let mappings = [
-            (&self.yes_text, true),
-            (&self.no_text, false),
-            (&self.always_text, true),
-            (&self.never_text, false),
-        ];
+
+        let yes_translations = runtime().language_system.get_translation_list("yes");
+        let no_translations = runtime().language_system.get_translation_list("no");
 
         if self.hard_search {
-            for (key, value) in mappings {
-                if cleaned == key.to_lowercase() {
-                    return Ok(value);
+            for yes_text in &yes_translations {
+                if cleaned == yes_text.to_lowercase() {
+                    return Ok(true);
+                }
+            }
+            for no_text in &no_translations {
+                if cleaned == no_text.to_lowercase() {
+                    return Ok(false);
                 }
             }
         } else {
-            for (key, value) in mappings {
-                if cleaned.contains(&key.to_lowercase()) {
-                    return Ok(value);
+            for yes_text in &yes_translations {
+                if cleaned.contains(&yes_text.to_lowercase()) {
+                    return Ok(true);
+                }
+            }
+            for no_text in &no_translations {
+                if cleaned.contains(&no_text.to_lowercase()) {
+                    return Ok(false);
                 }
             }
         }
-        
+
         Err(ValidationError::NotAccepted)
     }
-
     fn get_error_txt(&self, _error: &ValidationError) -> String {
         todo!()
     }
