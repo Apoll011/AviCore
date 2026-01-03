@@ -38,7 +38,7 @@ pub struct RequestReply {
     pub validator: Box<dyn ValidatorErasure>,
 }
 
-struct PendingReply {
+pub struct PendingReply {
     pub skill_request: String,
     pub handler: String,
     validator: Box<dyn ValidatorErasure>,
