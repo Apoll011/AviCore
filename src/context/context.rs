@@ -123,6 +123,11 @@ impl ContextManager {
 
         self.set(scope, key, serde_json::json!(value), ttl_duration, persistent);
     }
+
+    pub fn remove(&self, scope: &ContextScope, key: &str) {
+        self.delete_persistent(scope, key);
+    }
+    
     pub fn has(&self, scope: &ContextScope, key: &str) -> bool {
         self.get(scope, key).is_some()
     }
