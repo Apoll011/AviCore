@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             max_retries: Some(5),
         })),
         language_system: LanguageSystem::new("./config/lang"),
-        context: crate::context::context::ContextManager::new("./config/context")
+        context: ContextManager::new("./config/context")
     })).unwrap_or_else(|_| panic!("Runtime context already initialized"));
 
     let api = Arc::new(Mutex::new(Api::new()));
