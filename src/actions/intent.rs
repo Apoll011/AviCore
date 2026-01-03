@@ -48,7 +48,11 @@ impl Action for IntentAction {
                         }
                         return;
                     }
-                    Err(e) => speak(&e)
+                    Err(e) => {
+                        if e != "" {
+                            speak(&e)
+                        }
+                    }
                 }
 
                 let maybe_intent = match api.lock().await.intent(&*msg).await {
