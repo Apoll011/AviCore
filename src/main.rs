@@ -83,10 +83,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut mesh_action = MeshAction::new(MeshConfig {});
     mesh_action.register().await;
 
-    // Spawn a task for context cleanup
-    let ctx = crate::ctx::runtime().clone();
+    let ctx = runtime().clone();
     tokio::spawn(async move {
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60 * 5)); // Every 5 minutes
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60 * 5));
         loop {
             interval.tick().await;
             ctx.context.cleanup_expired();
