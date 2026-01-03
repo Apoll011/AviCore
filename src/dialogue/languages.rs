@@ -115,6 +115,21 @@ impl LanguageSystem {
         }
     }
 
+    pub fn get_translation_list(&self, id: &str) -> Vec<String> {
+        self.languages
+            .iter()
+            .find(|l| l.code == &*runtime().lang)
+            .and_then(|l| l.lang.iter().find(|i| i.id == id))
+            .map(|i| {
+                match &i.value.0 {
+                    serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
+                        seq.map(|v: YamlValue| match v { _=> v.to_string()})
+                    }
+                    _ => vec![i.value.clone().to_string()]
+                }
+            })
+    }
+
     pub fn list(&self, code: &str) -> Vec<(String, YamlValue)> {
         let Some(lang) = self.languages.iter().find(|l| l.code == code) else {
             return Vec::<(String, YamlValue)>::new();
