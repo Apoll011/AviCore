@@ -1,4 +1,4 @@
-use crate::context::context::ContextScope;
+use crate::context::ContextScope;
 use crate::ctx::runtime;
 use crate::dialogue::intent::JsonValue;
 use crate::skills::dsl::avi_dsl::ctx;

@@ -14,7 +14,7 @@ use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfi
 use crate::actions::intent::{IntentAction, IntentConfig};
 use crate::actions::mesh::{MeshAction, MeshConfig};
 use crate::api::api::Api;
-use crate::context::context::ContextManager;
+use crate::context::ContextManager;
 use crate::ctx::RUNTIMECTX;
 use crate::ctx::{RuntimeContext, runtime};
 use crate::dialogue::languages::LanguageSystem;

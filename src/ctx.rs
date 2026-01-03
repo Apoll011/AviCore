@@ -1,4 +1,4 @@
-use crate::context::context::ContextManager;
+use crate::context::ContextManager;
 use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::ReplyManager;
 use avi_device::device::AviDevice;
