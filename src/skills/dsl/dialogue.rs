@@ -28,7 +28,7 @@ pub fn add_functions(module: &mut Module) {
     module.add(Arc::new("mapped_validator_num".into()), mapped_validator_num, Dfn::nl(vec![Any, Any], Any));
 
     module.add(Arc::new("confirm".into()), confirm, Dfn::nl(vec![Str, Str], Void));
-    /*module.add(Arc::new("ask".into()), dir, Dfn::nl(vec![], Str)); //Ask a question with a list of asnwers, fuzzy the response or frist second trird etc
+    /*module.add(Arc::new("ask".into()), dir, Dfn::nl(vec![Str, Object], Str)); //Ask a question with a list of asnwers, fuzzy the response or frist second trird etc
     module.add(Arc::new("repeat".into()), dir, Dfn::nl(vec![], Str)); //Repeats the last spoken utterance (Dont matter the skill)
     module.add(Arc::new("request_attention".into()), dir, Dfn::nl(vec![], Str)); //Call the user name without leaving the current skill */
 }
