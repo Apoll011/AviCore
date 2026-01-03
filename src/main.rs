@@ -60,7 +60,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             timeout_secs: 60,
             max_retries: Some(5),
         })),
-        language_system: LanguageSystem::new("./config/lang")
+        language_system: LanguageSystem::new("./config/lang"),
+        context: crate::context::context::ContextManager::new("./config/context")
     })).unwrap_or_else(|_| panic!("Runtime context already initialized"));
 
     let api = Arc::new(Mutex::new(Api::new()));
@@ -79,6 +80,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut mesh_action = MeshAction::new(MeshConfig {});
     mesh_action.register().await;
+
+    // Spawn a task for context cleanup
+    let ctx = crate::ctx::runtime().clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60 * 5)); // Every 5 minutes
+        loop {
+            interval.tick().await;
+            ctx.context.cleanup_expired();
+        }
+    });
 
     tokio::signal::ctrl_c().await?;
     println!("Shutting down gracefully...");

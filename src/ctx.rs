@@ -1,6 +1,7 @@
 use std::sync::{Arc, OnceLock};
 use avi_device::device::AviDevice;
 use tokio::runtime::Handle;
+use crate::context::context::ContextManager;
 use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::ReplyManager;
 
@@ -19,7 +20,9 @@ pub struct RuntimeContext {
 
     pub reply_manager: ReplyManager,
 
-    pub language_system: LanguageSystem
+    pub language_system: LanguageSystem,
+
+    pub context: ContextManager
 }
 
 /// Global static storage for the `RuntimeContext`.
