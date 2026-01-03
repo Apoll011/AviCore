@@ -1,3 +1,5 @@
+use crate::ctx::runtime;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValidationError {
     ParseError(String),
@@ -30,28 +32,19 @@ impl ResponseValidator for AnyValidator {
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        todo!()
+        "How?".to_string()
     }
 }
 
 pub struct ListOrNoneValidator {
     pub(crate) allowed_values: Vec<String>,
-    pub(crate) none_text: String,
-    pub(crate) case_sensitive: bool,
 }
 
 impl ListOrNoneValidator {
-    pub fn new(allowed_values: Vec<String>, none_text: String) -> Self {
+    pub fn new(allowed_values: Vec<String>) -> Self {
         Self {
-            allowed_values,
-            none_text,
-            case_sensitive: false,
+            allowed_values
         }
-    }
-
-    pub fn case_sensitive(mut self, sensitive: bool) -> Self {
-        self.case_sensitive = sensitive;
-        self
     }
 }
 
@@ -59,34 +52,21 @@ impl ResponseValidator for ListOrNoneValidator {
     type Output = Option<String>;
 
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
-        let cleaned = self.clear_text(text);
+        let cleaned = self.clear_text(text).to_lowercase();
 
-        let compare_text = if self.case_sensitive {
-            cleaned.clone()
-        } else {
-            cleaned.to_lowercase()
-        };
+        let none_translations = runtime().language_system.get_translation_list("none");
 
-        let compare_none = if self.case_sensitive {
-            self.none_text.clone()
-        } else {
-            self.none_text.to_lowercase()
-        };
-
-        // Check for "none" first
-        if compare_text.contains(&compare_none) {
-            return Ok(None);
+        for none_text in none_translations {
+            if cleaned.contains(&none_text.to_lowercase()) {
+                return Ok(None);
+            }
         }
 
         // Check against allowed values
         for allowed in &self.allowed_values {
-            let compare_allowed = if self.case_sensitive {
-                allowed.clone()
-            } else {
-                allowed.to_lowercase()
-            };
+            let compare_allowed = allowed.to_lowercase();
 
-            if compare_text.contains(&compare_allowed) {
+            if cleaned.contains(&compare_allowed) {
                 return Ok(Some(cleaned));
             }
         }
@@ -99,32 +79,28 @@ impl ResponseValidator for ListOrNoneValidator {
     }
 }
 
-pub struct OptionalValidator {
-    pub(crate) none_text: String,
-}
-
-impl OptionalValidator {
-    pub fn new(none_text: String) -> Self {
-        Self { none_text }
-    }
-}
+pub struct OptionalValidator;
 
 impl ResponseValidator for OptionalValidator {
     type Output = Option<String>;
 
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text);
-        let none_text_lower = self.none_text.to_lowercase();
+        let cleaned_lower = cleaned.to_lowercase();
 
-        if cleaned.to_lowercase().contains(&none_text_lower) {
-            Ok(None)
-        } else {
-            Ok(Some(cleaned))
+        let none_translations = runtime().language_system.get_translation_list("none");
+
+        for none_text in none_translations {
+            if cleaned_lower.contains(&none_text.to_lowercase()) {
+                return Ok(None);
+            }
         }
+    
+        Ok(Some(cleaned))
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        todo!()
+        runtime().language_system.get_translation("error_validator_optional")
     }
 }
 

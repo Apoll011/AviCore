@@ -21,8 +21,8 @@ pub fn add_functions(module: &mut Module) {
     module.add(Arc::new("on_reply_mapped_num".into()), on_reply_mapped_num, Dfn::nl(vec![Str, Any], Void));
 
     module.add(Arc::new("any_validator".into()), any_validator, Dfn::nl(vec![], Any));
-    module.add(Arc::new("list_or_none_validator".into()), list_or_none_validator, Dfn::nl(vec![Any, Str], Any));
-    module.add(Arc::new("optional_validator".into()), optional_validator, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("list_or_none_validator".into()), list_or_none_validator, Dfn::nl(vec![Any], Any));
+    module.add(Arc::new("optional_validator".into()), optional_validator, Dfn::nl(vec![], Any));
     module.add(Arc::new("bool_validator".into()), bool_validator, Dfn::nl(vec![Str, Str, Str, Str], Any));
     module.add(Arc::new("mapped_validator_str".into()), mapped_validator_str, Dfn::nl(vec![Any, Any], Any));
     module.add(Arc::new("mapped_validator_num".into()), mapped_validator_num, Dfn::nl(vec![Any, Any], Any));
@@ -41,8 +41,8 @@ dyon_fn! {fn listen() {
 }}
 
 dyon_obj!{AnyValidator { }}
-dyon_obj!{ListOrNoneValidator { allowed_values, none_text, case_sensitive }}
-dyon_obj!{OptionalValidator { none_text }}
+dyon_obj!{ListOrNoneValidator { allowed_values }}
+dyon_obj!{OptionalValidator { }}
 dyon_obj!{BoolValidator { yes_text, no_text, always_text, never_text, hard_search }}
 dyon_obj!{MappedValidatorString { mappings, default, hard_search }}
 dyon_obj!{MappedValidatorF64 { mappings, default, hard_search }}
@@ -54,12 +54,12 @@ dyon_fn!{fn any_validator() -> AnyValidator {
         AnyValidator
     }}
 
-dyon_fn!{fn list_or_none_validator(allowed: Vec<String>, none: String) -> ListOrNoneValidator {
-        ListOrNoneValidator::new(allowed, none)
+dyon_fn!{fn list_or_none_validator(allowed: Vec<String>) -> ListOrNoneValidator {
+        ListOrNoneValidator::new(allowed)
     }}
 
-dyon_fn!{fn optional_validator(none: String) -> OptionalValidator {
-        OptionalValidator::new(none)
+dyon_fn!{fn optional_validator() -> OptionalValidator {
+        OptionalValidator
     }}
 
 dyon_fn!{fn bool_validator(yes: String, no: String, always: String, never: String) -> BoolValidator {
