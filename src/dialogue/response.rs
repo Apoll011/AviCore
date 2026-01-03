@@ -234,7 +234,6 @@ mod tests {
     fn test_list_or_none_validator_with_none() {
         let validator = ListOrNoneValidator::new(
             vec!["apple".to_string(), "banana".to_string()],
-            "none".to_string(),
         );
 
         assert_eq!(validator.validate_and_parse("none").unwrap(), None);
@@ -246,7 +245,6 @@ mod tests {
     fn test_list_or_none_validator_with_values() {
         let validator = ListOrNoneValidator::new(
             vec!["apple".to_string(), "banana".to_string()],
-            "none".to_string(),
         );
 
         assert_eq!(
@@ -267,8 +265,7 @@ mod tests {
     fn test_list_or_none_validator_case_sensitive() {
         let validator = ListOrNoneValidator::new(
             vec!["Apple".to_string()],
-            "None".to_string(),
-        ).case_sensitive(true);
+        );
 
         assert!(validator.validate_and_parse("apple").is_err());
         assert_eq!(
@@ -283,7 +280,6 @@ mod tests {
     fn test_list_or_none_validator_not_accepted() {
         let validator = ListOrNoneValidator::new(
             vec!["apple".to_string()],
-            "none".to_string(),
         );
 
         assert!(validator.validate_and_parse("orange").is_err());
@@ -292,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_optional_validator_with_none() {
-        let validator = OptionalValidator::new("none".to_string());
+        let validator = OptionalValidator;
 
         assert_eq!(validator.validate_and_parse("none").unwrap(), None);
         assert_eq!(validator.validate_and_parse("NONE").unwrap(), None);
@@ -301,7 +297,7 @@ mod tests {
 
     #[test]
     fn test_optional_validator_with_value() {
-        let validator = OptionalValidator::new("none".to_string());
+        let validator = OptionalValidator;
 
         assert_eq!(
             validator.validate_and_parse("something").unwrap(),
@@ -315,12 +311,7 @@ mod tests {
 
     #[test]
     fn test_bool_validator_basic() {
-        let validator = BoolValidator::new(
-            "yes".to_string(),
-            "no".to_string(),
-            "always".to_string(),
-            "never".to_string(),
-        );
+        let validator = BoolValidator::new(false);
 
         assert_eq!(validator.validate_and_parse("yes").unwrap(), true);
         assert_eq!(validator.validate_and_parse("no").unwrap(), false);
@@ -330,12 +321,7 @@ mod tests {
 
     #[test]
     fn test_bool_validator_case_insensitive() {
-        let validator = BoolValidator::new(
-            "yes".to_string(),
-            "no".to_string(),
-            "always".to_string(),
-            "never".to_string(),
-        );
+        let validator = BoolValidator::new(false);
 
         assert_eq!(validator.validate_and_parse("YES").unwrap(), true);
         assert_eq!(validator.validate_and_parse("No").unwrap(), false);
@@ -345,12 +331,7 @@ mod tests {
 
     #[test]
     fn test_bool_validator_partial_match() {
-        let validator = BoolValidator::new(
-            "yes".to_string(),
-            "no".to_string(),
-            "always".to_string(),
-            "never".to_string(),
-        );
+        let validator = BoolValidator::new(false);
 
         assert_eq!(validator.validate_and_parse("oh yes please").unwrap(), true);
         assert_eq!(validator.validate_and_parse("no way").unwrap(), false);
@@ -359,12 +340,7 @@ mod tests {
 
     #[test]
     fn test_bool_validator_hard_search() {
-        let validator = BoolValidator::new(
-            "yes".to_string(),
-            "no".to_string(),
-            "always".to_string(),
-            "never".to_string(),
-        ).hard_search(true);
+        let validator = BoolValidator::new(true);
 
         assert_eq!(validator.validate_and_parse("yes").unwrap(), true);
         assert!(validator.validate_and_parse("oh yes please").is_err());
@@ -373,31 +349,11 @@ mod tests {
 
     #[test]
     fn test_bool_validator_not_accepted() {
-        let validator = BoolValidator::new(
-            "yes".to_string(),
-            "no".to_string(),
-            "always".to_string(),
-            "never".to_string(),
-        );
+        let validator = BoolValidator::new(false);
 
         assert!(validator.validate_and_parse("maybe").is_err());
         assert!(validator.validate_and_parse("sometimes").is_err());
         assert!(validator.validate_and_parse("").is_err());
-    }
-
-    #[test]
-    fn test_bool_validator_custom_translations() {
-        let validator = BoolValidator::new(
-            "si".to_string(),      // Spanish yes
-            "no".to_string(),      // Spanish no
-            "siempre".to_string(), // Spanish always
-            "nunca".to_string(),   // Spanish never
-        );
-
-        assert_eq!(validator.validate_and_parse("si").unwrap(), true);
-        assert_eq!(validator.validate_and_parse("no").unwrap(), false);
-        assert_eq!(validator.validate_and_parse("siempre").unwrap(), true);
-        assert_eq!(validator.validate_and_parse("nunca").unwrap(), false);
     }
 
     #[test]
@@ -497,12 +453,7 @@ mod tests {
 
     #[test]
     fn test_is_accepted_helper() {
-        let validator = BoolValidator::new(
-            "yes".to_string(),
-            "no".to_string(),
-            "always".to_string(),
-            "never".to_string(),
-        );
+        let validator = BoolValidator::new(false);
 
         assert!(validator.is_accepted("yes"));
         assert!(validator.is_accepted("no"));

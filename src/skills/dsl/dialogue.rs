@@ -43,7 +43,7 @@ dyon_fn! {fn listen() {
 dyon_obj!{AnyValidator { }}
 dyon_obj!{ListOrNoneValidator { allowed_values }}
 dyon_obj!{OptionalValidator { }}
-dyon_obj!{BoolValidator { yes_text, no_text, always_text, never_text, hard_search }}
+dyon_obj!{BoolValidator { hard_search }}
 dyon_obj!{MappedValidatorString { mappings, default, hard_search }}
 dyon_obj!{MappedValidatorF64 { mappings, default, hard_search }}
 
