@@ -99,7 +99,7 @@ impl ResponseValidator for OptionalValidator {
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        runtime().language_system.get_translation("error_validator_optional")
+        runtime().language_system.get_translation("error_validator_optional").unwrap_or_else(|| "".to_string())
     }
 }
 
@@ -151,7 +151,7 @@ impl ResponseValidator for BoolValidator {
         Err(ValidationError::NotAccepted)
     }
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        runtime().language_system.get_translation("error_validator_bool")
+        runtime().language_system.get_translation("error_validator_bool").unwrap_or_else(|| "".to_string())
     }
 }
 

@@ -4,6 +4,7 @@ use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
 use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
+use strfmt::strfmt;
 
 /// Represents the structure of a language resource file.
 #[derive(Debug, Clone, Deserialize)]
@@ -105,13 +106,29 @@ impl LanguageSystem {
             })
     }
 
-    pub fn get_translation(&self, id: &str) -> String {
-        match self.locale(&*runtime().lang, id) {
-            Some(value) => match value.0 {
-                serde_yaml::Value::String(s) => s,
-                _ => id.to_string()
+    pub fn locale_fmt(&self, code: &str, id: &str, fmt: &HashMap<String, String>) -> Option<String> {
+        match self.locale(code, id) {
+            Some(value) => {
+                match self.value_to_string(&value) {
+                    Some(v) => Some(strfmt(&v,  fmt).unwrap_or_else(|_| v.clone())),
+                    None => None
+                }
             },
-            None => id.to_string()
+            None => None
+        }
+    }
+
+    fn value_to_string(&self, value: &YamlValue) -> Option<String> {
+        match &value.0 {
+            serde_yaml::Value::String(s) => Some(s.clone()),
+            _ => None
+        }
+    }
+
+    pub fn get_translation(&self, id: &str) -> Option<String> {
+        match self.locale(&*runtime().lang, id) {
+            Some(value) => self.value_to_string(&value),
+            None => None
         }
     }
 
