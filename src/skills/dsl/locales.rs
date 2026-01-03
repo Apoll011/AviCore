@@ -35,9 +35,9 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
             hashmap = v.iter()
                 .filter_map(|(k, v)| {
                     match v {
-                        Variable::Str(text) => Some((k.clone().into(), text.as_ref().clone())),
-                        Variable::F64(number,  ..) => Some((k.clone().into(), number.to_string())),
-                        Variable::Bool(bool, ..) => Some((k.clone().into(), runtime().language_system.get_translation(&*bool.to_string()).unwrap_or("Erro".to_string()))),
+                        Variable::Str(text) => Some((k.clone().to_string(), text.as_ref().clone())),
+                        Variable::F64(number,  ..) => Some((k.clone().to_string(), number.to_string())),
+                        Variable::Bool(bool, ..) => Some((k.clone().to_string(), runtime().language_system.get_translation(&*bool.to_string()).unwrap_or("Erro".to_string()))),
                         _ => None
                     }
                 })

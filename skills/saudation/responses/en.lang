@@ -1,6 +1,6 @@
 code: en
 lang:
-  hello: "Hi Tiago!"
+  hello: "Hi {name}!"
   ask: "How can I help you?"
   light_on_success: "Turning on the lights."
   light_off_success: "Lights are off now."

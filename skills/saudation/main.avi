@@ -6,7 +6,7 @@ use dialogue as d
 
 fn intent_hi(intent: Intent) {
     if (test::is_eco()) {
-        say(locale::get("hello"))
+        say(locale::get_fmt("hello", {"name": "Tiago"}))
         d::confirm("ask", "reply")
     }
     else {
