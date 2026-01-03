@@ -3,8 +3,10 @@ use locale as locale
 use constant as constant
 use test as test
 use dialogue as d
+use context as c
 
 fn intent_hi(intent: Intent) {
+    println(c::has("test"))
     if (test::is_eco()) {
         say(locale::get_fmt("hello", {"name": "Tiago"}))
         d::confirm("ask", "reply")
@@ -24,5 +26,6 @@ fn reply(response) {
 }
 
 fn main() {
+    c::set("test", "Hi", true, 0)
     println("Greeting Skill Loaded!")
 }
