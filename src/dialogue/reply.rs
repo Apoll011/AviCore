@@ -105,17 +105,17 @@ impl ReplyManager {
 
     /// Processes incoming text against pending reply
     /// Returns true if text was consumed by reply handler
-    pub async fn process_text(&self, text: &str) -> Result<Replayed, dyn std::error::Error> {
+    pub async fn process_text(&self, text: &str) -> Result<Replayed, String> {
         let mut pending_lock = self.pending_reply.lock().await;
 
         if let Some(mut pending) = pending_lock.take() {
             if pending.created_at.elapsed() > Duration::from_secs(self.config.timeout_secs) {
-                return Err("Request timed out. Please try again.");
+                return Err("Request timed out. Please try again.".to_string());
             }
 
             if let Some(max) = self.config.max_retries {
                 if pending.retry_count >= max {
-                    return Err("Too many invalid attempts. Cancelling request.");
+                    return Err("Too many invalid attempts. Cancelling request.".to_string());
                 }
             }
 
@@ -131,16 +131,16 @@ impl ReplyManager {
 
                     if let Some(max) = self.config.max_retries {
                         if pending.retry_count >= max {
-                            return Err("Too many invalid attempts. Cancelling request.");
+                            return Err("Too many invalid attempts. Cancelling request.".to_string());
                         }
                     }
 
                     *pending_lock = Some(pending);
-                    Err(&error_msg)
+                    Err(error_msg)
                 }
             }
         } else {
-            Err("No pending request.")
+            Err("".to_string())
         }
     }
 }
