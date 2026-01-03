@@ -22,3 +22,4 @@ avi_device = { package = "avi-device", git = "https://github.com/apoll011/avi-de
 [dev-dependencies]
 async-trait = "0.1.89"
 avi-p2p = { git = "https://github.com/apoll011/avi-device", package = "avi-p2p" }
+tempfile = "3.24.0"
