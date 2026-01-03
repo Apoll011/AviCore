@@ -20,6 +20,7 @@ use crate::actions::mesh::{MeshAction, MeshConfig};
 use crate::api::api::Api;
 use crate::ctx::RuntimeContext;
 use crate::ctx::RUNTIMECTX;
+use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::{ReplyConfig, ReplyManager};
 use crate::skills::manager::SkillManager;
 
@@ -59,6 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             timeout_secs: 60,
             max_retries: Some(5),
         })),
+        language_system: LanguageSystem::new("./config/lang")
     })).unwrap_or_else(|_| panic!("Runtime context already initialized"));
 
     let api = Arc::new(Mutex::new(Api::new()));
