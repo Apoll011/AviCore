@@ -4,6 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use crate::dialogue::intent::JsonValue;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextValue {
@@ -112,6 +113,18 @@ impl ContextManager {
         }
 
         None
+    }
+    pub fn set_skill_save(&self, scope: ContextScope, key: String, value: JsonValue, ttl: f64, persistent: bool) {
+        let ttl_duration = if ttl == 0.0 {
+            None
+        } else {
+            Some(Duration::from_secs_f64(ttl))
+        };
+
+        self.set(scope, key, serde_json::json!(value), ttl_duration, persistent);
+    }
+    pub fn has(&self, scope: &ContextScope, key: &str) -> bool {
+        self.get(scope, key).is_some()
     }
 
     pub fn get_memory(&self, scope: &ContextScope, key: &str) -> Option<serde_json::Value> {
