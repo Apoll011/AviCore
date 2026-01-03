@@ -99,6 +99,7 @@ impl ReplyManager {
         *self.pending_reply.lock().await = None;
     }
 
+    #[allow(dead_code)]
     pub async fn has_pending(&self) -> bool {
         self.pending_reply.lock().await.is_some()
     }

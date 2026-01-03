@@ -2,6 +2,7 @@ use crate::ctx::runtime;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValidationError {
+    #[allow(dead_code)]
     ParseError(String),
     NotAccepted,
 }
@@ -11,6 +12,7 @@ pub trait ResponseValidator {
 
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError>;
 
+    #[allow(dead_code)]
     fn is_accepted(&self, text: &str) -> bool {
         self.validate_and_parse(text).is_ok()
     }
@@ -175,6 +177,7 @@ impl<T: Clone> MappedValidator<T> {
         self
     }
 
+    #[allow(dead_code)]
     pub fn hard_search(mut self, enabled: bool) -> Self {
         self.hard_search = enabled;
         self

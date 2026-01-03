@@ -1,7 +1,6 @@
 use std::result::Result;
 use std::sync::Arc;
-use dyon::{Dfn, Module, Runtime, Variable};
-use dyon::embed::PushVariable;
+use dyon::{Dfn, Module, Runtime};
 use dyon::Type::*;
 use crate::ctx::runtime;
 use crate::dialogue::reply::RequestReply;

@@ -39,6 +39,7 @@ impl Action for IntentAction {
             async move {
                 let msg = String::from_utf8_lossy(&data);
                 let text = msg.trim();
+                let mut processed = false;
 
                 match runtime().reply_manager.process_text(text).await {
                     Ok(replay) => {
@@ -46,13 +47,17 @@ impl Action for IntentAction {
                         if let Err(e) = mg.run_skill_function(&*replay.pending_reply.skill_request, &*replay.pending_reply.handler, vec![replay.parsed_output]) {
                             println!("Error executing replay: {}", e);
                         }
-                        return;
+                        processed = true;
                     }
                     Err(e) => {
                         if e != "" {
                             speak(&e)
                         }
                     }
+                }
+
+                if processed {
+                    return;
                 }
 
                 let maybe_intent = match api.lock().await.intent(&*msg).await {
