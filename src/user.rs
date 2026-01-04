@@ -1,3 +1,4 @@
+use avi_device::device::AviDevice;
 use crate::ctx::runtime;
 use crate::{remove_ctx, set_ctx};
 use serde::{Deserialize, Serialize};
@@ -80,21 +81,24 @@ pub struct UserManager {
 }
 
 impl UserManager {
-    pub async fn new() -> Self {
-        if let Ok(value) = runtime().device.get_ctx("avi.user").await {
+    pub fn new() -> Self {
+        Self {
+            user: Self::create_default_user(),
+        }
+    }
+
+    pub async fn init(&mut self, device: &AviDevice) {
+        if let Ok(value) = device.get_ctx("avi.user").await {
             if let Ok(user) = serde_json::from_value::<User>(value) {
-                set_ctx!("user", &user);
-                return Self { user };
+                self.user = user;
+                return;
             }
         }
 
         let user = Self::create_default_user();
-        let manager = Self { user };
-
-        manager.save_all().await;
-
-        manager
+        self.user = user;
     }
+
 
     fn create_default_user() -> User {
         let now = chrono::Utc::now().timestamp();
@@ -438,7 +442,7 @@ mod tests {
     #[tokio::test]
     async fn example_usage() {
         // Inicialização - busca do device ctx (mesh) → persistent → cria novo
-        let mut user_manager = UserManager::new().await;
+        let mut user_manager = UserManager::new();
 
         // Profile operations
         user_manager.set_name("João Silva".to_string()).await;
