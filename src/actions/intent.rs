@@ -13,19 +13,16 @@ pub struct IntentAction {
     skill_manager: Arc<Mutex<SkillManager>>,
 }
 
-pub struct IntentConfig {
-    pub(crate) api: Arc<Mutex<Api>>,
-    pub(crate) skill_manager: Arc<Mutex<SkillManager>>,
-}
+pub struct IntentConfig {}
 
 impl Action for IntentAction {
     type Config = IntentConfig;
 
-    fn new(config: Self::Config) -> Self {
+    fn new(_config: Self::Config) -> Self {
         Self {
             device: Arc::clone(&runtime().device),
-            api: config.api,
-            skill_manager: config.skill_manager,
+            api: Arc::new(Mutex::new(Api::new())),
+            skill_manager:  Arc::new(Mutex::new(SkillManager::new()))
         }
     }
 

@@ -15,7 +15,7 @@ use crate::actions::intent::{IntentAction, IntentConfig};
 use crate::actions::mesh::{MeshAction, MeshConfig};
 use crate::api::api::Api;
 use crate::context::ContextManager;
-use crate::ctx::RUNTIMECTX;
+use crate::ctx::{create_ctx, RUNTIMECTX};
 use crate::ctx::{RuntimeContext, runtime};
 use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::{ReplyConfig, ReplyManager};
@@ -47,34 +47,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let device = Arc::new(AviDevice::new(config).await?);
 
-    let device_clone = Arc::clone(&device);
-    tokio::spawn(async move {
-        device_clone.start_event_loop().await;
-    });
+    device.start_event_loop();
 
-    RUNTIMECTX
-        .set(Arc::from(RuntimeContext {
-            api_url: "http://127.0.0.1:1178".into(),
-            lang: "pt".into(),
-            skill_path: "./skills".into(),
-            device,
-            rt: Handle::current(),
-            reply_manager: ReplyManager::new(Option::from(ReplyConfig {
-                timeout_secs: 60,
-                max_retries: Some(5),
-            })),
-            language_system: LanguageSystem::new("./config/lang"),
-            context: ContextManager::new("./config/context"),
-        }))
-        .unwrap_or_else(|_| panic!("Runtime context already initialized"));
+    create_ctx("127.0.0.1:8080", "pt", "./config", device);
 
-    let api = Arc::new(Mutex::new(Api::new()));
-    let manager = Arc::new(Mutex::new(SkillManager::new()));
-
-    let mut intent_action = IntentAction::new(IntentConfig {
-        api: Arc::clone(&api),
-        skill_manager: Arc::clone(&manager),
-    });
+    let mut intent_action = IntentAction::new(IntentConfig {});
     intent_action.register().await;
 
     let mut dialogue_action = DialogueAction::new(DialogueConfig {

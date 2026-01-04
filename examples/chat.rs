@@ -95,16 +95,13 @@ async fn main() -> Result<(), String> {
         can_gateway_embedded: true,
     };
 
-    let device = AviDevice::new(config).await?;
+    let device = Arc::new(AviDevice::new(config).await?);
 
     device
         .register_stream_handler("chat".to_string(), ChatStreamFactory)
         .await;
 
-    let device_clone = device.clone();
-    tokio::spawn(async move {
-        device_clone.start_event_loop().await;
-    });
+    device.start_event_loop();
 
     device.on_started(on_started).await;
 
