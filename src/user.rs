@@ -166,9 +166,9 @@ impl UserManager {
     pub async fn load_from_device(&self) {
         if let Ok(value) = runtime().device.get_ctx("avi.user").await {
             if let Ok(user) = serde_json::from_value::<User>(value) {
-                println!("Loaded user from device ctx: {:?}", user);
-                set_ctx!("user", &user);
                 *self.user.write().await = user;
+                self.save_to_memory().await;
+                self.save_to_persistent().await;
                 return;
             }
         }
