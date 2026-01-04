@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 use crate::ctx::runtime;
 use crate::{remove_ctx, set_ctx};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
@@ -70,8 +70,8 @@ pub struct VoiceData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metadata {
-    pub created_at: i64,      // Unix timestamp
-    pub last_updated: i64,    // Unix timestamp
+    pub created_at: i64,       // Unix timestamp
+    pub last_updated: i64,     // Unix timestamp
     pub last_interaction: i64, // Unix timestamp
 }
 
@@ -113,9 +113,7 @@ impl UserManager {
                 communication_style: CommunicationStyle::Friendly,
                 response_length: ResponseLength::Balanced,
                 topics_of_interest: Vec::new(),
-                notification_preferences: NotificationPreferences {
-                    quiet_hours: None,
-                },
+                notification_preferences: NotificationPreferences { quiet_hours: None },
             },
             voice_data: VoiceData {
                 voice_profile_id: None,
@@ -142,7 +140,10 @@ impl UserManager {
     }
 
     async fn save_to_device(&self) {
-        let _ = runtime().device.update_ctx("avi.user", json!(&self.user)).await;
+        let _ = runtime()
+            .device
+            .update_ctx("avi.user", json!(&self.user))
+            .await;
     }
 
     async fn save_to_persistent(&self) {
@@ -264,7 +265,10 @@ impl UserManager {
     }
 
     pub async fn remove_topic_of_interest(&mut self, topic: &str) {
-        self.user.preferences.topics_of_interest.retain(|t| t != topic);
+        self.user
+            .preferences
+            .topics_of_interest
+            .retain(|t| t != topic);
         self.auto_save().await;
     }
 
@@ -274,7 +278,11 @@ impl UserManager {
     }
 
     pub fn get_quiet_hours(&self) -> Option<&QuietHours> {
-        self.user.preferences.notification_preferences.quiet_hours.as_ref()
+        self.user
+            .preferences
+            .notification_preferences
+            .quiet_hours
+            .as_ref()
     }
 
     pub async fn set_quiet_hours(&mut self, start: String, end: String) {
@@ -436,19 +444,33 @@ mod tests {
         user_manager.set_name("João Silva".to_string()).await;
         user_manager.set_nickname(Some("JJ".to_string())).await;
         user_manager.set_language("pt-BR".to_string()).await;
-        user_manager.set_timezone("America/Sao_Paulo".to_string()).await;
-        user_manager.set_location(Some("São Paulo".to_string()), "Brasil".to_string()).await;
+        user_manager
+            .set_timezone("America/Sao_Paulo".to_string())
+            .await;
+        user_manager
+            .set_location(Some("São Paulo".to_string()), "Brasil".to_string())
+            .await;
 
         // Birthday como timestamp
         let birthday_timestamp = chrono::Utc::now().timestamp();
         user_manager.set_birthday(birthday_timestamp).await;
 
         // Preferences
-        user_manager.set_communication_style(CommunicationStyle::Casual).await;
-        user_manager.set_response_length(ResponseLength::Detailed).await;
-        user_manager.add_topic_of_interest("tecnologia".to_string()).await;
-        user_manager.add_topic_of_interest("música".to_string()).await;
-        user_manager.set_quiet_hours("22:00".to_string(), "08:00".to_string()).await;
+        user_manager
+            .set_communication_style(CommunicationStyle::Casual)
+            .await;
+        user_manager
+            .set_response_length(ResponseLength::Detailed)
+            .await;
+        user_manager
+            .add_topic_of_interest("tecnologia".to_string())
+            .await;
+        user_manager
+            .add_topic_of_interest("música".to_string())
+            .await;
+        user_manager
+            .set_quiet_hours("22:00".to_string(), "08:00".to_string())
+            .await;
 
         // Voice data
         user_manager.set_voice_speed(1.2).await;
@@ -458,7 +480,10 @@ mod tests {
             println!("Nome: {}", name);
         }
 
-        user_manager.set_field("profile.nickname", json!("Johnny")).await.unwrap();
+        user_manager
+            .set_field("profile.nickname", json!("Johnny"))
+            .await
+            .unwrap();
 
         // Update last interaction
         user_manager.update_last_interaction().await;

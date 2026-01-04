@@ -1,6 +1,7 @@
 use crate::context::ContextManager;
 use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::{ReplyConfig, ReplyManager};
+use crate::user::UserManager;
 use avi_device::device::AviDevice;
 use std::sync::{Arc, OnceLock};
 use tokio::runtime::Handle;
@@ -23,6 +24,8 @@ pub struct RuntimeContext {
     pub language_system: LanguageSystem,
 
     pub context: ContextManager,
+
+    pub user: UserManager,
 }
 
 /// Global static storage for the `RuntimeContext`.
@@ -55,6 +58,7 @@ pub fn create_ctx(api_url: &str, lang: &str, config_path: &str, device: Arc<AviD
             })),
             language_system: LanguageSystem::new(&format!("{}/lang", config_path)),
             context: ContextManager::new(&format!("{}/context", config_path)),
+            user: UserManager::new(),
         }))
         .unwrap_or_else(|_| panic!("Runtime context already initialized"));
 }
