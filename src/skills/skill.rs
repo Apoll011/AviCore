@@ -6,6 +6,7 @@ use dyon::{Call, FnIndex, Module, Runtime, error, load};
 use std::ffi::OsStr;
 use std::fs;
 use std::sync::Arc;
+use crate::ctx::runtime;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -56,7 +57,7 @@ impl Skill {
     ///
     /// TODO: Use the `skill_path` from `RuntimeContext` instead of a hardcoded path.
     fn skill_path(name: &str) -> String {
-        format!("./skills/{}", name)
+        format!("{}/{}", runtime().skill_path, name)
     }
 
     /// Creates and loads a Dyon module for the skill, including its dependencies.
