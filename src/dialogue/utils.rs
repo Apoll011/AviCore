@@ -1,4 +1,3 @@
-use crate::context::ContextScope;
 use crate::ctx::runtime;
 use crate::set_ctx;
 
