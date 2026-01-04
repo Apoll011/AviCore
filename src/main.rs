@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     device.start_event_loop();
 
-    create_ctx("127.0.0.1:8080", "pt", "./config", device);
+    create_ctx("127.0.0.1:8080", "pt", "./config", device).await;
 
     let mut intent_action = IntentAction::new(IntentConfig {});
     intent_action.register().await;
