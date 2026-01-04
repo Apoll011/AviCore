@@ -22,7 +22,7 @@ impl Action for IntentAction {
         Self {
             device: Arc::clone(&runtime().device),
             api: Arc::new(Mutex::new(Api::new())),
-            skill_manager:  Arc::new(Mutex::new(SkillManager::new()))
+            skill_manager: Arc::new(Mutex::new(SkillManager::new())),
         }
     }
 

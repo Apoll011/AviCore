@@ -13,11 +13,11 @@ use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfig};
 use crate::actions::intent::{IntentAction, IntentConfig};
 use crate::actions::mesh::{MeshAction, MeshConfig};
-use crate::ctx::{create_ctx};
+use crate::context::context_cleanup_task;
+use crate::ctx::create_ctx;
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use std::sync::Arc;
-use crate::context::context_cleanup_task;
 
 /// Entry point for the AviCore application.
 ///

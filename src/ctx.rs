@@ -46,12 +46,12 @@ pub fn create_ctx(api_url: &str, lang: &str, config_path: &str, device: Arc<AviD
         .set(Arc::from(RuntimeContext {
             api_url: api_url.to_string(),
             lang: lang.to_string(),
-            skill_path: format!("{}/skills", config_path.clone()),
+            skill_path: format!("{}/skills", config_path),
             device,
             rt: Handle::current(),
             reply_manager: ReplyManager::new(Option::from(ReplyConfig {
                 timeout_secs: 30,
-                max_retries: Some(3)
+                max_retries: Some(3),
             })),
             language_system: LanguageSystem::new(&format!("{}/lang", config_path.clone())),
             context: ContextManager::new(&format!("{}/context", config_path.clone())),
