@@ -93,7 +93,6 @@ impl Action for IntentAction {
                 "intent/reply/cancel",
                 move |_from, _topic, _data| async move {
                     runtime().reply_manager.cancel().await;
-                    speak!("Request cancelled.");
                 },
             )
             .await
