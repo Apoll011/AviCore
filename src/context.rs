@@ -228,7 +228,7 @@ impl ContextManager {
 macro_rules! set_ctx {
     ($key:expr, $value:expr) => {
         crate::ctx::runtime().context.set(
-            ContextScope::Global,
+            crate::context::ContextScope::Global,
             $key.to_string(),
             serde_json::json!($value),
             None,
@@ -237,7 +237,7 @@ macro_rules! set_ctx {
     };
     ($key:expr, $value:expr, $ttl:expr) => {
         crate::ctx::runtime().context.set(
-            ContextScope::Global,
+            crate::context::ContextScope::Global,
             $key.to_string(),
             serde_json::json!($value),
             Some(Duration::from_secs_f64(ttl)),
@@ -246,7 +246,7 @@ macro_rules! set_ctx {
     };
     ($key:expr, $value:expr, $ttl:expr, persistent: $persistent:expr) => {
         crate::ctx::runtime().context.set(
-            ContextScope::Global,
+            crate::context::ContextScope::Global,
             $key.to_string(),
             serde_json::json!($value),
             Some(Duration::from_secs_f64(ttl)),
@@ -255,7 +255,7 @@ macro_rules! set_ctx {
     };
     ($key:expr, $value:expr, $ttl:expr, $persistent:expr) => {
         crate::ctx::runtime().context.set(
-            ContextScope::Global,
+            crate::context::ContextScope::Global,
             $key.to_string(),
             serde_json::json!($value),
             Some(Duration::from_secs_f64(ttl)),
@@ -264,7 +264,7 @@ macro_rules! set_ctx {
     };
     ($key:expr, $value:expr, persistent: $persistent:expr) => {
         crate::ctx::runtime().context.set(
-            ContextScope::Global,
+            crate::context::ContextScope::Global,
             $key.to_string(),
             serde_json::json!($value),
             None,
@@ -278,7 +278,7 @@ macro_rules! get_ctx {
     ($key:expr) => {
         crate::ctx::runtime()
             .context
-            .get(ContextScope::Global, $key.to_string());
+            .get(&crate::context::ContextScope::Global, $key)
     };
 }
 
@@ -287,7 +287,7 @@ macro_rules! has_ctx {
     ($key:expr) => {
         crate::ctx::runtime()
             .context
-            .has(ContextScope::Global, $key.to_string());
+            .has(&crate::context::ContextScope::Global, $key)
     };
 }
 
@@ -296,7 +296,7 @@ macro_rules! remove_ctx {
     ($key:expr) => {
         crate::ctx::runtime()
             .context
-            .remove(ContextScope::Global, $key.to_string());
+            .remove(&crate::context::ContextScope::Global, $key);
     };
 }
 

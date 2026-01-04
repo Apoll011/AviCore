@@ -6,7 +6,7 @@ use crate::dialogue::response::{
 };
 use crate::dialogue::utils::{listen as device_listen, speak};
 use crate::skills::dsl::avi_dsl::ctx;
-use crate::speak;
+use crate::{get_ctx, speak};
 use dyon::Type::*;
 use dyon::{Dfn, Module, Runtime};
 use std::result::Result;
@@ -85,8 +85,9 @@ pub fn add_functions(module: &mut Module) {
         confirm,
         Dfn::nl(vec![Str, Str], Void),
     );
-    /*module.add(Arc::new("repeat".into()), dir, Dfn::nl(vec![], Str)); //Repeats the last spoken utterance (Dont matter the skill)
-    module.add(Arc::new("request_attention".into()), dir, Dfn::nl(vec![], Str)); //Call the user name without leaving the current skill */
+    module.add(Arc::new("repeat".into()), repeat, Dfn::nl(vec![], Void)); //Repeats the last spoken utterance (Dont matter the skill)
+
+    /*module.add(Arc::new("request_attention".into()), dir, Dfn::nl(vec![], Str)); //Call the user name without leaving the current skill */
 }
 
 dyon_fn! {fn say(text: String) {
@@ -99,6 +100,13 @@ dyon_fn! {fn say_once(text: String) {
 
 dyon_fn! {fn listen() {
     device_listen();
+}}
+
+dyon_fn! {fn repeat() {
+    match get_ctx!("utterance.last") {
+        Some(v) => speak!(&v.to_string()),
+        None => (),
+    };
 }}
 
 dyon_obj! {AnyValidator { }}
