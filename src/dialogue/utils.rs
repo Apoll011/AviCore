@@ -1,4 +1,6 @@
+use crate::context::ContextScope;
 use crate::ctx::runtime;
+use serde_json::json;
 
 /// Retrieves the ID of the last active listener device.
 ///
@@ -38,8 +40,18 @@ pub async fn get_speaker() -> Result<String, Box<dyn std::error::Error>> {
 /// * `text` - The string content to be spoken.
 ///
 /// TODO: Handle the case where the speaker device is offline or unavailable.
-pub fn speak(text: &str) {
+pub fn speak(text: &str, store: bool) {
     let text = text.to_string();
+
+    if store {
+        runtime().context.set(
+            ContextScope::Global,
+            "utterance.last".to_string(),
+            json!(text),
+            None,
+            false,
+        );
+    }
 
     runtime().rt.spawn(async move {
         let speaker = match get_speaker().await {
@@ -59,7 +71,12 @@ pub fn speak(text: &str) {
         }
     });
 }
-
+#[macro_export]
+macro_rules! speak {
+    ($a: expr) => {
+        crate::dialogue::utils::speak($a, false)
+    };
+}
 /// Commands the last active listener to start listening for voice input.
 ///
 /// This function spawns an asynchronous task to publish the start command.

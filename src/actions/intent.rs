@@ -1,11 +1,12 @@
 use crate::actions::action::Action;
 use crate::api::api::Api;
 use crate::ctx::runtime;
-use crate::dialogue::utils::speak;
 use crate::skills::manager::SkillManager;
+use crate::speak;
 use avi_device::device::AviDevice;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+
 pub struct IntentAction {
     device: Arc<AviDevice>,
     api: Arc<Mutex<Api>>,
@@ -57,7 +58,7 @@ impl Action for IntentAction {
                         }
                         Err(e) => {
                             if !e.is_empty() {
-                                speak(&e)
+                                speak!(&e);
                             }
                         }
                     }
@@ -95,7 +96,7 @@ impl Action for IntentAction {
                 "intent/reply/cancel",
                 move |_from, _topic, _data| async move {
                     runtime().reply_manager.cancel().await;
-                    speak("Request cancelled.");
+                    speak!("Request cancelled.");
                 },
             )
             .await

@@ -6,6 +6,7 @@ use crate::dialogue::response::{
 };
 use crate::dialogue::utils::{listen as device_listen, speak};
 use crate::skills::dsl::avi_dsl::ctx;
+use crate::speak;
 use dyon::Type::*;
 use dyon::{Dfn, Module, Runtime};
 use std::result::Result;
@@ -14,6 +15,7 @@ use std::sync::Arc;
 pub fn add_functions(module: &mut Module) {
     module.ns("dialogue");
     module.add(Arc::new("say".into()), say, Dfn::nl(vec![Str], Void));
+    module.add(Arc::new("say_once".into()), say, Dfn::nl(vec![Str], Void));
     module.add(Arc::new("listen".into()), listen, Dfn::nl(vec![Any], Void)); // Last device that sent a utterance will start listening again
 
     module.add(
@@ -88,7 +90,11 @@ pub fn add_functions(module: &mut Module) {
 }
 
 dyon_fn! {fn say(text: String) {
-    speak(&text);
+    speak(&text, true);
+}}
+
+dyon_fn! {fn say_once(text: String) {
+    speak!(&text);
 }}
 
 dyon_fn! {fn listen() {
@@ -221,11 +227,11 @@ pub fn confirm(_rt: &mut Runtime) -> Result<(), String> {
     let skill_context = ctx(_rt)?;
     let skill_name = ctx(_rt)?.info.name.clone();
 
-    speak(
+    speak!(
         &skill_context
             .languages
             .get_translation(&question_locale_id)
-            .unwrap(),
+            .unwrap()
     );
 
     handle_on_reply(handler, BoolValidator::new(false), skill_name);

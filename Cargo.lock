@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "AviCore"
-version = "0.6.2"
+version = "0.7.9"
 dependencies = [
  "async-trait",
  "avi-device",
@@ -20,6 +20,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sha2 0.11.0-rc.3",
+ "store",
  "strfmt",
  "tempfile",
  "tokio 1.48.0",
@@ -405,6 +406,12 @@ name = "bumpalo"
 version = "3.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dd9dc738b7a8311c7ade152424974d8115f2cdad61e8dab8dac9f2362298510"
+
+[[package]]
+name = "byteio"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1628aaab25b23803453d80873600ebffe6326577c1db81f5a3d123290e6287af"
 
 [[package]]
 name = "byteorder"
@@ -2654,6 +2661,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nano-leb128"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f778a7433cee0fc957551fe7e8bb7abb5caa7ea5d5ed52f9fabb63873415728e"
+dependencies = [
+ "byteio",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4037,6 +4053,17 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "store"
+version = "0.1.0-alpha.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ad0af95a7b33c61fe6ae2848e850f98e72f3a3e3c1e351d8bbe122631f12263"
+dependencies = [
+ "byteio",
+ "nano-leb128",
+ "serde",
+]
 
 [[package]]
 name = "strfmt"
