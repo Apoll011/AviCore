@@ -5,6 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use crate::ctx::runtime;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextValue {
@@ -297,6 +298,17 @@ macro_rules! remove_ctx {
             .context
             .remove(ContextScope::Global, $key.to_string());
     };
+}
+
+pub fn context_cleanup_task() {
+    let ctx = runtime().clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(60 * 5));
+        loop {
+            interval.tick().await;
+            ctx.context.cleanup_expired();
+        }
+    });
 }
 
 #[cfg(test)]

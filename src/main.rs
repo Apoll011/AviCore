@@ -13,18 +13,11 @@ use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfig};
 use crate::actions::intent::{IntentAction, IntentConfig};
 use crate::actions::mesh::{MeshAction, MeshConfig};
-use crate::api::api::Api;
-use crate::context::ContextManager;
-use crate::ctx::{create_ctx, RUNTIMECTX};
-use crate::ctx::{RuntimeContext, runtime};
-use crate::dialogue::languages::LanguageSystem;
-use crate::dialogue::reply::{ReplyConfig, ReplyManager};
-use crate::skills::manager::SkillManager;
+use crate::ctx::{create_ctx};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use std::sync::Arc;
-use tokio::runtime::Handle;
-use tokio::sync::Mutex;
+use crate::context::context_cleanup_task;
 
 /// Entry point for the AviCore application.
 ///
@@ -62,14 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut mesh_action = MeshAction::new(MeshConfig {});
     mesh_action.register().await;
 
-    let ctx = runtime().clone();
-    tokio::spawn(async move {
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60 * 5));
-        loop {
-            interval.tick().await;
-            ctx.context.cleanup_expired();
-        }
-    });
+    context_cleanup_task();
 
     tokio::signal::ctrl_c().await?;
     println!("Shutting down gracefully...");
