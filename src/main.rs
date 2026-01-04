@@ -15,7 +15,7 @@ use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfi
 use crate::actions::intent::{IntentAction, IntentConfig};
 use crate::actions::mesh::{MeshAction, MeshConfig};
 use crate::context::context_cleanup_task;
-use crate::ctx::{create_ctx, runtime};
+use crate::ctx::{create_ctx};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use std::sync::Arc;
@@ -43,9 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     device.start_event_loop();
 
-    create_ctx("127.0.0.1:8080", "pt", "./config", device).await;
-
-    runtime().user.save_all().await;
+    create_ctx("127.0.0.1:8080", "pt", "./config", device);
 
     let mut intent_action = IntentAction::new(IntentConfig {});
     intent_action.register().await;

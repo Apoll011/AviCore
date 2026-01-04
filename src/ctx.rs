@@ -44,15 +44,7 @@ pub fn runtime() -> &'static Arc<RuntimeContext> {
     RUNTIMECTX.get().expect("Runtime not initialized")
 }
 
-pub async fn create_ctx(
-    api_url: &str,
-    lang: &str,
-    config_path: &str,
-    device: Arc<AviDevice>,
-) {
-    let mut user = UserManager::new();
-    user.init(&device).await;
-
+pub fn create_ctx(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {
     RUNTIMECTX
         .set(Arc::from(RuntimeContext {
             api_url: api_url.to_string(),
@@ -66,8 +58,7 @@ pub async fn create_ctx(
             })),
             language_system: LanguageSystem::new(&format!("{}/lang", config_path)),
             context: ContextManager::new(&format!("{}/context", config_path)),
-            user,
+            user: UserManager::new(),
         }))
         .unwrap_or_else(|_| panic!("Runtime context already initialized"));
 }
-
