@@ -1,6 +1,6 @@
 use crate::context::ContextScope;
 use crate::ctx::runtime;
-use serde_json::json;
+use crate::set_ctx;
 
 /// Retrieves the ID of the last active listener device.
 ///
@@ -44,13 +44,7 @@ pub fn speak(text: &str, store: bool) {
     let text = text.to_string();
 
     if store {
-        runtime().context.set(
-            ContextScope::Global,
-            "utterance.last".to_string(),
-            json!(text),
-            None,
-            false,
-        );
+        set_ctx!("utterance.last", text);
     }
 
     runtime().rt.spawn(async move {

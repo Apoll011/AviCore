@@ -223,6 +223,82 @@ impl ContextManager {
     }
 }
 
+#[macro_export]
+macro_rules! set_ctx {
+    ($key:expr, $value:expr) => {
+        crate::ctx::runtime().context.set(
+            ContextScope::Global,
+            $key.to_string(),
+            serde_json::json!($value),
+            None,
+            false,
+        );
+    };
+    ($key:expr, $value:expr, $ttl:expr) => {
+        crate::ctx::runtime().context.set(
+            ContextScope::Global,
+            $key.to_string(),
+            serde_json::json!($value),
+            Some(Duration::from_secs_f64(ttl)),
+            false,
+        );
+    };
+    ($key:expr, $value:expr, $ttl:expr, persistent: $persistent:expr) => {
+        crate::ctx::runtime().context.set(
+            ContextScope::Global,
+            $key.to_string(),
+            serde_json::json!($value),
+            Some(Duration::from_secs_f64(ttl)),
+            $persistent,
+        );
+    };
+    ($key:expr, $value:expr, $ttl:expr, $persistent:expr) => {
+        crate::ctx::runtime().context.set(
+            ContextScope::Global,
+            $key.to_string(),
+            serde_json::json!($value),
+            Some(Duration::from_secs_f64(ttl)),
+            $persistent,
+        );
+    };
+    ($key:expr, $value:expr, persistent: $persistent:expr) => {
+        crate::ctx::runtime().context.set(
+            ContextScope::Global,
+            $key.to_string(),
+            serde_json::json!($value),
+            None,
+            $persistent,
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! get_ctx {
+    ($key:expr) => {
+        crate::ctx::runtime()
+            .context
+            .get(ContextScope::Global, $key.to_string());
+    };
+}
+
+#[macro_export]
+macro_rules! has_ctx {
+    ($key:expr) => {
+        crate::ctx::runtime()
+            .context
+            .has(ContextScope::Global, $key.to_string());
+    };
+}
+
+#[macro_export]
+macro_rules! remove_ctx {
+    ($key:expr) => {
+        crate::ctx::runtime()
+            .context
+            .remove(ContextScope::Global, $key.to_string());
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
