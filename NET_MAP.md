@@ -19,6 +19,8 @@ speak
   └── {peerId}/text
 listening
   └── {peerId}/start
+user
+  └── update
 ```
 
 ### Topic Descriptions

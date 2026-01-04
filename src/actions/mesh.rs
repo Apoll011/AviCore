@@ -8,7 +8,6 @@ pub struct MeshAction {
     /// Reference to the Avi device.
     device: Arc<AviDevice>,
 }
-
 pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
     match avi_device
         .delete_ctx(&format!("avi.device.caps.{}", peer_id))
@@ -48,6 +47,14 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
     }
 }
 
+pub async fn on_started(_device: AviDevice, _peer_id: String, _listening_address: Vec<String>) {
+    runtime().user.get_from_disk().await;
+}
+
+pub async fn on_peer_connected(_device: AviDevice, _peer_id: String, _address: String) {
+    runtime().user.save_to_device().await;
+}
+
 impl Action for MeshAction {
     type Config = MeshConfig;
     fn new(_config: Self::Config) -> Self {
@@ -57,6 +64,22 @@ impl Action for MeshAction {
     }
 
     async fn register(&mut self) {
+        self.device.on_started(on_started).await;
+        self.device.on_peer_connected(on_peer_connected).await;
         self.device.on_peer_disconnected(on_peer_disconnected).await;
+
+        match self
+            .device
+            .subscribe_async(
+                "user/update",
+                move |_from, _topic, _data| async move {
+                    runtime().user.load_from_device().await;
+                },
+            )
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => eprintln!("Failed to subscribe to update topic: {}", e),
+        }
     }
 }
