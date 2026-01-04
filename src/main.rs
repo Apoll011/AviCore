@@ -8,6 +8,7 @@ mod context;
 mod ctx;
 mod dialogue;
 mod skills;
+mod user;
 
 use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfig};

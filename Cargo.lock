@@ -23,6 +23,7 @@ dependencies = [
  "strfmt",
  "tempfile",
  "tokio 1.48.0",
+ "uuid",
 ]
 
 [[package]]
