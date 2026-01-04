@@ -88,9 +88,10 @@ avi
   ├── device
   │     └── caps: *
   │           └── {peerId}: DeviceCapabilities
-  └── dialogue
-        ├── speaker: {peerId}
-        └── listener: {peerId}
+  ├── dialogue
+  │     ├── speaker: {peerId}
+  │     └── listener: {peerId}
+  └── user: User
 ```
 
 ### Context Breakdown
