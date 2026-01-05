@@ -29,7 +29,6 @@ impl SkillManager {
     ///
     /// A `HashMap` containing the successfully loaded skills.
     ///
-    /// TODO: Consider adding a way to reload skills without restarting the application.
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 

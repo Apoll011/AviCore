@@ -37,7 +37,7 @@ impl Skill {
     ///
     /// Returns an error if the skill context or module fails to load.
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
-        let context = SkillContext::new(&Self::skill_path(&name));
+        let context = SkillContext::new(&Self::skill_path(&name))?;
 
         let module: Arc<Module> = match Self::create_module(&name, &context) {
             Ok(v) => v,
@@ -55,7 +55,6 @@ impl Skill {
 
     /// Constructs the path to a skill's directory.
     ///
-    /// TODO: Use the `skill_path` from `RuntimeContext` instead of a hardcoded path.
     fn skill_path(name: &str) -> String {
         format!("{}/{}", runtime().skill_path, name)
     }
@@ -136,8 +135,6 @@ impl Skill {
     }
 
     /// Formats an intent name into a Dyon-compatible function name.
-    ///
-    /// FIXME: This function panics if the intent name does not contain an '@' separator.
     pub fn format_intent_name(name: String) -> String {
         name.split("@").collect::<Vec<&str>>()[1].replace(".", "_")
     }

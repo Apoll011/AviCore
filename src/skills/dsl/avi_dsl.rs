@@ -42,8 +42,6 @@ pub fn load_module() -> Option<dyon::Module> {
 /// # Panics
 ///
 /// Panics if the `SkillContext` is not found at the expected stack position or if it cannot be popped.
-///
-/// TODO: Avoid panicking; return an `Option` or `Result` instead.
 pub fn ctx(rt: &mut Runtime) -> Result<SkillContext, String> {
     SkillContext::pop_var(rt, &rt.stack[0])
 }

@@ -28,8 +28,6 @@ use std::sync::Arc;
 /// # Errors
 ///
 /// Returns an error if device initialization, context setup, or signal handling fails.
-///
-/// TODO: Consider moving hardcoded configuration values (API URL, paths) to a configuration file or environment variables.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = AviDeviceConfig {
