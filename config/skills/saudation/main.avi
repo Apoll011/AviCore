@@ -4,12 +4,13 @@ use constant as constant
 use test as test
 use dialogue as d
 use context as c
+use user as user
 
 fn intent_hi(intent: Intent) {
     println(c::has("test"))
     println(c::get("test"))
     if (test::is_eco()) {
-        say(locale::get_fmt("hello", {"name": "Tiago"}))
+        say(locale::get_fmt("hello", {"name": user::name()}))
         d::confirm("ask", "reply")
     }
     else {
