@@ -169,3 +169,10 @@ impl LanguageSystem {
             .any(|lang| lang.lang.iter().any(|l| l.id == id))
     }
 }
+
+#[macro_export]
+macro_rules! locale {
+    ($key:expr) => {
+        crate::ctx::runtime().language_system.get_translation($key)
+    };
+}
