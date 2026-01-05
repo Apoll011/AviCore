@@ -9,3 +9,4 @@ pub mod manifest;
 pub mod settings;
 pub mod time;
 pub mod utils;
+mod user;
