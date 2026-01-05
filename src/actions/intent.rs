@@ -34,6 +34,7 @@ impl IntentAction {
             Err(e) => {
                 if !e.is_empty() {
                     speak!(&e);
+                    return true;
                 }
                 false
             }
