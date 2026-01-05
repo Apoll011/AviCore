@@ -177,7 +177,6 @@ impl UserManager {
         self.save_all().await;
     }
 
-
     // ==================== PROFILE METHODS ====================
 
     pub async fn get_id(&self) -> String {
@@ -251,7 +250,12 @@ impl UserManager {
     // ==================== PREFERENCES METHODS ====================
 
     pub async fn get_communication_style(&self) -> CommunicationStyle {
-        self.user.read().await.preferences.communication_style.clone()
+        self.user
+            .read()
+            .await
+            .preferences
+            .communication_style
+            .clone()
     }
 
     pub async fn set_communication_style(&self, style: CommunicationStyle) {
@@ -269,7 +273,12 @@ impl UserManager {
     }
 
     pub async fn get_topics_of_interest(&self) -> Vec<String> {
-        self.user.read().await.preferences.topics_of_interest.clone()
+        self.user
+            .read()
+            .await
+            .preferences
+            .topics_of_interest
+            .clone()
     }
 
     pub async fn add_topic_of_interest(&self, topic: String) {
@@ -292,7 +301,12 @@ impl UserManager {
     }
 
     pub async fn clear_topics_of_interest(&self) {
-        self.user.write().await.preferences.topics_of_interest.clear();
+        self.user
+            .write()
+            .await
+            .preferences
+            .topics_of_interest
+            .clear();
         self.auto_save().await;
     }
 
@@ -307,13 +321,22 @@ impl UserManager {
     }
 
     pub async fn set_quiet_hours(&self, start: String, end: String) {
-        self.user.write().await.preferences.notification_preferences.quiet_hours =
-            Some(QuietHours { start, end });
+        self.user
+            .write()
+            .await
+            .preferences
+            .notification_preferences
+            .quiet_hours = Some(QuietHours { start, end });
         self.auto_save().await;
     }
 
     pub async fn remove_quiet_hours(&self) {
-        self.user.write().await.preferences.notification_preferences.quiet_hours = None;
+        self.user
+            .write()
+            .await
+            .preferences
+            .notification_preferences
+            .quiet_hours = None;
         self.auto_save().await;
     }
 

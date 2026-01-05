@@ -8,5 +8,5 @@ pub mod locales;
 pub mod manifest;
 pub mod settings;
 pub mod time;
-pub mod utils;
 mod user;
+pub mod utils;

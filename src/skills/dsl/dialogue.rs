@@ -87,7 +87,11 @@ pub fn add_functions(module: &mut Module) {
     );
     module.add(Arc::new("repeat".into()), repeat, Dfn::nl(vec![], Void)); //Repeats the last spoken utterance (Dont matter the skill)
 
-    module.add(Arc::new("request_attention".into()), req_attention, Dfn::nl(vec![], Void)); //Call the user name without leaving the current skill
+    module.add(
+        Arc::new("request_attention".into()),
+        req_attention,
+        Dfn::nl(vec![], Void),
+    ); //Call the user name without leaving the current skill
 }
 
 dyon_fn! {fn say(text: String) {

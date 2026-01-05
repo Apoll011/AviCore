@@ -70,12 +70,9 @@ impl Action for MeshAction {
 
         match self
             .device
-            .subscribe_async(
-                "user/update",
-                move |_from, _topic, _data| async move {
-                    runtime().user.load_from_device().await;
-                },
-            )
+            .subscribe_async("user/update", move |_from, _topic, _data| async move {
+                runtime().user.load_from_device().await;
+            })
             .await
         {
             Ok(_) => (),
