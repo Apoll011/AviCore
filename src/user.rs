@@ -166,9 +166,8 @@ impl UserManager {
     pub async fn load_from_device(&self) {
         if let Ok(value) = runtime().device.get_ctx("avi.user").await {
             if let Ok(user) = serde_json::from_value::<User>(value) {
+                set_ctx!("user", &user);
                 *self.user.write().await = user;
-                self.save_to_memory().await;
-                self.save_to_persistent().await;
                 return;
             }
         }
@@ -177,6 +176,7 @@ impl UserManager {
         *self.user.write().await = user;
         self.save_all().await;
     }
+
 
     // ==================== PROFILE METHODS ====================
 
@@ -251,12 +251,7 @@ impl UserManager {
     // ==================== PREFERENCES METHODS ====================
 
     pub async fn get_communication_style(&self) -> CommunicationStyle {
-        self.user
-            .read()
-            .await
-            .preferences
-            .communication_style
-            .clone()
+        self.user.read().await.preferences.communication_style.clone()
     }
 
     pub async fn set_communication_style(&self, style: CommunicationStyle) {
@@ -274,12 +269,7 @@ impl UserManager {
     }
 
     pub async fn get_topics_of_interest(&self) -> Vec<String> {
-        self.user
-            .read()
-            .await
-            .preferences
-            .topics_of_interest
-            .clone()
+        self.user.read().await.preferences.topics_of_interest.clone()
     }
 
     pub async fn add_topic_of_interest(&self, topic: String) {
@@ -302,12 +292,7 @@ impl UserManager {
     }
 
     pub async fn clear_topics_of_interest(&self) {
-        self.user
-            .write()
-            .await
-            .preferences
-            .topics_of_interest
-            .clear();
+        self.user.write().await.preferences.topics_of_interest.clear();
         self.auto_save().await;
     }
 
@@ -322,22 +307,13 @@ impl UserManager {
     }
 
     pub async fn set_quiet_hours(&self, start: String, end: String) {
-        self.user
-            .write()
-            .await
-            .preferences
-            .notification_preferences
-            .quiet_hours = Some(QuietHours { start, end });
+        self.user.write().await.preferences.notification_preferences.quiet_hours =
+            Some(QuietHours { start, end });
         self.auto_save().await;
     }
 
     pub async fn remove_quiet_hours(&self) {
-        self.user
-            .write()
-            .await
-            .preferences
-            .notification_preferences
-            .quiet_hours = None;
+        self.user.write().await.preferences.notification_preferences.quiet_hours = None;
         self.auto_save().await;
     }
 
@@ -470,6 +446,13 @@ impl UserManager {
 
         Err("Failed to set value".to_string())
     }
+}
+
+#[macro_export]
+macro_rules! user_name {
+    () => {
+        runtime().rt.block_on(runtime().user.get_name())
+    };
 }
 
 #[cfg(test)]
