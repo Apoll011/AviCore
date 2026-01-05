@@ -75,16 +75,18 @@ pub struct Metadata {
     pub last_interaction: i64, // Unix timestamp
 }
 
-use tokio::sync::RwLock;
+use parking_lot::RwLock;
+use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct UserManager {
-    user: RwLock<User>,
+    user: Arc<RwLock<User>>,
 }
 
 impl UserManager {
     pub fn new() -> Self {
         Self {
-            user: RwLock::new(Self::create_default_user()),
+            user: Arc::new(RwLock::new(Self::create_default_user())),
         }
     }
 
@@ -122,28 +124,28 @@ impl UserManager {
     // ==================== SAVE METHODS ====================
 
     pub async fn save_all(&self) {
-        self.save_to_memory().await;
+        self.save_to_memory();
         self.save_to_device().await;
-        self.save_to_persistent().await;
+        self.save_to_persistent();
     }
 
-    async fn save_to_memory(&self) {
-        set_ctx!("user", &*self.user.read().await);
+    fn save_to_memory(&self) {
+        set_ctx!("user", &*self.user.read());
     }
 
     pub async fn save_to_device(&self) {
         let _ = runtime()
             .device
-            .update_ctx("avi.user", json!(&*self.user.read().await))
+            .update_ctx("avi.user", json!(&*self.user.read()))
             .await;
     }
 
-    async fn save_to_persistent(&self) {
-        set_ctx!("user", &*self.user.read().await, persistent: true);
+    fn save_to_persistent(&self) {
+        set_ctx!("user", &*self.user.read(), persistent: true);
     }
 
     async fn auto_save(&self) {
-        self.update_last_modified().await;
+        self.update_last_modified();
         self.save_all().await;
     }
 
@@ -151,15 +153,15 @@ impl UserManager {
         self.save_all().await;
     }
 
-    async fn update_last_modified(&self) {
-        self.user.write().await.metadata.last_updated = chrono::Utc::now().timestamp();
+    fn update_last_modified(&self) {
+        self.user.write().metadata.last_updated = chrono::Utc::now().timestamp();
     }
 
-    pub async fn get_from_disk(&self) {
+    pub fn get_from_disk(&self) {
         if let Some(user) = get_ctx!("user")
             && let Ok(data) = serde_json::from_value::<User>(user)
         {
-            *self.user.write().await = data;
+            *self.user.write() = data;
         }
     }
 
@@ -167,250 +169,376 @@ impl UserManager {
         if let Ok(value) = runtime().device.get_ctx("avi.user").await {
             if let Ok(user) = serde_json::from_value::<User>(value) {
                 set_ctx!("user", &user);
-                *self.user.write().await = user;
+                *self.user.write() = user;
                 return;
             }
         }
 
         let user = Self::create_default_user();
-        *self.user.write().await = user;
+        *self.user.write() = user;
         self.save_all().await;
     }
 
     // ==================== PROFILE METHODS ====================
 
-    pub async fn get_id(&self) -> String {
-        self.user.read().await.id.clone()
+    pub fn get_id(&self) -> String {
+        self.user.read().id.clone()
     }
 
-    pub async fn get_name(&self) -> String {
-        self.user.read().await.profile.name.clone()
+    pub fn get_name(&self) -> String {
+        self.user.read().profile.name.clone()
     }
 
-    pub async fn set_name(&self, name: String) {
-        self.user.write().await.profile.name = name;
-        self.auto_save().await;
+    pub fn set_name(&self, name: String) {
+        let mut user = self.user.write();
+        user.profile.name = name;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_nickname(&self) -> Option<String> {
-        self.user.read().await.profile.nickname.clone()
+    pub fn get_nickname(&self) -> Option<String> {
+        self.user.read().profile.nickname.clone()
     }
 
-    pub async fn set_nickname(&self, nickname: Option<String>) {
-        self.user.write().await.profile.nickname = nickname;
-        self.auto_save().await;
+    pub fn set_nickname(&self, nickname: Option<String>) {
+        let mut user = self.user.write();
+        user.profile.nickname = nickname;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_language(&self) -> String {
-        self.user.read().await.profile.language.clone()
+    pub fn get_language(&self) -> String {
+        self.user.read().profile.language.clone()
     }
 
-    pub async fn set_language(&self, language: String) {
-        self.user.write().await.profile.language = language;
-        self.auto_save().await;
+    pub fn set_language(&self, language: String) {
+        let mut user = self.user.write();
+        user.profile.language = language;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_timezone(&self) -> String {
-        self.user.read().await.profile.timezone.clone()
+    pub fn get_timezone(&self) -> String {
+        self.user.read().profile.timezone.clone()
     }
 
-    pub async fn set_timezone(&self, timezone: String) {
-        self.user.write().await.profile.timezone = timezone;
-        self.auto_save().await;
+    pub fn set_timezone(&self, timezone: String) {
+        let mut user = self.user.write();
+        user.profile.timezone = timezone;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_location(&self) -> Option<Location> {
-        self.user.read().await.profile.location.clone()
+    pub fn get_location(&self) -> Option<Location> {
+        self.user.read().profile.location.clone()
     }
 
-    pub async fn set_location(&self, city: Option<String>, country: String) {
-        self.user.write().await.profile.location = Some(Location { city, country });
-        self.auto_save().await;
+    pub fn set_location(&self, city: Option<String>, country: String) {
+        let mut user = self.user.write();
+        user.profile.location = Some(Location { city, country });
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn remove_location(&self) {
-        self.user.write().await.profile.location = None;
-        self.auto_save().await;
+    pub fn remove_location(&self) {
+        let mut user = self.user.write();
+        user.profile.location = None;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_birthday(&self) -> Option<i64> {
-        self.user.read().await.profile.birthday
+    pub fn get_birthday(&self) -> Option<i64> {
+        self.user.read().profile.birthday
     }
 
-    pub async fn set_birthday(&self, timestamp: i64) {
-        self.user.write().await.profile.birthday = Some(timestamp);
-        self.auto_save().await;
+    pub fn set_birthday(&self, timestamp: i64) {
+        let mut user = self.user.write();
+        user.profile.birthday = Some(timestamp);
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn remove_birthday(&self) {
-        self.user.write().await.profile.birthday = None;
-        self.auto_save().await;
+    pub fn remove_birthday(&self) {
+        let mut user = self.user.write();
+        user.profile.birthday = None;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
     // ==================== PREFERENCES METHODS ====================
 
-    pub async fn get_communication_style(&self) -> CommunicationStyle {
-        self.user
-            .read()
-            .await
-            .preferences
-            .communication_style
-            .clone()
+    pub fn get_communication_style(&self) -> CommunicationStyle {
+        self.user.read().preferences.communication_style.clone()
     }
 
-    pub async fn set_communication_style(&self, style: CommunicationStyle) {
-        self.user.write().await.preferences.communication_style = style;
-        self.auto_save().await;
+    pub fn set_communication_style(&self, style: CommunicationStyle) {
+        let mut user = self.user.write();
+        user.preferences.communication_style = style;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_response_length(&self) -> ResponseLength {
-        self.user.read().await.preferences.response_length.clone()
+    pub fn get_response_length(&self) -> ResponseLength {
+        self.user.read().preferences.response_length.clone()
     }
 
-    pub async fn set_response_length(&self, length: ResponseLength) {
-        self.user.write().await.preferences.response_length = length;
-        self.auto_save().await;
+    pub fn set_response_length(&self, length: ResponseLength) {
+        let mut user = self.user.write();
+        user.preferences.response_length = length;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_topics_of_interest(&self) -> Vec<String> {
-        self.user
-            .read()
-            .await
-            .preferences
-            .topics_of_interest
-            .clone()
+    pub fn get_topics_of_interest(&self) -> Vec<String> {
+        self.user.read().preferences.topics_of_interest.clone()
     }
 
-    pub async fn add_topic_of_interest(&self, topic: String) {
-        let mut user = self.user.write().await;
+    pub fn add_topic_of_interest(&self, topic: String) {
+        let mut user = self.user.write();
         if !user.preferences.topics_of_interest.contains(&topic) {
             user.preferences.topics_of_interest.push(topic);
             drop(user);
-            self.auto_save().await;
+
+            let self_clone = self.clone();
+            std::thread::spawn(move || {
+                tokio::runtime::Runtime::new().unwrap().block_on(async {
+                    self_clone.auto_save().await;
+                });
+            });
         }
     }
 
-    pub async fn remove_topic_of_interest(&self, topic: &str) {
-        self.user
-            .write()
-            .await
-            .preferences
-            .topics_of_interest
-            .retain(|t| t != topic);
-        self.auto_save().await;
+    pub fn remove_topic_of_interest(&self, topic: &str) {
+        let mut user = self.user.write();
+        user.preferences.topics_of_interest.retain(|t| t != topic);
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn clear_topics_of_interest(&self) {
-        self.user
-            .write()
-            .await
-            .preferences
-            .topics_of_interest
-            .clear();
-        self.auto_save().await;
+    pub fn clear_topics_of_interest(&self) {
+        let mut user = self.user.write();
+        user.preferences.topics_of_interest.clear();
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_quiet_hours(&self) -> Option<QuietHours> {
+    pub fn get_quiet_hours(&self) -> Option<QuietHours> {
         self.user
             .read()
-            .await
             .preferences
             .notification_preferences
             .quiet_hours
             .clone()
     }
 
-    pub async fn set_quiet_hours(&self, start: String, end: String) {
-        self.user
-            .write()
-            .await
-            .preferences
-            .notification_preferences
-            .quiet_hours = Some(QuietHours { start, end });
-        self.auto_save().await;
+    pub fn set_quiet_hours(&self, start: String, end: String) {
+        let mut user = self.user.write();
+        user.preferences.notification_preferences.quiet_hours = Some(QuietHours { start, end });
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn remove_quiet_hours(&self) {
-        self.user
-            .write()
-            .await
-            .preferences
-            .notification_preferences
-            .quiet_hours = None;
-        self.auto_save().await;
+    pub fn remove_quiet_hours(&self) {
+        let mut user = self.user.write();
+        user.preferences.notification_preferences.quiet_hours = None;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
     // ==================== VOICE DATA METHODS ====================
 
-    pub async fn get_voice_profile_id(&self) -> Option<String> {
-        self.user.read().await.voice_data.voice_profile_id.clone()
+    pub fn get_voice_profile_id(&self) -> Option<String> {
+        self.user.read().voice_data.voice_profile_id.clone()
     }
 
-    pub async fn set_voice_profile_id(&self, id: Option<String>) {
-        self.user.write().await.voice_data.voice_profile_id = id;
-        self.auto_save().await;
+    pub fn set_voice_profile_id(&self, id: Option<String>) {
+        let mut user = self.user.write();
+        user.voice_data.voice_profile_id = id;
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
-    pub async fn get_voice_speed(&self) -> f32 {
-        self.user.read().await.voice_data.preferred_voice_speed
+    pub fn get_voice_speed(&self) -> f32 {
+        self.user.read().voice_data.preferred_voice_speed
     }
 
-    pub async fn set_voice_speed(&self, speed: f32) {
-        self.user.write().await.voice_data.preferred_voice_speed = speed.clamp(0.5, 2.0);
-        self.auto_save().await;
+    pub fn set_voice_speed(&self, speed: f32) {
+        let mut user = self.user.write();
+        user.voice_data.preferred_voice_speed = speed.clamp(0.5, 2.0);
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
     // ==================== METADATA METHODS ====================
 
-    pub async fn get_created_at(&self) -> i64 {
-        self.user.read().await.metadata.created_at
+    pub fn get_created_at(&self) -> i64 {
+        self.user.read().metadata.created_at
     }
 
-    pub async fn get_last_updated(&self) -> i64 {
-        self.user.read().await.metadata.last_updated
+    pub fn get_last_updated(&self) -> i64 {
+        self.user.read().metadata.last_updated
     }
 
-    pub async fn get_last_interaction(&self) -> i64 {
-        self.user.read().await.metadata.last_interaction
+    pub fn get_last_interaction(&self) -> i64 {
+        self.user.read().metadata.last_interaction
     }
 
-    pub async fn update_last_interaction(&self) {
-        self.user.write().await.metadata.last_interaction = chrono::Utc::now().timestamp();
-        self.auto_save().await;
+    pub fn update_last_interaction(&self) {
+        let mut user = self.user.write();
+        user.metadata.last_interaction = chrono::Utc::now().timestamp();
+        drop(user);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
     // ==================== GENERIC METHODS ====================
 
-    pub async fn get_field(&self, path: &str) -> Option<serde_json::Value> {
-        let user_json = json!(&*self.user.read().await);
+    pub fn get_field(&self, path: &str) -> Option<serde_json::Value> {
+        let user_json = json!(&*self.user.read());
         Self::get_nested_value(&user_json, path)
     }
 
-    pub async fn set_field(&self, path: &str, value: serde_json::Value) -> Result<(), String> {
-        let mut user_json = json!(&*self.user.read().await);
+    pub fn set_field(&self, path: &str, value: serde_json::Value) -> Result<(), String> {
+        let mut user_json = json!(&*self.user.read());
         Self::set_nested_value(&mut user_json, path, value)?;
 
-        *self.user.write().await = serde_json::from_value(user_json)
+        let mut user = self.user.write();
+        *user = serde_json::from_value(user_json)
             .map_err(|e| format!("Failed to deserialize: {}", e))?;
+        drop(user);
 
-        self.auto_save().await;
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
         Ok(())
     }
 
-    pub async fn get_user(&self) -> User {
-        self.user.read().await.clone()
+    pub fn get_user(&self) -> User {
+        self.user.read().clone()
     }
 
-    pub async fn replace_user(&self, user: User) {
-        *self.user.write().await = user;
-        self.auto_save().await;
+    pub fn replace_user(&self, user: User) {
+        let mut user_lock = self.user.write();
+        *user_lock = user;
+        drop(user_lock);
+
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
     pub async fn reload(&self) -> Result<(), String> {
         if let Ok(value) = runtime().device.get_ctx("avi.user").await {
             if let Ok(user) = serde_json::from_value::<User>(value) {
-                *self.user.write().await = user;
-                self.save_to_memory().await;
+                *self.user.write() = user;
+                self.save_to_memory();
                 return Ok(());
             }
         }
@@ -474,7 +602,7 @@ impl UserManager {
 #[macro_export]
 macro_rules! user_name {
     () => {
-        runtime().rt.block_on(runtime().user.get_name())
+        runtime().user.get_name()
     };
 }
 
@@ -488,52 +616,37 @@ mod tests {
         let user_manager = UserManager::new();
 
         // Profile operations
-        user_manager.set_name("João Silva".to_string()).await;
-        user_manager.set_nickname(Some("JJ".to_string())).await;
-        user_manager.set_language("pt-BR".to_string()).await;
-        user_manager
-            .set_timezone("America/Sao_Paulo".to_string())
-            .await;
-        user_manager
-            .set_location(Some("São Paulo".to_string()), "Brasil".to_string())
-            .await;
+        user_manager.set_name("João Silva".to_string());
+        user_manager.set_nickname(Some("JJ".to_string()));
+        user_manager.set_language("pt-BR".to_string());
+        user_manager.set_timezone("America/Sao_Paulo".to_string());
+        user_manager.set_location(Some("São Paulo".to_string()), "Brasil".to_string());
 
         // Birthday como timestamp
         let birthday_timestamp = chrono::Utc::now().timestamp();
-        user_manager.set_birthday(birthday_timestamp).await;
+        user_manager.set_birthday(birthday_timestamp);
 
         // Preferences
-        user_manager
-            .set_communication_style(CommunicationStyle::Casual)
-            .await;
-        user_manager
-            .set_response_length(ResponseLength::Detailed)
-            .await;
-        user_manager
-            .add_topic_of_interest("tecnologia".to_string())
-            .await;
-        user_manager
-            .add_topic_of_interest("música".to_string())
-            .await;
-        user_manager
-            .set_quiet_hours("22:00".to_string(), "08:00".to_string())
-            .await;
+        user_manager.set_communication_style(CommunicationStyle::Casual);
+        user_manager.set_response_length(ResponseLength::Detailed);
+        user_manager.add_topic_of_interest("tecnologia".to_string());
+        user_manager.add_topic_of_interest("música".to_string());
+        user_manager.set_quiet_hours("22:00".to_string(), "08:00".to_string());
 
         // Voice data
-        user_manager.set_voice_speed(1.2).await;
+        user_manager.set_voice_speed(1.2);
 
         // Generic field access
-        if let Some(name) = user_manager.get_field("profile.name").await {
+        if let Some(name) = user_manager.get_field("profile.name") {
             println!("Nome: {}", name);
         }
 
         user_manager
             .set_field("profile.nickname", json!("Johnny"))
-            .await
             .unwrap();
 
         // Update last interaction
-        user_manager.update_last_interaction().await;
+        user_manager.update_last_interaction();
 
         // Manual save (já faz auto-save em cada operação para todos os lugares)
         user_manager.save().await;
@@ -541,8 +654,8 @@ mod tests {
         // Recarregar do device ctx
         // user_manager.reload().await.unwrap(); // This will fail if runtime is not fully set up in tests
 
-        println!("User ID: {}", user_manager.get_id().await);
-        println!("Name: {}", user_manager.get_name().await);
-        println!("Language: {}", user_manager.get_language().await);
+        println!("User ID: {}", user_manager.get_id());
+        println!("Name: {}", user_manager.get_name());
+        println!("Language: {}", user_manager.get_language());
     }
 }

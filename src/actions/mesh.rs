@@ -48,11 +48,13 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
 }
 
 pub async fn on_started(_device: AviDevice, _peer_id: String, _listening_address: Vec<String>) {
-    runtime().user.get_from_disk().await;
+    runtime().user.get_from_disk();
 }
 
 pub async fn on_peer_connected(_device: AviDevice, _peer_id: String, _address: String) {
-    runtime().user.save_to_device().await;
+    tokio::task::block_in_place(|| {
+        tokio::runtime::Handle::current().block_on(runtime().user.save_to_device())
+    });
 }
 
 impl Action for MeshAction {
@@ -71,7 +73,9 @@ impl Action for MeshAction {
         match self
             .device
             .subscribe_async("user/update", move |_from, _topic, _data| async move {
-                runtime().user.load_from_device().await;
+                tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(runtime().user.load_from_device())
+                });
             })
             .await
         {

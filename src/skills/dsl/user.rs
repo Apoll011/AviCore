@@ -34,33 +34,27 @@ dyon_obj! {Location { city, country }}
 dyon_obj! {QuietHours { start, end }}
 
 dyon_fn! {fn name() -> String {
-    runtime().rt.block_on(runtime().user.get_name())
+    runtime().user.get_name()
 }}
 
 pub fn nickname(_rt: &mut Runtime) -> Result<Variable, String> {
-    Ok(PushVariable::push_var(
-        &runtime().rt.block_on(runtime().user.get_nickname()),
-    ))
+    Ok(PushVariable::push_var(&runtime().user.get_nickname()))
 }
 
 dyon_fn! {fn id() -> String {
-    runtime().rt.block_on(runtime().user.get_id())
+    runtime().user.get_id()
 }}
 
 pub fn location(_rt: &mut Runtime) -> Result<Variable, String> {
-    Ok(PushVariable::push_var(
-        &runtime().rt.block_on(runtime().user.get_location()),
-    ))
+    Ok(PushVariable::push_var(&runtime().user.get_location()))
 }
 
 pub fn quiet_hours(_rt: &mut Runtime) -> Result<Variable, String> {
-    Ok(PushVariable::push_var(
-        &runtime().rt.block_on(runtime().user.get_quiet_hours()),
-    ))
+    Ok(PushVariable::push_var(&runtime().user.get_quiet_hours()))
 }
 
 dyon_fn! { fn birthday() -> f64 {
-    match runtime().rt.block_on(runtime().user.get_birthday()) {
+    match runtime().user.get_birthday() {
         Some(timestamp) => timestamp as f64,
         None => 0.0
     }
@@ -68,10 +62,10 @@ dyon_fn! { fn birthday() -> f64 {
 
 pub fn voice_profile_id(_rt: &mut Runtime) -> Result<Variable, String> {
     Ok(PushVariable::push_var(
-        &runtime().rt.block_on(runtime().user.get_voice_profile_id()),
+        &runtime().user.get_voice_profile_id(),
     ))
 }
 
 dyon_fn! { fn language() -> String {
-    runtime().rt.block_on(runtime().user.get_language())
+    runtime().user.get_language()
 }}
