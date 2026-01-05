@@ -1,4 +1,5 @@
 - [ ] Scheduler
 - [ ] Context
-- [ ] Event System
+- [ ] Event System (Add it to the pub sub system)
+- [ ] Command system (Each device register functions they can execute)
 - [ ] If skill can go again register it
