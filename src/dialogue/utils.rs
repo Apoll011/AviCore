@@ -66,6 +66,12 @@ pub fn speak(text: &str, store: bool) {
 }
 #[macro_export]
 macro_rules! speak {
+    (locale: $a: expr) => {
+        match locale!($a) {
+            Some(v) => speak!(&v),
+            None => (),
+        }
+    };
     ($a: expr) => {
         crate::dialogue::utils::speak($a, false)
     };
