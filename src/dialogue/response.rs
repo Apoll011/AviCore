@@ -34,7 +34,7 @@ impl ResponseValidator for AnyValidator {
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        "How?".to_string()
+        "error_any".to_string()
     }
 }
 
@@ -74,7 +74,7 @@ impl ResponseValidator for ListOrNoneValidator {
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        todo!()
+        "not_valid_error".to_string()
     }
 }
 
@@ -99,10 +99,7 @@ impl ResponseValidator for OptionalValidator {
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        runtime()
-            .language_system
-            .get_translation("error_validator_optional")
-            .unwrap_or_default()
+        "error_validator_optional".to_string()
     }
 }
 
@@ -152,10 +149,7 @@ impl ResponseValidator for BoolValidator {
         Err(ValidationError::NotAccepted)
     }
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        runtime()
-            .language_system
-            .get_translation("error_validator_bool")
-            .unwrap_or_default()
+        "error_validator_bool".to_string()
     }
 }
 
@@ -211,7 +205,7 @@ impl<T: Clone> ResponseValidator for MappedValidator<T> {
     }
 
     fn get_error_txt(&self, _error: &ValidationError) -> String {
-        todo!()
+        "not_valid_error".to_string()
     }
 }
 

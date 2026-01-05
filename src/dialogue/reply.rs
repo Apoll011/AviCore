@@ -1,4 +1,7 @@
+use crate::ctx::runtime;
 use crate::dialogue::response::{ResponseValidator, ValidationError};
+use crate::locale;
+use crate::speak;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
@@ -113,12 +116,13 @@ impl ReplyManager {
 
         if let Some(mut pending) = pending_lock.take() {
             if pending.created_at.elapsed() > Duration::from_secs(self.config.timeout_secs) {
-                return Err("Request timed out. Please try again.".to_string());
+                return Err("".to_string());
             }
 
             if let Some(max) = self.config.max_retries
                 && pending.retry_count >= max
             {
+                speak!(locale: "to_many_replay_trys");
                 return Err("Too many invalid attempts. Cancelling request.".to_string());
             }
 
@@ -133,11 +137,17 @@ impl ReplyManager {
                     if let Some(max) = self.config.max_retries
                         && pending.retry_count >= max
                     {
+                        speak!(locale: "to_many_replay_trys");
                         return Err("Too many invalid attempts. Cancelling request.".to_string());
                     }
 
                     *pending_lock = Some(pending);
-                    Err(error_msg)
+                    speak!(locale: error_msg.as_str());
+
+                    match runtime().language_system.get_translation(&error_msg) {
+                        Some(v) => Err(v.to_string()),
+                        None => Err(error_msg),
+                    }
                 }
             }
         } else {

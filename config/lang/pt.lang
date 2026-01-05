@@ -68,3 +68,6 @@ lang:
     error_validator_bool: "Estava a espera de uma resposta de sim ou não."
     true: "Verdadeiro"
     false: "Falso"
+    error_any: "Esperava algo."
+    not_valid_error: ["Isso não é valido.", "Não entendi.", "Tente outra vez.", "Não é uma resposta valida."]
+    to_many_replay_trys: "Demasiadas tentativas erradas. Cancelando."

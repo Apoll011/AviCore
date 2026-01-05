@@ -33,7 +33,7 @@ impl IntentAction {
             }
             Err(e) => {
                 if !e.is_empty() {
-                    speak!(&e);
+                    println!("Error processing replay: {}", e);
                     return true;
                 }
                 false

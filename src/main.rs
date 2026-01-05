@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     context_cleanup_task();
 
     tokio::signal::ctrl_c().await?;
-    println!("Shutting down gracefully...");
+    println!("Shutting down...");
 
     Ok(())
 }
