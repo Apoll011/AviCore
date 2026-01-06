@@ -49,9 +49,8 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
 }
 
 pub async fn on_started(_device: AviDevice, _peer_id: String, _listening_address: Vec<String>) {
-    match runtime() {
-        Ok(c) => c.user.get_from_disk(),
-        Err(_) => (),
+    if let Ok(c) = runtime() {
+        c.user.get_from_disk()
     };
 }
 

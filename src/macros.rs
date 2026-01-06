@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! locale {
     ($key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.language_system.get_translation($key),
             Err(_) => None,
         }
@@ -11,7 +11,7 @@ macro_rules! locale {
 #[macro_export]
 macro_rules! get_translation_list {
     ($key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.language_system.get_translation_list($key),
             Err(_) => Vec::new(),
         }
@@ -27,7 +27,7 @@ macro_rules! speak {
         }
     };
     ($a: expr) => {
-        crate::dialogue::utils::speak($a, false)
+        $crate::dialogue::utils::speak($a, false)
     };
 }
 
@@ -37,7 +37,7 @@ macro_rules! publish {
         publish!($topic, Vec::new())
     };
     ($topic: expr, $data: expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => match c.device.publish($topic, $data).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error publishing: {}", e.to_string())),
@@ -50,7 +50,7 @@ macro_rules! publish {
 #[macro_export]
 macro_rules! subscribe {
     ($topic: expr, async: $body:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(runtime) => match runtime.device.subscribe_async($topic, $body).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
@@ -59,7 +59,7 @@ macro_rules! subscribe {
         }
     };
     ($topic:expr, $body:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(runtime) => match runtime.device.subscribe($topic, $body).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
@@ -72,9 +72,9 @@ macro_rules! subscribe {
 #[macro_export]
 macro_rules! set_ctx {
     ($key:expr, $value:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.context.set(
-                crate::context::ContextScope::Global,
+                $crate::context::ContextScope::Global,
                 $key.to_string(),
                 serde_json::json!($value),
                 None,
@@ -93,9 +93,9 @@ macro_rules! set_ctx {
         }
     };
     ($key:expr, $value:expr, $ttl:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.context.set(
-                crate::context::ContextScope::Global,
+                $crate::context::ContextScope::Global,
                 $key.to_string(),
                 serde_json::json!($value),
                 Some(Duration::from_secs_f64(ttl)),
@@ -105,9 +105,9 @@ macro_rules! set_ctx {
         }
     };
     ($key:expr, $value:expr, $ttl:expr, persistent: $persistent:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.context.set(
-                crate::context::ContextScope::Global,
+                $crate::context::ContextScope::Global,
                 $key.to_string(),
                 serde_json::json!($value),
                 Some(Duration::from_secs_f64(ttl)),
@@ -117,9 +117,9 @@ macro_rules! set_ctx {
         }
     };
     ($key:expr, $value:expr, $ttl:expr, $persistent:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.context.set(
-                crate::context::ContextScope::Global,
+                $crate::context::ContextScope::Global,
                 $key.to_string(),
                 serde_json::json!($value),
                 Some(Duration::from_secs_f64(ttl)),
@@ -129,9 +129,9 @@ macro_rules! set_ctx {
         }
     };
     ($key:expr, $value:expr, persistent: $persistent:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.context.set(
-                crate::context::ContextScope::Global,
+                $crate::context::ContextScope::Global,
                 $key.to_string(),
                 serde_json::json!($value),
                 None,
@@ -145,13 +145,13 @@ macro_rules! set_ctx {
 #[macro_export]
 macro_rules! get_ctx {
     ($key:expr) => {
-        match crate::ctx::runtime() {
-            Ok(c) => c.context.get(&crate::context::ContextScope::Global, $key),
+        match $crate::ctx::runtime() {
+            Ok(c) => c.context.get(&$crate::context::ContextScope::Global, $key),
             Err(_) => None,
         }
     };
     (device, $key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => match c.device.get_ctx($key).await {
                 Ok(v) => Ok(v),
                 Err(e) => Err(format!("Error getting context: {}", e.to_string())),
@@ -160,10 +160,10 @@ macro_rules! get_ctx {
         }
     };
     (skill: $name:expr, $key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c
                 .context
-                .get(&crate::context::ContextScope::Skill($name), $key),
+                .get(&$crate::context::ContextScope::Skill($name), $key),
             Err(_) => None,
         }
     };
@@ -172,22 +172,22 @@ macro_rules! get_ctx {
 #[macro_export]
 macro_rules! has_ctx {
     ($key:expr) => {
-        match crate::ctx::runtime() {
-            Ok(c) => c.context.has(&crate::context::ContextScope::Global, $key),
+        match $crate::ctx::runtime() {
+            Ok(c) => c.context.has(&$crate::context::ContextScope::Global, $key),
             Err(_) => false,
         }
     };
     (device, $key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.devce.has_ctx($key),
             Err(_) => false,
         }
     };
     (skill: $name:expr, $key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c
                 .context
-                .has(&crate::context::ContextScope::Skill($name), $key),
+                .has(&$crate::context::ContextScope::Skill($name), $key),
             Err(_) => false,
         }
     };
@@ -196,15 +196,15 @@ macro_rules! has_ctx {
 #[macro_export]
 macro_rules! remove_ctx {
     ($key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c
                 .context
-                .remove(&crate::context::ContextScope::Global, $key),
+                .remove(&$crate::context::ContextScope::Global, $key),
             Err(_) => (),
         }
     };
     (device, $key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => match c.device.delete_ctx($key).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error removing device ctx: {}", e.to_string())),
@@ -213,10 +213,10 @@ macro_rules! remove_ctx {
         }
     };
     (skill: $name:expr, $key:expr) => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c
                 .context
-                .remove(&crate::context::ContextScope::Skill($name), $key),
+                .remove(&$crate::context::ContextScope::Skill($name), $key),
             Err(_) => (),
         }
     };
@@ -225,7 +225,7 @@ macro_rules! remove_ctx {
 #[macro_export]
 macro_rules! lang {
     () => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => c.lang.to_string(),
             Err(_) => "en".to_string(),
         }
@@ -266,7 +266,7 @@ macro_rules! rt_spawn {
 #[macro_export]
 macro_rules! core_id {
     () => {
-        match crate::ctx::runtime() {
+        match $crate::ctx::runtime() {
             Ok(c) => match c.device.get_core_id().await {
                 Ok(v) => Ok(v),
                 Err(e) => Err(format!("Error getting core id: {}", e.to_string())),
@@ -279,7 +279,7 @@ macro_rules! core_id {
 #[macro_export]
 macro_rules! register_action {
     ($action_type:ty, { $($field:ident: $value:expr),* $(,)? }) => {{
-        type Config = <$action_type as crate::actions::action:: Action>::Config;
+        type Config = <$action_type as $crate::actions::action:: Action>::Config;
         if let Ok(mut action) = <$action_type>::new(Config {
             $($field: $value),*
         }) {
@@ -288,7 +288,7 @@ macro_rules! register_action {
     }};
 
     ($action_type:ty) => {{
-        type Config = <$action_type as crate::actions::action::Action>::Config;
+        type Config = <$action_type as $crate::actions::action::Action>::Config;
         if let Ok(mut action) = <$action_type>::new(Config {}) {
             action.register().await;
         }

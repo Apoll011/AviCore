@@ -112,10 +112,7 @@ dyon_fn! {fn listen() {
 }}
 
 dyon_fn! {fn repeat() {
-    match get_ctx!("utterance.last") {
-        Some(v) => speak!(&v.to_string()),
-        None => (),
-    };
+    if let Some(v) = get_ctx!("utterance.last") { speak!(&v.to_string()) };
 }}
 
 dyon_obj! {AnyValidator { }}
@@ -166,16 +163,13 @@ where
     V::Output: std::fmt::Debug,
 {
     rt_spawn! {
-        match  runtime() {
-            Ok(c) => c.reply_manager
-            .set_reply(RequestReply {
-                skill_request: skill_name,
-                handler,
-                validator: Box::new(validator),
-            })
-            .await,
-            Err(_) => ()
-        };
+        if let Ok(c) = runtime() { c.reply_manager
+        .set_reply(RequestReply {
+            skill_request: skill_name,
+            handler,
+            validator: Box::new(validator),
+        })
+        .await };
     }
 }
 

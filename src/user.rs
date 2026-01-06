@@ -164,12 +164,12 @@ impl UserManager {
     }
 
     pub async fn load_from_device(&self) {
-        if let Ok(value) = get_ctx!(device, "avi.user") {
-            if let Ok(user) = serde_json::from_value::<User>(value) {
-                set_ctx!("user", &user);
-                *self.user.write() = user;
-                return;
-            }
+        if let Ok(value) = get_ctx!(device, "avi.user")
+            && let Ok(user) = serde_json::from_value::<User>(value)
+        {
+            set_ctx!("user", &user);
+            *self.user.write() = user;
+            return;
         }
 
         let user = Self::create_default_user();
@@ -533,12 +533,12 @@ impl UserManager {
     }
 
     pub async fn reload(&self) -> Result<(), String> {
-        if let Ok(value) = get_ctx!(device, "avi.user") {
-            if let Ok(user) = serde_json::from_value::<User>(value) {
-                *self.user.write() = user;
-                self.save_to_memory();
-                return Ok(());
-            }
+        if let Ok(value) = get_ctx!(device, "avi.user")
+            && let Ok(user) = serde_json::from_value::<User>(value)
+        {
+            *self.user.write() = user;
+            self.save_to_memory();
+            return Ok(());
         }
         Err("Failed to reload user from device ctx".to_string())
     }
@@ -584,7 +584,7 @@ impl UserManager {
                     Err(format!("Cannot set field on non-object at: {}", part))
                 };
             } else {
-                if !current.get(part).is_some() {
+                if current.get(part).is_none() {
                     return Err(format!("Path not found: {}", part));
                 }
                 current = current.get_mut(part).unwrap();

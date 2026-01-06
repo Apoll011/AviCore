@@ -230,9 +230,8 @@ pub fn context_cleanup_task() {
         let mut interval = tokio::time::interval(Duration::from_secs(60 * 5));
         loop {
             interval.tick().await;
-            match ctx {
-                Ok(c) => c.context.cleanup_expired(),
-                Err(_) => (),
+            if let Ok(c) = ctx {
+                c.context.cleanup_expired()
             }
         }
     });

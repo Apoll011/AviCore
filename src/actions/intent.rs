@@ -104,10 +104,7 @@ impl Action for IntentAction {
         });
 
         let _ = subscribe!("intent/reply/cancel", async: move |_from, _topic, _data| async move {
-            match runtime() {
-                Ok(c) => c.reply_manager.cancel().await,
-                Err(_) => (),
-            };
+            if let Ok(c) = runtime() { c.reply_manager.cancel().await };
         });
     }
 }

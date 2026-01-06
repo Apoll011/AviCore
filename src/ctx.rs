@@ -60,7 +60,7 @@ pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<
                 max_retries: Some(3),
             })),
             language_system: LanguageSystem::new(&format!("{}/lang", config_path)),
-            context: ContextManager::new(&format!("{}/context", config_path)),
+            context: ContextManager::new(format!("{}/context", config_path)),
             user: UserManager::new(),
         }))
         .unwrap_or_else(|_| panic!("Runtime context already initialized"));

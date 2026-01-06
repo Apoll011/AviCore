@@ -133,7 +133,7 @@ impl LanguageSystem {
     pub fn get_translation_list(&self, id: &str) -> Vec<String> {
         self.languages
             .iter()
-            .find(|l| l.code == &*lang!())
+            .find(|l| l.code == *lang!())
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
             .map(|i| match &i.value.0 {
                 serde_yaml::Value::Sequence(seq) if !seq.is_empty() => seq
