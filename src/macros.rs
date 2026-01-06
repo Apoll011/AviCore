@@ -249,3 +249,22 @@ macro_rules! core_id {
         }
     };
 }
+
+#[macro_export]
+macro_rules! register_action {
+    ($action_type:ty, { $($field:ident: $value:expr),* $(,)? }) => {{
+        type Config = <$action_type as crate::actions::action:: Action>::Config;
+        if let Ok(mut action) = <$action_type>::new(Config {
+            $($field: $value),*
+        }) {
+            action.register().await;
+        }
+    }};
+
+    ($action_type:ty) => {{
+        type Config = <$action_type as crate::actions::action::Action>::Config;
+        if let Ok(mut action) = <$action_type>::new(Config {}) {
+            action.register().await;
+        }
+    }};
+}

@@ -12,9 +12,9 @@ mod skills;
 mod user;
 
 use crate::actions::action::Action;
-use crate::actions::dialogue::{DialogueAction, DialogueCapability, DialogueConfig};
-use crate::actions::intent::{IntentAction, IntentConfig};
-use crate::actions::mesh::{MeshAction, MeshConfig};
+use crate::actions::dialogue::{DialogueAction, DialogueCapability};
+use crate::actions::intent::{IntentAction};
+use crate::actions::mesh::{MeshAction};
 use crate::context::context_cleanup_task;
 use crate::ctx::create_ctx;
 use avi_device::DeviceCapabilities;
@@ -44,19 +44,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     create_ctx("http://localhost:1178", "pt", "./config", device);
 
-    if let Ok(mut intent_action) = IntentAction::new(IntentConfig {}) {
-        intent_action.register().await;
-    };
+    register_action!(IntentAction);
 
-    if let Ok(mut dialogue_action) = DialogueAction::new(DialogueConfig {
+    register_action!(DialogueAction, {
         capability: DialogueCapability::Speaker,
-    }) {
-        dialogue_action.register().await;
-    };
+    });
 
-    if let Ok(mut mesh_action) = MeshAction::new(MeshConfig {}) {
-        mesh_action.register().await;
-    }
+    register_action!(MeshAction);
 
     context_cleanup_task();
 

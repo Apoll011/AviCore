@@ -83,6 +83,7 @@ pub struct UserManager {
     user: Arc<RwLock<User>>,
 }
 
+#[allow(dead_code)]
 impl UserManager {
     pub fn new() -> Self {
         Self {
