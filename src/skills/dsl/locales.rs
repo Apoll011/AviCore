@@ -1,5 +1,5 @@
 use super::avi_dsl::ctx;
-use crate::ctx::runtime;
+use crate::{lang, locale};
 use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
@@ -33,10 +33,7 @@ pub fn locale(_rt: &mut Runtime) -> Result<Variable, String> {
     let skill_context = ctx(_rt)?;
 
     Ok(PushVariable::push_var(
-        &skill_context
-            .languages
-            .locale(&runtime().lang, &id)
-            .unwrap(),
+        &skill_context.languages.locale(&lang!(), &id).unwrap(),
     ))
 }
 
@@ -53,10 +50,7 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
                 Variable::F64(number, ..) => Some((k.clone().to_string(), number.to_string())),
                 Variable::Bool(bool, ..) => Some((
                     k.clone().to_string(),
-                    runtime()
-                        .language_system
-                        .get_translation(&bool.to_string())
-                        .unwrap_or("Erro".to_string()),
+                    locale!(&bool.to_string()).unwrap_or("Erro".to_string()),
                 )),
                 _ => None,
             })
@@ -67,14 +61,14 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
     Ok(PushVariable::push_var(
         &skill_context
             .languages
-            .locale_fmt(&runtime().lang, &id, &hashmap)
+            .locale_fmt(&lang!(), &id, &hashmap)
             .unwrap(),
     ))
 }
 
 #[allow(non_snake_case)]
 pub fn current_lang(_rt: &mut Runtime) -> Result<Variable, String> {
-    Ok(PushVariable::push_var(&runtime().lang))
+    Ok(PushVariable::push_var(&lang!()))
 }
 
 #[allow(non_snake_case)]

@@ -7,7 +7,7 @@ pub trait Action {
     type Config;
 
     /// Creates a new instance of the action with the given configuration.
-    fn new(config: Self::Config) -> Self;
+    fn new(config: Self::Config) -> Result<Self, String> where Self: Sized;
 
     /// Registers the action, typically by subscribing to relevant device topics.
     async fn register(&mut self);

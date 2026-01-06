@@ -134,10 +134,14 @@ impl UserManager {
     }
 
     pub async fn save_to_device(&self) {
-        let _ = runtime()
-            .device
-            .update_ctx("avi.user", json!(&*self.user.read()))
-            .await;
+        let _ = match runtime() {
+            Ok(c) => {
+                c.device
+                    .update_ctx("avi.user", json!(&*self.user.read()))
+                    .await
+            }
+            Err(_) => return,
+        };
     }
 
     fn save_to_persistent(&self) {
@@ -166,7 +170,7 @@ impl UserManager {
     }
 
     pub async fn load_from_device(&self) {
-        if let Ok(value) = runtime().device.get_ctx("avi.user").await {
+        if let Ok(value) = get_ctx!(device, "avi.user") {
             if let Ok(user) = serde_json::from_value::<User>(value) {
                 set_ctx!("user", &user);
                 *self.user.write() = user;
@@ -535,7 +539,7 @@ impl UserManager {
     }
 
     pub async fn reload(&self) -> Result<(), String> {
-        if let Ok(value) = runtime().device.get_ctx("avi.user").await {
+        if let Ok(value) = get_ctx!(device, "avi.user") {
             if let Ok(user) = serde_json::from_value::<User>(value) {
                 *self.user.write() = user;
                 self.save_to_memory();
@@ -548,7 +552,10 @@ impl UserManager {
     pub async fn delete_all(&self) -> Result<(), String> {
         remove_ctx!("user");
 
-        let _ = runtime().device.delete_ctx("avi.user").await;
+        let _ = match runtime() {
+            Ok(c) => c.device.delete_ctx("avi.user").await,
+            Err(_) => Ok(()),
+        };
 
         Ok(())
     }
@@ -581,12 +588,12 @@ impl UserManager {
 
         for (i, part) in parts.iter().enumerate() {
             if i == parts.len() - 1 {
-                if let Some(obj) = current.as_object_mut() {
+                return if let Some(obj) = current.as_object_mut() {
                     obj.insert(part.to_string(), new_value);
-                    return Ok(());
+                    Ok(())
                 } else {
-                    return Err(format!("Cannot set field on non-object at: {}", part));
-                }
+                    Err(format!("Cannot set field on non-object at: {}", part))
+                };
             } else {
                 if !current.get(part).is_some() {
                     return Err(format!("Path not found: {}", part));
@@ -597,13 +604,6 @@ impl UserManager {
 
         Err("Failed to set value".to_string())
     }
-}
-
-#[macro_export]
-macro_rules! user_name {
-    () => {
-        runtime().user.get_name()
-    };
 }
 
 #[cfg(test)]

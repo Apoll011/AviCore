@@ -224,89 +224,16 @@ impl ContextManager {
     }
 }
 
-#[macro_export]
-macro_rules! set_ctx {
-    ($key:expr, $value:expr) => {
-        crate::ctx::runtime().context.set(
-            crate::context::ContextScope::Global,
-            $key.to_string(),
-            serde_json::json!($value),
-            None,
-            false,
-        );
-    };
-    ($key:expr, $value:expr, $ttl:expr) => {
-        crate::ctx::runtime().context.set(
-            crate::context::ContextScope::Global,
-            $key.to_string(),
-            serde_json::json!($value),
-            Some(Duration::from_secs_f64(ttl)),
-            false,
-        );
-    };
-    ($key:expr, $value:expr, $ttl:expr, persistent: $persistent:expr) => {
-        crate::ctx::runtime().context.set(
-            crate::context::ContextScope::Global,
-            $key.to_string(),
-            serde_json::json!($value),
-            Some(Duration::from_secs_f64(ttl)),
-            $persistent,
-        );
-    };
-    ($key:expr, $value:expr, $ttl:expr, $persistent:expr) => {
-        crate::ctx::runtime().context.set(
-            crate::context::ContextScope::Global,
-            $key.to_string(),
-            serde_json::json!($value),
-            Some(Duration::from_secs_f64(ttl)),
-            $persistent,
-        );
-    };
-    ($key:expr, $value:expr, persistent: $persistent:expr) => {
-        crate::ctx::runtime().context.set(
-            crate::context::ContextScope::Global,
-            $key.to_string(),
-            serde_json::json!($value),
-            None,
-            $persistent,
-        );
-    };
-}
-
-#[macro_export]
-macro_rules! get_ctx {
-    ($key:expr) => {
-        crate::ctx::runtime()
-            .context
-            .get(&crate::context::ContextScope::Global, $key)
-    };
-}
-
-#[macro_export]
-macro_rules! has_ctx {
-    ($key:expr) => {
-        crate::ctx::runtime()
-            .context
-            .has(&crate::context::ContextScope::Global, $key)
-    };
-}
-
-#[macro_export]
-macro_rules! remove_ctx {
-    ($key:expr) => {
-        crate::ctx::runtime()
-            .context
-            .remove(&crate::context::ContextScope::Global, $key);
-    };
-}
-
 pub fn context_cleanup_task() {
     let ctx = runtime().clone();
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(Duration::from_secs(60 * 5));
         loop {
             interval.tick().await;
-            ctx.context.cleanup_expired();
+            match ctx {
+                Ok(c) => c.context.cleanup_expired(),
+                Err(_) => (),
+            }
         }
     });
 }

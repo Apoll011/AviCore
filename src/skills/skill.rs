@@ -37,7 +37,7 @@ impl Skill {
     ///
     /// Returns an error if the skill context or module fails to load.
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
-        let context = SkillContext::new(&Self::skill_path(&name))?;
+        let context = SkillContext::new(&Self::skill_path(&name)?)?;
 
         let module: Arc<Module> = match Self::create_module(&name, &context) {
             Ok(v) => v,
@@ -45,7 +45,7 @@ impl Skill {
         };
 
         Ok(Self {
-            pathname: Self::skill_path(&name),
+            pathname: Self::skill_path(&name)?,
             name: name.clone(),
             module,
             runtime: Self::create_runtime(context.clone()),
@@ -55,8 +55,11 @@ impl Skill {
 
     /// Constructs the path to a skill's directory.
     ///
-    fn skill_path(name: &str) -> String {
-        format!("{}/{}", runtime().skill_path, name)
+    fn skill_path(name: &str) -> Result<String, String> {
+        match runtime() {
+            Ok(c) => Ok(format!("{}/{}", c.skill_path, name)),
+            Err(e) => Err(e),
+        }
     }
 
     /// Creates and loads a Dyon module for the skill, including its dependencies.
@@ -81,7 +84,7 @@ impl Skill {
 
         let entry = ctx.info.entry.clone();
 
-        for item in fs::read_dir(Self::skill_path(name))? {
+        for item in fs::read_dir(Self::skill_path(name)?)? {
             let item = item?;
             let path = item.path();
 
@@ -104,7 +107,7 @@ impl Skill {
         }
 
         if error(load(
-            &format!("{}/{}", Self::skill_path(name), ctx.info.entry),
+            &format!("{}/{}", Self::skill_path(name)?, ctx.info.entry),
             &mut dyon_module,
         )) {
             return Err(format!("Error loading skill {}", name).into());

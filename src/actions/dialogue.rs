@@ -66,11 +66,11 @@ impl Action for DialogueAction {
     type Config = DialogueConfig;
 
     /// Creates a new instance of `DialogueAction` with the provided configuration.
-    fn new(config: Self::Config) -> Self {
-        Self {
-            device: Arc::clone(&runtime().device),
+    fn new(config: Self::Config) -> Result<DialogueAction, String> {
+        Ok(Self {
+            device: Arc::clone(&runtime()?.device),
             config,
-        }
+        })
     }
 
     /// Registers the dialogue action based on its configured capabilities.

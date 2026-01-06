@@ -7,6 +7,7 @@ mod config;
 mod context;
 mod ctx;
 mod dialogue;
+mod macros;
 mod skills;
 mod user;
 
@@ -22,7 +23,7 @@ use std::sync::Arc;
 
 /// Entry point for the AviCore application.
 ///
-/// This function initializes the device, setup the runtime context,
+/// This function initializes the device, set up the runtime context,
 /// and registers actions like intent handling and dialogue management.
 ///
 /// # Errors
@@ -43,16 +44,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     create_ctx("http://localhost:1178", "pt", "./config", device);
 
-    let mut intent_action = IntentAction::new(IntentConfig {});
-    intent_action.register().await;
+    if let Ok(mut intent_action) = IntentAction::new(IntentConfig {}) {
+        intent_action.register().await;
+    };
 
-    let mut dialogue_action = DialogueAction::new(DialogueConfig {
+    if let Ok(mut dialogue_action) = DialogueAction::new(DialogueConfig {
         capability: DialogueCapability::Speaker,
-    });
-    dialogue_action.register().await;
+    }) {
+        dialogue_action.register().await;
+    };
 
-    let mut mesh_action = MeshAction::new(MeshConfig {});
-    mesh_action.register().await;
+    if let Ok(mut mesh_action) = MeshAction::new(MeshConfig {}) {
+        mesh_action.register().await;
+    }
 
     context_cleanup_task();
 

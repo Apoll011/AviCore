@@ -1,4 +1,4 @@
-use crate::ctx::runtime;
+use crate::get_translation_list;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValidationError {
@@ -54,7 +54,7 @@ impl ResponseValidator for ListOrNoneValidator {
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text).to_lowercase();
 
-        let none_translations = runtime().language_system.get_translation_list("none");
+        let none_translations = get_translation_list!("none");
 
         for none_text in none_translations {
             if cleaned.contains(&none_text.to_lowercase()) {
@@ -87,7 +87,7 @@ impl ResponseValidator for OptionalValidator {
         let cleaned = self.clear_text(text);
         let cleaned_lower = cleaned.to_lowercase();
 
-        let none_translations = runtime().language_system.get_translation_list("none");
+        let none_translations = get_translation_list!("none");
 
         for none_text in none_translations {
             if cleaned_lower.contains(&none_text.to_lowercase()) {
@@ -119,8 +119,8 @@ impl ResponseValidator for BoolValidator {
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text).to_lowercase();
 
-        let yes_translations = runtime().language_system.get_translation_list("yes");
-        let no_translations = runtime().language_system.get_translation_list("no");
+        let yes_translations = get_translation_list!("yes");
+        let no_translations = get_translation_list!("no");
 
         if self.hard_search {
             for yes_text in &yes_translations {

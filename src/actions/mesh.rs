@@ -48,21 +48,27 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
 }
 
 pub async fn on_started(_device: AviDevice, _peer_id: String, _listening_address: Vec<String>) {
-    runtime().user.get_from_disk();
+    match runtime() {
+        Ok(c) => c.user.get_from_disk(),
+        Err(_) => (),
+    };
 }
 
 pub async fn on_peer_connected(_device: AviDevice, _peer_id: String, _address: String) {
     tokio::task::block_in_place(|| {
-        tokio::runtime::Handle::current().block_on(runtime().user.save_to_device())
+        tokio::runtime::Handle::current().block_on(match runtime() {
+            Ok(c) => c.user.save_to_device(),
+            Err(_) => return,
+        })
     });
 }
 
 impl Action for MeshAction {
     type Config = MeshConfig;
-    fn new(_config: Self::Config) -> Self {
-        Self {
-            device: Arc::clone(&runtime().device),
-        }
+    fn new(_config: Self::Config) -> Result<MeshAction, String> {
+        Ok(Self {
+            device: Arc::clone(&runtime()?.device),
+        })
     }
 
     async fn register(&mut self) {
@@ -74,7 +80,10 @@ impl Action for MeshAction {
             .device
             .subscribe_async("user/update", move |_from, _topic, _data| async move {
                 tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(runtime().user.load_from_device())
+                    tokio::runtime::Handle::current().block_on(match runtime() {
+                        Ok(c) => c.user.load_from_device(),
+                        Err(_) => return,
+                    })
                 });
             })
             .await

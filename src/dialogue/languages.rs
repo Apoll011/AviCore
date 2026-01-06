@@ -1,5 +1,5 @@
-use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
+use crate::lang;
 use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -124,7 +124,7 @@ impl LanguageSystem {
     }
 
     pub fn get_translation(&self, id: &str) -> Option<String> {
-        match self.locale(&runtime().lang, id) {
+        match self.locale(&lang!(), id) {
             Some(value) => self.value_to_string(&value),
             None => None,
         }
@@ -133,7 +133,7 @@ impl LanguageSystem {
     pub fn get_translation_list(&self, id: &str) -> Vec<String> {
         self.languages
             .iter()
-            .find(|l| l.code == &*runtime().lang)
+            .find(|l| l.code == &*lang!())
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
             .map(|i| match &i.value.0 {
                 serde_yaml::Value::Sequence(seq) if !seq.is_empty() => seq
@@ -168,11 +168,4 @@ impl LanguageSystem {
             .iter()
             .any(|lang| lang.lang.iter().any(|l| l.id == id))
     }
-}
-
-#[macro_export]
-macro_rules! locale {
-    ($key:expr) => {
-        crate::ctx::runtime().language_system.get_translation($key)
-    };
 }

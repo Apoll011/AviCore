@@ -40,8 +40,11 @@ pub(crate) static RUNTIMECTX: OnceLock<Arc<RuntimeContext>> = OnceLock::new();
 /// Panics if the runtime context has not been initialized yet.
 ///
 /// TODO: Consider returning an `Option` or `Result` instead of panicking, or provide a non-panicking alternative.
-pub fn runtime() -> &'static Arc<RuntimeContext> {
-    RUNTIMECTX.get().expect("Runtime not initialized")
+pub fn runtime() -> Result<&'static Arc<RuntimeContext>, String> {
+    match RUNTIMECTX.get() {
+        Some(runtime) => Ok(runtime),
+        None => Err("Runtime Context not initialized".to_string()),
+    }
 }
 
 pub fn create_ctx(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {

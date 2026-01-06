@@ -1,4 +1,3 @@
-use crate::ctx::runtime;
 use crate::dialogue::response::{ResponseValidator, ValidationError};
 use crate::locale;
 use crate::speak;
@@ -144,7 +143,7 @@ impl ReplyManager {
                     *pending_lock = Some(pending);
                     speak!(locale: error_msg.as_str());
 
-                    match runtime().language_system.get_translation(&error_msg) {
+                    match locale!(&error_msg) {
                         Some(v) => Err(v.to_string()),
                         None => Err(error_msg),
                     }

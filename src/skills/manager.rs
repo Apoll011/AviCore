@@ -32,30 +32,31 @@ impl SkillManager {
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
-        let entries = match fs::read_dir(runtime().skill_path.clone()) {
-            Ok(v) => v,
-            Err(_) => return skills,
-        };
+        if let Ok(c) = runtime()
+            && let Ok(entries) = fs::read_dir(c.skill_path.clone())
+        {
+            for entry_dir in entries {
+                let entry = match entry_dir {
+                    Ok(v) => v,
+                    Err(_) => continue,
+                };
 
-        for entry_dir in entries {
-            let entry = match entry_dir {
-                Ok(v) => v,
-                Err(_) => continue,
-            };
+                let path = entry.path();
 
-            let path = entry.path();
-
-            match Self::load_skill(path) {
-                Ok((dir, mut v)) => {
-                    if v.start().is_ok() {
-                        skills.insert(dir.to_string(), v);
+                match Self::load_skill(path) {
+                    Ok((dir, mut v)) => {
+                        if v.start().is_ok() {
+                            skills.insert(dir.to_string(), v);
+                        }
                     }
+                    Err(e) => println!("Error loading skill: {}", e),
                 }
-                Err(e) => println!("Error loading skill: {}", e),
             }
-        }
 
-        skills
+            skills
+        } else {
+            skills
+        }
     }
 
     /// Loads an individual skill from a directory path.

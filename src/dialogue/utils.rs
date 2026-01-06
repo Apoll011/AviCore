@@ -1,5 +1,5 @@
 use crate::ctx::runtime;
-use crate::set_ctx;
+use crate::{get_ctx, publish, rt_spawn, set_ctx};
 
 /// Retrieves the ID of the last active listener device.
 ///
@@ -10,9 +10,9 @@ use crate::set_ctx;
 /// Returns an error if the context is found but cannot be parsed, or if the core ID retrieval fails.
 #[allow(dead_code)]
 pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
-    match runtime().device.get_ctx("avi.dialogue.listener").await {
+    match get_ctx!(device, "avi.dialogue.listener") {
         Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
-        Err(_) => Ok(runtime().device.get_core_id().await?),
+        Err(_) => Ok(runtime()?.device.get_core_id().await?),
     }
 }
 
@@ -24,9 +24,9 @@ pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
 ///
 /// Returns an error if the context is found but cannot be parsed, or if the core ID retrieval fails.
 pub async fn get_speaker() -> Result<String, Box<dyn std::error::Error>> {
-    match runtime().device.get_ctx("avi.dialogue.speaker").await {
+    match get_ctx!(device, "avi.dialogue.speaker") {
         Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
-        Err(_) => Ok(runtime().device.get_core_id().await?),
+        Err(_) => Ok(runtime()?.device.get_core_id().await?),
     }
 }
 
@@ -46,7 +46,7 @@ pub fn speak(text: &str, store: bool) {
         set_ctx!("utterance.last", text);
     }
 
-    runtime().rt.spawn(async move {
+    rt_spawn! {
         let speaker = match get_speaker().await {
             Ok(s) => s,
             Err(e) => {
@@ -55,33 +55,17 @@ pub fn speak(text: &str, store: bool) {
             }
         };
 
-        if let Err(e) = runtime()
-            .device
-            .publish(&format!("speak/{}/text", speaker), text.into_bytes())
-            .await
-        {
+        if let Err(e) = publish!(&format!("speak/{}/text", speaker), text.into_bytes()) {
             eprintln!("publish error: {e}");
         }
-    });
-}
-#[macro_export]
-macro_rules! speak {
-    (locale: $a: expr) => {
-        match locale!($a) {
-            Some(v) => speak!(&v),
-            None => (),
-        }
-    };
-    ($a: expr) => {
-        crate::dialogue::utils::speak($a, false)
-    };
+    }
 }
 /// Commands the last active listener to start listening for voice input.
 ///
 /// This function spawns an asynchronous task to publish the start command.
 #[allow(dead_code)]
 pub fn listen() {
-    runtime().rt.spawn(async move {
+    rt_spawn! {
         let listener = match get_last_listener().await {
             Ok(s) => s,
             Err(e) => {
@@ -90,12 +74,8 @@ pub fn listen() {
             }
         };
 
-        if let Err(e) = runtime()
-            .device
-            .publish(&format!("listening/{}/start", listener), Vec::new())
-            .await
-        {
+        if let Err(e) = publish!(&format!("listening/{}/start", listener)) {
             eprintln!("publish error: {e}");
         }
-    });
+    }
 }

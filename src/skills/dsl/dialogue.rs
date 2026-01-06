@@ -6,7 +6,7 @@ use crate::dialogue::response::{
 };
 use crate::dialogue::utils::{listen as device_listen, speak};
 use crate::skills::dsl::avi_dsl::ctx;
-use crate::{get_ctx, speak, user_name};
+use crate::{get_ctx, rt_spawn, speak, user_name};
 use dyon::Type::*;
 use dyon::{Dfn, Module, Runtime};
 use std::result::Result;
@@ -165,16 +165,18 @@ where
     V: ResponseValidator + Send + Sync + 'static,
     V::Output: std::fmt::Debug,
 {
-    runtime().rt.spawn(async move {
-        runtime()
-            .reply_manager
+    rt_spawn! {
+        match  runtime() {
+            Ok(c) => c.reply_manager
             .set_reply(RequestReply {
                 skill_request: skill_name,
                 handler,
                 validator: Box::new(validator),
             })
-            .await;
-    });
+            .await,
+            Err(_) => ()
+        };
+    }
 }
 
 #[allow(non_snake_case)]

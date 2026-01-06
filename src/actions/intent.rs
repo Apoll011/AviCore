@@ -2,10 +2,10 @@ use crate::actions::action::Action;
 use crate::api::api::Api;
 use crate::ctx::runtime;
 use crate::skills::manager::SkillManager;
-use crate::speak;
 use avi_device::device::AviDevice;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use crate::process_reply_text;
 
 pub struct IntentAction {
     device: Arc<AviDevice>,
@@ -19,7 +19,7 @@ impl IntentAction {
     pub async fn parse_as_reply(&self, text: &str) -> bool {
         let skill_manager = Arc::clone(&self.skill_manager);
 
-        match runtime().reply_manager.process_text(text).await {
+        match process_reply_text!(text) {
             Ok(replay) => {
                 let mut mg = skill_manager.lock().await;
                 if let Err(e) = mg.run_skill_function(
@@ -69,12 +69,12 @@ impl IntentAction {
 impl Action for IntentAction {
     type Config = IntentConfig;
 
-    fn new(_config: Self::Config) -> Self {
-        Self {
-            device: Arc::clone(&runtime().device),
+    fn new(_config: Self::Config) -> Result<IntentAction, String> {
+        Ok(Self {
+            device: Arc::clone(&runtime()?.device),
             api: Arc::new(Mutex::new(Api::new())),
             skill_manager: Arc::new(Mutex::new(SkillManager::new())),
-        }
+        })
     }
 
     async fn register(&mut self) {
@@ -116,7 +116,10 @@ impl Action for IntentAction {
             .subscribe_async(
                 "intent/reply/cancel",
                 move |_from, _topic, _data| async move {
-                    runtime().reply_manager.cancel().await;
+                    match runtime() {
+                        Ok(c) => c.reply_manager.cancel().await,
+                        Err(_) => (),
+                    };
                 },
             )
             .await
