@@ -104,7 +104,7 @@ fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
         },
         Link(_) | RustObject(_) | UnsafeRef(_) => {
             Err("Cannot convert complex Dyon types (Link/RustObject/UnsafeRef) to Value".into())
-        },
+        }
         _ => Err("Unsupported Dyon type for JSON".into()),
     }
 }

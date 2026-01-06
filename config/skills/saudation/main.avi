@@ -18,7 +18,7 @@ fn intent_hi(intent: Intent) {
 
 fn reply(response) {
     if (response == "true") {
-        say("Okkkk!!!!!")
+        say("Okkkk!")
     }
     else {
         say("Sorry")

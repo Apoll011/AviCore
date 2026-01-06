@@ -59,6 +59,10 @@ impl SkillManager {
         }
     }
 
+    pub fn reload(&mut self) {
+        self.skills = Self::load_skills();
+    }
+
     /// Loads an individual skill from a directory path.
     ///
     /// # Arguments

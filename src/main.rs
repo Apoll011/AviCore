@@ -44,7 +44,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     create_runtime("http://localhost:1178", "pt", "./config", device);
 
-    register_action!(IntentAction);
+    register_action!(IntentAction, {
+        watch_skill_dir: true
+    });
 
     register_action!(DialogueAction, {
         capability: DialogueCapability::Speaker,

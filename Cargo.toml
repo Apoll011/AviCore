@@ -20,6 +20,7 @@ chrono = "0.4.42"
 humantime = "2.3.0"
 avi_device = { package = "avi-device", git = "https://github.com/apoll011/avi-device" }
 uuid = "0.7.4"
+notify-debouncer-mini = "0.4.1"
 
 [dev-dependencies]
 async-trait = "0.1.89"

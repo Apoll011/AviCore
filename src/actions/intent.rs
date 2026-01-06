@@ -2,18 +2,22 @@ use crate::actions::action::Action;
 use crate::api::api::Api;
 use crate::ctx::runtime;
 use crate::skills::manager::SkillManager;
-use crate::{process_reply_text, subscribe};
+use crate::{process_reply_text, subscribe, watch_dir};
 use avi_device::device::AviDevice;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::Mutex;
 
 pub struct IntentAction {
     device: Arc<AviDevice>,
     api: Arc<Mutex<Api>>,
     skill_manager: Arc<Mutex<SkillManager>>,
+    config: IntentConfig,
 }
 
-pub struct IntentConfig {}
+pub struct IntentConfig {
+    pub watch_skill_dir: bool,
+}
 
 impl IntentAction {
     pub async fn parse_as_reply(&self, text: &str) -> bool {
@@ -69,11 +73,12 @@ impl IntentAction {
 impl Action for IntentAction {
     type Config = IntentConfig;
 
-    fn new(_config: Self::Config) -> Result<IntentAction, String> {
+    fn new(config: Self::Config) -> Result<IntentAction, String> {
         Ok(Self {
             device: Arc::clone(&runtime()?.device),
             api: Arc::new(Mutex::new(Api::new())),
             skill_manager: Arc::new(Mutex::new(SkillManager::new())),
+            config,
         })
     }
 
@@ -82,12 +87,7 @@ impl Action for IntentAction {
         let api = Arc::clone(&self.api);
         let skill_manager = Arc::clone(&self.skill_manager);
 
-        let _ = subscribe!("intent/execute/text", async: move |_from, _topic, data| {
-            let device = Arc::clone(&device);
-            let api = Arc::clone(&api);
-            let skill_manager = Arc::clone(&skill_manager);
-
-            async move {
+        let _ = subscribe!("intent/execute/text", captures: [skill_manager, api, device], async: |_from, _topic, data| {
                 let msg = String::from_utf8_lossy(&data);
                 let text = msg.trim();
 
@@ -95,16 +95,29 @@ impl Action for IntentAction {
                     device: Arc::clone(&device),
                     api,
                     skill_manager,
+                    config: IntentConfig { watch_skill_dir: false }
                 };
 
                 if !intent_action.parse_as_reply(text).await {
                     let _ = intent_action.parse_as_intent(text).await;
                 }
-            }
         });
 
         let _ = subscribe!("intent/reply/cancel", async: move |_from, _topic, _data| async move {
             if let Ok(c) = runtime() { c.reply_manager.cancel().await };
         });
+
+        let _ = subscribe!("skills/reload", captures: [skill_manager], async: |_from, _topic, _data| {
+            let mut lock = skill_manager.lock().await;
+            lock.reload();
+        });
+
+        if self.config.watch_skill_dir {
+            watch_dir!("./config/skills", Duration::from_secs(1), captures: [skill_manager], async: |event| {
+                let mut lock = skill_manager.lock().await;
+                lock.reload();
+                println!("Reloaded skills due to change in: {:?}", event.path);
+            });
+        }
     }
 }

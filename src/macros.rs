@@ -67,6 +67,27 @@ macro_rules! subscribe {
             Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
         }
     };
+    ($topic:expr, captures: [$($cap:ident),*], async: |$from:ident, $top:ident, $data:ident| $body:block) => {{
+        $(let $cap = $cap.clone();)*
+
+        match $crate::ctx::runtime() {
+            Ok(runtime) => {
+                let result = runtime.device.subscribe_async($topic, move |$from, $top, $data| {
+                    $(let $cap = $cap.clone();)*
+
+                    async move {
+                        $body
+                    }
+                }).await;
+
+                match result {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+                }
+            },
+            Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+        }
+    }};
 }
 
 #[macro_export]
@@ -293,4 +314,93 @@ macro_rules! register_action {
             action.register().await;
         }
     }};
+}
+
+#[macro_export]
+macro_rules! watch_dir {
+    ($path:expr, $duration:expr, async: |$event:ident| $action:block) => {{
+        use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+        use std::sync::mpsc::channel;
+        use tokio::runtime::Handle;
+
+        let path = $path.to_string();
+        let handle = Handle::current();
+
+        std::thread::spawn(move || {
+            let (tx, rx) = channel();
+            let mut debouncer = new_debouncer($duration, tx).expect("Watcher fail");
+
+            debouncer.watcher()
+                .watch(std::path::Path::new(&path), RecursiveMode::Recursive)
+                .expect("Path fail");
+
+            for result in rx {
+                if let Ok(events) = result {
+                    for $event in events {
+                        // Enter the async context from a sync thread
+                        handle.spawn(async move {
+                            $action
+                        });
+                    }
+                }
+            }
+        });
+    }};
+    ($path:expr, $duration:expr, captures: [$($cap:ident),*], async: |$event:ident| $action:block) => {
+        use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+        use std::sync::mpsc::channel;
+        use tokio::runtime::Handle;
+
+        let path = $path.to_string();
+        let handle = Handle::current();
+
+        $(let $cap = $cap.clone();)*
+
+        std::thread::spawn(move || {
+            let (tx, rx) = channel();
+            let mut debouncer = new_debouncer($duration, tx).expect("Watcher fail");
+
+            debouncer.watcher()
+                .watch(std::path::Path::new(&path), RecursiveMode::Recursive)
+                .expect("Path fail");
+
+            for result in rx {
+                if let Ok(events) = result {
+                    for $event in events {
+                        $(let $cap = $cap.clone();)*
+
+                        handle.spawn(async move {
+                            $action
+                        });
+                    }
+                }
+            }
+        });
+    };
+    ($path:expr, $duration:expr, $callback:expr) => {
+        use notify_debouncer_mini::{new_debouncer, notify::{RecursiveMode}};
+        use std::sync::mpsc::channel;
+        use std::path::Path;
+
+        let (tx, rx) = channel();
+
+        let mut debouncer = new_debouncer($duration, tx)
+            .expect("Failed to create debouncer");
+
+        debouncer.watcher()
+            .watch(Path::new($path), RecursiveMode::Recursive)
+            .expect("Failed to watch path");
+
+
+        for result in rx {
+            match result {
+                Ok(events) => {
+                    for event in events {
+                        $callback(event);
+                    }
+                }
+                Err(e) => eprintln!("Watch error: {:?}", e),
+            }
+        }
+    };
 }
