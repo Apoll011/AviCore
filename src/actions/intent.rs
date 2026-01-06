@@ -17,6 +17,7 @@ pub struct IntentAction {
 
 pub struct IntentConfig {
     pub watch_skill_dir: bool,
+    pub watch_dir_debounce_time: u64
 }
 
 impl IntentAction {
@@ -95,7 +96,7 @@ impl Action for IntentAction {
                     device: Arc::clone(&device),
                     api,
                     skill_manager,
-                    config: IntentConfig { watch_skill_dir: false }
+                    config: IntentConfig { watch_skill_dir: false, watch_dir_debounce_time: 10 }
                 };
 
                 if !intent_action.parse_as_reply(text).await {
@@ -113,7 +114,17 @@ impl Action for IntentAction {
         });
 
         if self.config.watch_skill_dir {
-            watch_dir!("./config/skills", Duration::from_secs(1), captures: [skill_manager], async: |event| {
+            let time = self.config.watch_dir_debounce_time;
+            watch_dir!("./config/skills", Duration::from_secs(time), captures: [skill_manager], async: |event| {
+                if event.path.is_dir() {
+                    return
+                }
+
+                match event.path.extension() {
+                    Some(extension) => {if !extension.eq("avi") { return }}
+                    None => return
+                }
+
                 let mut lock = skill_manager.lock().await;
                 lock.reload();
                 println!("Reloaded skills due to change in: {:?}", event.path);

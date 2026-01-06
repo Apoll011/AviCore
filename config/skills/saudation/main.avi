@@ -12,13 +12,13 @@ fn intent_hi(intent: Intent) {
         d::confirm("ask", "reply")
     }
     else {
-        say("Oi!")
+        say("Oii!")
     }
 }
 
 fn reply(response) {
     if (response == "true") {
-        say("Okkkk!")
+        say("Okkk!")
     }
     else {
         say("Sorry")
