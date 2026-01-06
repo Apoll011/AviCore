@@ -1,5 +1,6 @@
 use crate::actions::action::Action;
 use crate::ctx::runtime;
+use crate::subscribe;
 use avi_device::device::AviDevice;
 use std::sync::Arc;
 
@@ -76,20 +77,13 @@ impl Action for MeshAction {
         self.device.on_peer_connected(on_peer_connected).await;
         self.device.on_peer_disconnected(on_peer_disconnected).await;
 
-        match self
-            .device
-            .subscribe_async("user/update", move |_from, _topic, _data| async move {
-                tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(match runtime() {
-                        Ok(c) => c.user.load_from_device(),
-                        Err(_) => return,
-                    })
-                });
-            })
-            .await
-        {
-            Ok(_) => (),
-            Err(e) => eprintln!("Failed to subscribe to update topic: {}", e),
-        }
+        let _ = subscribe!("user/update", async: move |_from, _topic, _data| async move {
+            tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(match runtime() {
+                    Ok(c) => c.user.load_from_device(),
+                    Err(_) => return,
+                })
+            });
+        });
     }
 }

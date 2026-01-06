@@ -1,5 +1,6 @@
 use crate::actions::action::Action;
 use crate::ctx::runtime;
+use crate::subscribe;
 use avi_device::device::AviDevice;
 use std::sync::Arc;
 
@@ -34,31 +35,25 @@ impl DialogueAction {
     ///
     /// TODO: Implement actual audio output or interaction with a text-to-speech system instead of just printing to console.
     async fn register_speaker(&mut self) {
-        self.device
-            .subscribe(
-                &format!("speak/{}/text", self.device.get_id().await),
-                move |_from, _topic, data| {
-                    let msg = String::from_utf8_lossy(&data);
-                    println!("Speaker: {}", msg);
-                },
-            )
-            .await
-            .expect("Failed to subscribe to intent topic");
+        let _ = subscribe!(
+            &format!("speak/{}/text", self.device.get_id().await),
+            move |_from, _topic, data| {
+                let msg = String::from_utf8_lossy(&data);
+                println!("Speaker: {}", msg);
+            }
+        );
     }
 
     /// Subscribes to the listener topic for the current device.
     ///
     /// TODO: Implement actual voice recognition or interaction with a speech-to-text system.
     async fn register_listener(&mut self) {
-        self.device
-            .subscribe(
-                &format!("listening/{}/start", self.device.get_id().await),
-                move |_from, _topic, _data| {
-                    println!("Listening...");
-                },
-            )
-            .await
-            .expect("Failed to subscribe to intent topic");
+        let _ = subscribe!(
+            &format!("listening/{}/start", self.device.get_id().await),
+            |_from, _topic, _data| {
+                println!("Listening...");
+            }
+        );
     }
 }
 

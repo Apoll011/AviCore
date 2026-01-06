@@ -1,8 +1,8 @@
 use crate::actions::action::Action;
 use crate::api::api::Api;
 use crate::ctx::runtime;
-use crate::process_reply_text;
 use crate::skills::manager::SkillManager;
+use crate::{process_reply_text, subscribe};
 use avi_device::device::AviDevice;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -82,50 +82,32 @@ impl Action for IntentAction {
         let api = Arc::clone(&self.api);
         let skill_manager = Arc::clone(&self.skill_manager);
 
-        match self
-            .device
-            .subscribe_async("intent/execute/text", move |_from, _topic, data| {
-                let device = Arc::clone(&device);
-                let api = Arc::clone(&api);
-                let skill_manager = Arc::clone(&skill_manager);
+        let _ = subscribe!("intent/execute/text", async: move |_from, _topic, data| {
+            let device = Arc::clone(&device);
+            let api = Arc::clone(&api);
+            let skill_manager = Arc::clone(&skill_manager);
 
-                async move {
-                    let msg = String::from_utf8_lossy(&data);
-                    let text = msg.trim();
+            async move {
+                let msg = String::from_utf8_lossy(&data);
+                let text = msg.trim();
 
-                    let intent_action = IntentAction {
-                        device: Arc::clone(&device),
-                        api,
-                        skill_manager,
-                    };
+                let intent_action = IntentAction {
+                    device: Arc::clone(&device),
+                    api,
+                    skill_manager,
+                };
 
-                    if !intent_action.parse_as_reply(text).await {
-                        let _ = intent_action.parse_as_intent(text).await;
-                    }
+                if !intent_action.parse_as_reply(text).await {
+                    let _ = intent_action.parse_as_intent(text).await;
                 }
-            })
-            .await
-        {
-            Ok(_) => (),
-            Err(e) => eprintln!("Failed to subscribe to intent topic: {}", e),
-        }
+            }
+        });
 
-        // Cancel topic
-        match self
-            .device
-            .subscribe_async(
-                "intent/reply/cancel",
-                move |_from, _topic, _data| async move {
-                    match runtime() {
-                        Ok(c) => c.reply_manager.cancel().await,
-                        Err(_) => (),
-                    };
-                },
-            )
-            .await
-        {
-            Ok(_) => (),
-            Err(e) => eprintln!("Failed to subscribe to cancel topic: {}", e),
-        }
+        let _ = subscribe!("intent/reply/cancel", async: move |_from, _topic, _data| async move {
+            match runtime() {
+                Ok(c) => c.reply_manager.cancel().await,
+                Err(_) => (),
+            };
+        });
     }
 }

@@ -47,7 +47,7 @@ pub fn runtime() -> Result<&'static Arc<RuntimeContext>, String> {
     }
 }
 
-pub fn create_ctx(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {
+pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {
     RUNTIMECTX
         .set(Arc::from(RuntimeContext {
             api_url: api_url.to_string(),

@@ -48,6 +48,28 @@ macro_rules! publish {
 }
 
 #[macro_export]
+macro_rules! subscribe {
+    ($topic: expr, async: $body:expr) => {
+        match crate::ctx::runtime() {
+            Ok(runtime) => match runtime.device.subscribe_async($topic, $body).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+            },
+            Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+        }
+    };
+    ($topic:expr, $body:expr) => {
+        match crate::ctx::runtime() {
+            Ok(runtime) => match runtime.device.subscribe($topic, $body).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+            },
+            Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! set_ctx {
     ($key:expr, $value:expr) => {
         match crate::ctx::runtime() {
@@ -155,6 +177,12 @@ macro_rules! has_ctx {
             Err(_) => false,
         }
     };
+    (device, $key:expr) => {
+        match crate::ctx::runtime() {
+            Ok(c) => c.devce.has_ctx($key),
+            Err(_) => false,
+        }
+    };
     (skill: $name:expr, $key:expr) => {
         match crate::ctx::runtime() {
             Ok(c) => c
@@ -177,9 +205,7 @@ macro_rules! remove_ctx {
     };
     (device, $key:expr) => {
         match crate::ctx::runtime() {
-            Ok(c) => match c
-                .device
-                .delete_ctx($key).await {
+            Ok(c) => match c.device.delete_ctx($key).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error removing device ctx: {}", e.to_string())),
             },
