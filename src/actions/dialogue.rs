@@ -32,8 +32,6 @@ pub struct DialogueConfig {
 
 impl DialogueAction {
     /// Subscribes to the speaker topic for the current device.
-    ///
-    /// TODO: Implement actual audio output or interaction with a text-to-speech system instead of just printing to console.
     async fn register_speaker(&mut self) {
         let _ = subscribe!(
             &format!("speak/{}/text", self.device.get_id().await),
@@ -45,8 +43,6 @@ impl DialogueAction {
     }
 
     /// Subscribes to the listener topic for the current device.
-    ///
-    /// TODO: Implement actual voice recognition or interaction with a speech-to-text system.
     async fn register_listener(&mut self) {
         let _ = subscribe!(
             &format!("listening/{}/start", self.device.get_id().await),

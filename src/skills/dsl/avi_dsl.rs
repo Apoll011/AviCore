@@ -11,7 +11,7 @@ use serde_yaml::{Mapping, Sequence, Value as Yaml};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Loads and initializes the core Avi Dyon module with all sub-modules and functions.
+/// Loads and initializes the core Avi Dyon module with all submodules and functions.
 pub fn load_module() -> Option<dyon::Module> {
     use dyon::Module;
 
@@ -73,8 +73,6 @@ impl PopVariable for JsonValue {
 /// # Errors
 ///
 /// Returns an error if the Dyon variable is a complex type (Link/RustObject/UnsafeRef) that cannot be converted to JSON.
-///
-/// FIXME: `_ => todo!()` will cause a crash if an unhandled Dyon variable type is encountered.
 fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
     use dyon::Variable::*;
     match var {
@@ -106,8 +104,8 @@ fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
         },
         Link(_) | RustObject(_) | UnsafeRef(_) => {
             Err("Cannot convert complex Dyon types (Link/RustObject/UnsafeRef) to Value".into())
-        }
-        _ => todo!(),
+        },
+        _ => Err("Unsupported Dyon type for JSON".into()),
     }
 }
 
@@ -148,7 +146,7 @@ fn to_dyon_variable_json(value: JsonValue) -> Variable {
 
             Object(Arc::new(obj))
         }
-        _ => Bool(false, None),
+        _ => Option(None),
     }
 }
 
@@ -250,8 +248,6 @@ fn to_dyon_variable(value: YamlValue) -> Variable {
             Object(Arc::new(obj))
         }
 
-        Yaml::Null => Option(None),
-
-        _ => Bool(false, None),
+        _ => Option(None),
     }
 }

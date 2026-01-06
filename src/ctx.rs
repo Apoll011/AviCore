@@ -38,8 +38,6 @@ pub(crate) static RUNTIMECTX: OnceLock<Arc<RuntimeContext>> = OnceLock::new();
 /// # Panics
 ///
 /// Panics if the runtime context has not been initialized yet.
-///
-/// TODO: Consider returning an `Option` or `Result` instead of panicking, or provide a non-panicking alternative.
 pub fn runtime() -> Result<&'static Arc<RuntimeContext>, String> {
     match RUNTIMECTX.get() {
         Some(runtime) => Ok(runtime),
