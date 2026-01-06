@@ -61,6 +61,15 @@ macro_rules! set_ctx {
             Err(_) => (),
         }
     };
+    (device, $key:expr, $value:expr) => {
+        match runtime() {
+            Ok(c) => match c.device.update_ctx($key, json!($value)).await {
+                Ok(v) => Ok(v),
+                Err(e) => Err(format!("Error setting device ctx: {}", e.to_string())),
+            },
+            Err(e) => Err(e),
+        }
+    };
     ($key:expr, $value:expr, $ttl:expr) => {
         match crate::ctx::runtime() {
             Ok(c) => c.context.set(
@@ -166,6 +175,17 @@ macro_rules! remove_ctx {
             Err(_) => (),
         }
     };
+    (device, $key:expr) => {
+        match crate::ctx::runtime() {
+            Ok(c) => match c
+                .device
+                .delete_ctx($key).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(format!("Error removing device ctx: {}", e.to_string())),
+            },
+            Err(e) => Err(e),
+        }
+    };
     (skill: $name:expr, $key:expr) => {
         match crate::ctx::runtime() {
             Ok(c) => c
@@ -213,6 +233,19 @@ macro_rules! rt_spawn {
             c.rt.spawn(async move {
                 $($b)*
             });
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! core_id {
+    () => {
+        match crate::ctx::runtime() {
+            Ok(c) => match c.device.get_core_id().await {
+                Ok(v) => Ok(v),
+                Err(e) => Err(format!("Error getting core id: {}", e.to_string())),
+            },
+            Err(e) => Err(e),
         }
     };
 }

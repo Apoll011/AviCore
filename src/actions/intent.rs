@@ -1,11 +1,11 @@
 use crate::actions::action::Action;
 use crate::api::api::Api;
 use crate::ctx::runtime;
+use crate::process_reply_text;
 use crate::skills::manager::SkillManager;
 use avi_device::device::AviDevice;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::process_reply_text;
 
 pub struct IntentAction {
     device: Arc<AviDevice>,

@@ -1,5 +1,5 @@
 use crate::ctx::runtime;
-use crate::{get_ctx, publish, rt_spawn, set_ctx};
+use crate::{core_id, get_ctx, publish, rt_spawn, set_ctx};
 
 /// Retrieves the ID of the last active listener device.
 ///
@@ -12,7 +12,7 @@ use crate::{get_ctx, publish, rt_spawn, set_ctx};
 pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
     match get_ctx!(device, "avi.dialogue.listener") {
         Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
-        Err(_) => Ok(runtime()?.device.get_core_id().await?),
+        Err(_) => Ok(core_id!()?),
     }
 }
 
@@ -26,7 +26,7 @@ pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
 pub async fn get_speaker() -> Result<String, Box<dyn std::error::Error>> {
     match get_ctx!(device, "avi.dialogue.speaker") {
         Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
-        Err(_) => Ok(runtime()?.device.get_core_id().await?),
+        Err(_) => Ok(core_id!()?),
     }
 }
 

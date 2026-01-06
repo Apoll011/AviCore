@@ -134,14 +134,7 @@ impl UserManager {
     }
 
     pub async fn save_to_device(&self) {
-        let _ = match runtime() {
-            Ok(c) => {
-                c.device
-                    .update_ctx("avi.user", json!(&*self.user.read()))
-                    .await
-            }
-            Err(_) => return,
-        };
+        let _ = set_ctx!(device, "avi.user", &*self.user.read());
     }
 
     fn save_to_persistent(&self) {
@@ -552,12 +545,7 @@ impl UserManager {
     pub async fn delete_all(&self) -> Result<(), String> {
         remove_ctx!("user");
 
-        let _ = match runtime() {
-            Ok(c) => c.device.delete_ctx("avi.user").await,
-            Err(_) => Ok(()),
-        };
-
-        Ok(())
+        remove_ctx!(device, "avi.user")
     }
 
     // ==================== HELPER METHODS ====================
