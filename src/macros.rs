@@ -34,7 +34,7 @@ macro_rules! speak {
 #[macro_export]
 macro_rules! publish {
     ($topic: expr) => {
-        publish!($topic, Vec::new())
+        $crate::publish!($topic, Vec::new())
     };
     ($topic: expr, $data: expr) => {
         match $crate::ctx::runtime() {
@@ -93,16 +93,7 @@ macro_rules! subscribe {
 #[macro_export]
 macro_rules! set_ctx {
     ($key:expr, $value:expr) => {
-        match $crate::ctx::runtime() {
-            Ok(c) => c.context.set(
-                $crate::context::ContextScope::Global,
-                $key.to_string(),
-                serde_json::json!($value),
-                None,
-                false,
-            ),
-            Err(_) => (),
-        }
+        $crate::set_ctx!($key, $value, persistent: false);
     };
     (device, $key:expr, $value:expr) => {
         match runtime() {
@@ -114,28 +105,10 @@ macro_rules! set_ctx {
         }
     };
     ($key:expr, $value:expr, $ttl:expr) => {
-        match $crate::ctx::runtime() {
-            Ok(c) => c.context.set(
-                $crate::context::ContextScope::Global,
-                $key.to_string(),
-                serde_json::json!($value),
-                Some(Duration::from_secs_f64(ttl)),
-                false,
-            ),
-            Err(_) => (),
-        }
+        $crate::set_ctx!($key, $value, $ttl, false);
     };
     ($key:expr, $value:expr, $ttl:expr, persistent: $persistent:expr) => {
-        match $crate::ctx::runtime() {
-            Ok(c) => c.context.set(
-                $crate::context::ContextScope::Global,
-                $key.to_string(),
-                serde_json::json!($value),
-                Some(Duration::from_secs_f64(ttl)),
-                $persistent,
-            ),
-            Err(_) => (),
-        }
+        $crate::set_ctx!($key, $value, $ttl, $persistent);
     };
     ($key:expr, $value:expr, $ttl:expr, $persistent:expr) => {
         match $crate::ctx::runtime() {
