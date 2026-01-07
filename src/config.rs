@@ -110,7 +110,10 @@ impl ConfigSystem {
         let parsed_settings = match serde_yaml::from_str::<SettingsFile>(&content_settings) {
             Ok(v) => v,
             Err(e) => {
-                error!("Failed to parse settings.config at {}: {}", settings_path, e);
+                error!(
+                    "Failed to parse settings.config at {}: {}",
+                    settings_path, e
+                );
                 return ConfigSystem::default();
             }
         };

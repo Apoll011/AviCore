@@ -89,7 +89,10 @@ impl ReplyManager {
     pub async fn set_reply(&self, request: RequestReply) {
         self.cancel().await;
 
-        info!("Skill {} requested reply for handler {}.", request.skill_request, request.handler);
+        info!(
+            "Skill {} requested reply for handler {}.",
+            request.skill_request, request.handler
+        );
         let pending = PendingReply {
             skill_request: request.skill_request.clone(),
             handler: request.handler,
@@ -128,7 +131,10 @@ impl ReplyManager {
             if let Some(max) = self.config.max_retries
                 && pending.retry_count >= max
             {
-                warn!("Too many invalid attempts for skill {}. Cancelling request.", pending.skill_request);
+                warn!(
+                    "Too many invalid attempts for skill {}. Cancelling request.",
+                    pending.skill_request
+                );
                 speak!(locale: "to_many_replay_trys");
                 return Err("Too many invalid attempts. Cancelling request.".to_string());
             }
@@ -138,9 +144,12 @@ impl ReplyManager {
 
             match pending.validator.validate_erased(&cleaned) {
                 Ok(parsed_output) => {
-                    info!("Successfully parsed reply for skill {}: {}", pending.skill_request, parsed_output);
+                    info!(
+                        "Successfully parsed reply for skill {}: {}",
+                        pending.skill_request, parsed_output
+                    );
                     Ok(Replayed::new(parsed_output, pending))
-                },
+                }
                 Err(error) => {
                     pending.retry_count += 1;
                     let error_msg = pending.validator.get_error_txt(&error);
@@ -156,7 +165,10 @@ impl ReplyManager {
                     if let Some(max) = self.config.max_retries
                         && pending.retry_count >= max
                     {
-                        info!("Too many invalid attempts for skill {}. Cancelling request.", pending.skill_request);
+                        info!(
+                            "Too many invalid attempts for skill {}. Cancelling request.",
+                            pending.skill_request
+                        );
                         speak!(locale: "to_many_replay_trys");
                         return Err("Too many invalid attempts. Cancelling request.".to_string());
                     }

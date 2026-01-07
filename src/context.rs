@@ -186,7 +186,11 @@ impl ContextManager {
         let scope_path = self.get_scope_path(scope);
         if !scope_path.exists() {
             if let Err(e) = fs::create_dir_all(&scope_path) {
-                error!("Failed to create scope directory {}: {}", scope_path.display(), e);
+                error!(
+                    "Failed to create scope directory {}: {}",
+                    scope_path.display(),
+                    e
+                );
                 return;
             }
         }
@@ -195,7 +199,11 @@ impl ContextManager {
         match serde_json::to_string(value) {
             Ok(content) => {
                 if let Err(e) = fs::write(&file_path, content) {
-                    error!("Failed to write persistent context to {}: {}", file_path.display(), e);
+                    error!(
+                        "Failed to write persistent context to {}: {}",
+                        file_path.display(),
+                        e
+                    );
                 } else {
                     trace!("Saved persistent context to {}", file_path.display());
                 }
@@ -211,12 +219,20 @@ impl ContextManager {
                 Ok(content) => match serde_json::from_str(&content) {
                     Ok(v) => Some(v),
                     Err(e) => {
-                        error!("Failed to deserialize context from {}: {}", file_path.display(), e);
+                        error!(
+                            "Failed to deserialize context from {}: {}",
+                            file_path.display(),
+                            e
+                        );
                         None
                     }
                 },
                 Err(e) => {
-                    error!("Failed to read persistent context from {}: {}", file_path.display(), e);
+                    error!(
+                        "Failed to read persistent context from {}: {}",
+                        file_path.display(),
+                        e
+                    );
                     None
                 }
             }
@@ -229,7 +245,11 @@ impl ContextManager {
         let file_path = self.get_scope_path(scope).join(format!("{}.json", key));
         if file_path.exists() {
             if let Err(e) = fs::remove_file(&file_path) {
-                warn!("Failed to delete persistent context {}: {}", file_path.display(), e);
+                warn!(
+                    "Failed to delete persistent context {}: {}",
+                    file_path.display(),
+                    e
+                );
             } else {
                 trace!("Deleted persistent context {}", file_path.display());
             }
@@ -261,9 +281,16 @@ impl ContextManager {
                             && let Ok(ctx_value) = serde_json::from_str::<ContextValue>(&content)
                             && ctx_value.is_expired()
                         {
-                            debug!("Persistent context expired for: {}", sub_entry.path().display());
+                            debug!(
+                                "Persistent context expired for: {}",
+                                sub_entry.path().display()
+                            );
                             if let Err(e) = fs::remove_file(sub_entry.path()) {
-                                warn!("Failed to remove expired persistent file {}: {}", sub_entry.path().display(), e);
+                                warn!(
+                                    "Failed to remove expired persistent file {}: {}",
+                                    sub_entry.path().display(),
+                                    e
+                                );
                             }
                         }
                     }

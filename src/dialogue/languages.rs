@@ -70,23 +70,29 @@ impl LanguageSystem {
                 && (ext == "yaml" || ext == "lang")
             {
                 match fs::read_to_string(&path_buf) {
-                    Ok(content) => {
-                        match serde_yaml::from_str::<LanguageFile>(&content) {
-                            Ok(parsed) => {
-                                let lang_vec: Vec<IndividualLocale> = parsed
-                                    .lang
-                                    .into_iter()
-                                    .map(|(id, value)| IndividualLocale { id, value })
-                                    .collect();
-                                debug!("Loaded language {} from {}", parsed.code, path_buf.display());
-                                languages.push(Language {
-                                    code: parsed.code,
-                                    lang: lang_vec,
-                                });
-                            }
-                            Err(e) => error!("Failed to parse language file {}: {}", path_buf.display(), e),
+                    Ok(content) => match serde_yaml::from_str::<LanguageFile>(&content) {
+                        Ok(parsed) => {
+                            let lang_vec: Vec<IndividualLocale> = parsed
+                                .lang
+                                .into_iter()
+                                .map(|(id, value)| IndividualLocale { id, value })
+                                .collect();
+                            debug!(
+                                "Loaded language {} from {}",
+                                parsed.code,
+                                path_buf.display()
+                            );
+                            languages.push(Language {
+                                code: parsed.code,
+                                lang: lang_vec,
+                            });
                         }
-                    }
+                        Err(e) => error!(
+                            "Failed to parse language file {}: {}",
+                            path_buf.display(),
+                            e
+                        ),
+                    },
                     Err(e) => error!("Failed to read language file {}: {}", path_buf.display(), e),
                 }
             }

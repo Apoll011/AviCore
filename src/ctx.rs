@@ -50,7 +50,10 @@ pub fn runtime() -> Result<&'static Arc<RuntimeContext>, String> {
 }
 
 pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {
-    trace!("Creating runtime with api_url={}, lang={}, config_path={}", api_url, lang, config_path);
+    trace!(
+        "Creating runtime with api_url={}, lang={}, config_path={}",
+        api_url, lang, config_path
+    );
     info!("Initializing runtime.");
     RUNTIMECTX
         .set(Arc::from(RuntimeContext {

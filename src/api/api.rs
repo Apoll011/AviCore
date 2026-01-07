@@ -71,11 +71,11 @@ impl Api {
                         .map(|x| x.as_str().unwrap().to_string())
                         .collect(),
                 })
-            },
+            }
             None => {
                 error!("No response from server for /avi/alive");
                 Err("No response from server".into())
-            },
+            }
         }
     }
 
@@ -100,11 +100,11 @@ impl Api {
             Some(v) => {
                 debug!("Intent recognition response: {:?}", v);
                 Ok(serde_json::from_value(v)?)
-            },
+            }
             None => {
                 error!("No response from server for /intent_recognition");
                 Err("No response from server".into())
-            },
+            }
         }
     }
 }

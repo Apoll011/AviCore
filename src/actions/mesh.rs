@@ -57,7 +57,7 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
             if let Err(e) = avi_device.update_ctx("avi", v.clone()).await {
                 error!("Failed to update mesh context after peer disconnect: {}", e);
             }
-        },
+        }
         None => warn!("No avi data while trying to update the context after peer disconnect."),
     }
 }

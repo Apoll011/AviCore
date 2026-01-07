@@ -14,15 +14,21 @@ pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
     trace!("Getting last listener device ID");
     match get_ctx!(device, "avi.dialogue.listener") {
         Some(v) => {
-            let id = v.as_str().ok_or("Listener context is not a string")?.to_string();
+            let id = v
+                .as_str()
+                .ok_or("Listener context is not a string")?
+                .to_string();
             debug!("Last listener found in context: {}", id);
             Ok(id)
-        },
+        }
         None => {
             let id = core_id!()?;
-            debug!("No listener found in context, defaulting to core ID: {}", id);
+            debug!(
+                "No listener found in context, defaulting to core ID: {}",
+                id
+            );
             Ok(id)
-        },
+        }
     }
 }
 
@@ -37,15 +43,18 @@ pub async fn get_speaker() -> Result<String, Box<dyn std::error::Error>> {
     trace!("Getting current speaker device ID");
     match get_ctx!(device, "avi.dialogue.speaker") {
         Some(v) => {
-            let id = v.as_str().ok_or("Speaker context is not a string")?.to_string();
+            let id = v
+                .as_str()
+                .ok_or("Speaker context is not a string")?
+                .to_string();
             debug!("Speaker found in context: {}", id);
             Ok(id)
-        },
+        }
         None => {
             let id = core_id!()?;
             debug!("No speaker found in context, defaulting to core ID: {}", id);
             Ok(id)
-        },
+        }
     }
 }
 

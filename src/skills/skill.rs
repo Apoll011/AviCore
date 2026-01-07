@@ -4,10 +4,10 @@ use crate::skills::dsl::avi_dsl::load_module;
 use crate::skills::skill_context::SkillContext;
 use dyon::embed::PushVariable;
 use dyon::{Call, FnIndex, Module, Runtime, error, load};
+use log::info;
 use std::ffi::OsStr;
 use std::fs;
 use std::sync::Arc;
-use log::info;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///

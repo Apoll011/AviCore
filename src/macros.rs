@@ -6,7 +6,7 @@ macro_rules! locale {
             Err(e) => {
                 ::log::debug!("Failed to get translation for {}: {}", $key, e);
                 None
-            },
+            }
         }
     };
 }
@@ -19,7 +19,7 @@ macro_rules! get_translation_list {
             Err(e) => {
                 ::log::debug!("Failed to get translation list for {}: {}", $key, e);
                 Vec::new()
-            },
+            }
         }
     };
 }
@@ -31,7 +31,7 @@ macro_rules! speak {
             Some(v) => speak!(&v),
             None => {
                 ::log::warn!("Attempted to speak missing locale key: {}", $a);
-            },
+            }
         }
     };
     ($a: expr) => {
@@ -56,11 +56,11 @@ macro_rules! publish {
                         Err(err_msg)
                     }
                 }
-            },
+            }
             Err(e) => {
                 ::log::error!("Failed to publish: runtime not available: {}", e);
                 Err(e)
-            },
+            }
         }
     };
 }
@@ -201,7 +201,7 @@ macro_rules! get_ctx {
             Err(e) => {
                 ::log::error!("Failed to get context: runtime not available: {}", e);
                 None
-            },
+            }
         }
     };
     (device, $key:expr) => {
@@ -215,11 +215,11 @@ macro_rules! get_ctx {
                         None
                     }
                 }
-            },
+            }
             Err(e) => {
                 ::log::error!("Failed to get device context: runtime not available: {}", e);
                 None
-            },
+            }
         }
     };
     (skill: $name:expr, $key:expr) => {
@@ -230,7 +230,7 @@ macro_rules! get_ctx {
             Err(e) => {
                 ::log::error!("Failed to get skill context: runtime not available: {}", e);
                 None
-            },
+            }
         }
     };
 }
