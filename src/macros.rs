@@ -3,7 +3,10 @@ macro_rules! locale {
     ($key:expr) => {
         match $crate::ctx::runtime() {
             Ok(c) => c.language_system.get_translation($key),
-            Err(_) => None,
+            Err(e) => {
+                ::log::debug!("Failed to get translation for {}: {}", $key, e);
+                None
+            },
         }
     };
 }
@@ -13,7 +16,10 @@ macro_rules! get_translation_list {
     ($key:expr) => {
         match $crate::ctx::runtime() {
             Ok(c) => c.language_system.get_translation_list($key),
-            Err(_) => Vec::new(),
+            Err(e) => {
+                ::log::debug!("Failed to get translation list for {}: {}", $key, e);
+                Vec::new()
+            },
         }
     };
 }
@@ -23,7 +29,9 @@ macro_rules! speak {
     (locale: $a: expr) => {
         match locale!($a) {
             Some(v) => speak!(&v),
-            None => (),
+            None => {
+                ::log::warn!("Attempted to speak missing locale key: {}", $a);
+            },
         }
     };
     ($a: expr) => {
@@ -38,11 +46,21 @@ macro_rules! publish {
     };
     ($topic: expr, $data: expr) => {
         match $crate::ctx::runtime() {
-            Ok(c) => match c.device.publish($topic, $data).await {
-                Ok(_) => Ok(()),
-                Err(e) => Err(format!("Error publishing: {}", e.to_string())),
+            Ok(c) => {
+                ::log::trace!("Publishing to topic: {}", $topic);
+                match c.device.publish($topic, $data).await {
+                    Ok(_) => Ok(()),
+                    Err(e) => {
+                        let err_msg = format!("Error publishing to {}: {}", $topic, e.to_string());
+                        ::log::error!("{}", err_msg);
+                        Err(err_msg)
+                    }
+                }
             },
-            Err(e) => Err(e),
+            Err(e) => {
+                ::log::error!("Failed to publish: runtime not available: {}", e);
+                Err(e)
+            },
         }
     };
 }
@@ -51,26 +69,40 @@ macro_rules! publish {
 macro_rules! subscribe {
     ($topic: expr, async: $body:expr) => {
         match $crate::ctx::runtime() {
-            Ok(runtime) => match runtime.device.subscribe_async($topic, $body).await {
-                Ok(_) => {
-                    ::log::info!("Subscribed to {}", $topic);
-                    Ok(())
-                },
-                Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+            Ok(runtime) => {
+                let topic = $topic.to_string();
+                ::log::trace!("Subscribing async to topic: {}", topic);
+                let _ = runtime.device.subscribe_async(&topic, $body).await.map_err(|e| {
+                    let err_msg = format!("Error subscribing async to {}: {}", topic, e.to_string());
+                    ::log::error!("{}", err_msg);
+                    err_msg
+                }).map(|_| {
+                    ::log::info!("Subscribed async to {}", topic);
+                });
             },
-            Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+            Err(e) => {
+                let err_msg = format!("Error subscribing async (runtime error): {}", e.to_string());
+                ::log::error!("{}", err_msg);
+            },
         }
     };
     ($topic:expr, $body:expr) => {
         match $crate::ctx::runtime() {
-            Ok(runtime) => match runtime.device.subscribe($topic, $body).await {
-                Ok(_) => {
-                    ::log::info!("Subscribed to {}", $topic);
-                    Ok(())
-                },
-                Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+            Ok(runtime) => {
+                let topic = $topic.to_string();
+                ::log::trace!("Subscribing to topic: {}", topic);
+                let _ = runtime.device.subscribe(&topic, $body).await.map_err(|e| {
+                    let err_msg = format!("Error subscribing to {}: {}", topic, e.to_string());
+                    ::log::error!("{}", err_msg);
+                    err_msg
+                }).map(|_| {
+                    ::log::info!("Subscribed to {}", topic);
+                });
             },
-            Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+            Err(e) => {
+                let err_msg = format!("Error subscribing (runtime error): {}", e.to_string());
+                ::log::error!("{}", err_msg);
+            },
         }
     };
     ($topic:expr, captures: [$($cap:ident),*], async: |$from:ident, $top:ident, $data:ident| $body:block) => {{
@@ -78,6 +110,7 @@ macro_rules! subscribe {
 
         match $crate::ctx::runtime() {
             Ok(runtime) => {
+                ::log::trace!("Subscribing async (with captures) to topic: {}", $topic);
                 let result = runtime.device.subscribe_async($topic, move |$from, $top, $data| {
                     $(let $cap = $cap.clone();)*
 
@@ -88,13 +121,18 @@ macro_rules! subscribe {
 
                 match result {
                     Ok(_) => {
-                        ::log::info!("Subscribed to {}", $topic);
-                        Ok(())
+                        ::log::info!("Subscribed async (with captures) to {}", $topic);
                 },
-                    Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+                    Err(e) => {
+                        let err_msg = format!("Error subscribing async (with captures) to {}: {}", $topic, e.to_string());
+                        ::log::error!("{}", err_msg);
+                    }
                 }
             },
-            Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
+            Err(e) => {
+                let err_msg = format!("Error subscribing (runtime error): {}", e.to_string());
+                ::log::error!("{}", err_msg);
+            },
         }
     }};
 }
@@ -106,11 +144,21 @@ macro_rules! set_ctx {
     };
     (device, $key:expr, $value:expr) => {
         match runtime() {
-            Ok(c) => match c.device.update_ctx($key, json!($value)).await {
-                Ok(v) => Ok(v),
-                Err(e) => Err(format!("Error setting device ctx: {}", e.to_string())),
+            Ok(c) => {
+                ::log::trace!("Setting device context: {}={:?}", $key, $value);
+                match c.device.update_ctx($key, json!($value)).await {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        let err_msg = format!("Error setting device ctx {}: {}", $key, e.to_string());
+                        ::log::error!("{}", err_msg);
+                        Err(err_msg)
+                    }
+                }
             },
-            Err(e) => Err(e),
+            Err(e) => {
+                ::log::error!("Failed to set device context: runtime not available: {}", e);
+                Err(e)
+            },
         }
     };
     ($key:expr, $value:expr, $ttl:expr) => {
@@ -128,7 +176,7 @@ macro_rules! set_ctx {
                 Some(Duration::from_secs_f64(ttl)),
                 $persistent,
             ),
-            Err(_) => (),
+            Err(e) => ::log::error!("Failed to set context: runtime not available: {}", e),
         }
     };
     ($key:expr, $value:expr, persistent: $persistent:expr) => {
@@ -140,7 +188,7 @@ macro_rules! set_ctx {
                 None,
                 $persistent,
             ),
-            Err(_) => (),
+            Err(e) => ::log::error!("Failed to set context: runtime not available: {}", e),
         }
     };
 }
@@ -150,19 +198,28 @@ macro_rules! get_ctx {
     ($key:expr) => {
         match $crate::ctx::runtime() {
             Ok(c) => c.context.get(&$crate::context::ContextScope::Global, $key),
-            Err(_) => None,
+            Err(e) => {
+                ::log::error!("Failed to get context: runtime not available: {}", e);
+                None
+            },
         }
     };
     (device, $key:expr) => {
         match $crate::ctx::runtime() {
-            Ok(c) => match c.device.get_ctx($key).await {
-                Ok(v) => Some(v),
-                Err(e) => {
-                    ::log::warn!("Error getting context: {}", e.to_string());
-                    None
+            Ok(c) => {
+                ::log::trace!("Getting device context: {}", $key);
+                match c.device.get_ctx($key).await {
+                    Ok(v) => Some(v),
+                    Err(e) => {
+                        ::log::warn!("Error getting device context {}: {}", $key, e.to_string());
+                        None
+                    }
                 }
             },
-            Err(_) => None,
+            Err(e) => {
+                ::log::error!("Failed to get device context: runtime not available: {}", e);
+                None
+            },
         }
     };
     (skill: $name:expr, $key:expr) => {
@@ -170,7 +227,10 @@ macro_rules! get_ctx {
             Ok(c) => c
                 .context
                 .get(&$crate::context::ContextScope::Skill($name), $key),
-            Err(_) => None,
+            Err(e) => {
+                ::log::error!("Failed to get skill context: runtime not available: {}", e);
+                None
+            },
         }
     };
 }
@@ -312,13 +372,19 @@ macro_rules! get_user {
 #[macro_export]
 macro_rules! register_action {
     ($action_type:ty, { $($field:ident: $value:expr),* $(,)? }) => {{
-        ::log::info!("Registering action {:?}", stringify!($action_type));
-        type Config = <$action_type as $crate::actions::action:: Action>::Config;
-        if let Ok(mut action) = <$action_type>::new(Config {
+        ::log::info!("Registering action: {}", stringify!($action_type));
+        type Config = <$action_type as $crate::actions::action::Action>::Config;
+        match <$action_type>::new(Config {
             $($field: $value),*
         }) {
-            ::log::info!("Action {:?} registered!", stringify!($action_type));
-            action.register().await;
+            Ok(mut action) => {
+                ::log::debug!("Action {} initialized, registering...", stringify!($action_type));
+                action.register().await;
+                ::log::info!("Action {} registered successfully", stringify!($action_type));
+            },
+            Err(e) => {
+                ::log::error!("Failed to initialize action {}: {}", stringify!($action_type), e);
+            }
         }
     }};
 
@@ -337,22 +403,35 @@ macro_rules! watch_dir {
         let path = $path.to_string();
         let handle = Handle::current();
 
-        ::log::info!("Watching directory: {}", path);
+        ::log::info!("Starting directory watcher for: {}", path);
         std::thread::spawn(move || {
             let (tx, rx) = channel();
-            let mut debouncer = new_debouncer($duration, tx).expect("Watcher fail");
+            let mut debouncer = match new_debouncer($duration, tx) {
+                Ok(d) => d,
+                Err(e) => {
+                    ::log::error!("Failed to create debouncer for {}: {}", path, e);
+                    return;
+                }
+            };
 
-            debouncer.watcher()
-                .watch(std::path::Path::new(&path), RecursiveMode::Recursive)
-                .expect("Path fail");
+            if let Err(e) = debouncer.watcher().watch(std::path::Path::new(&path), RecursiveMode::Recursive) {
+                ::log::error!("Failed to watch path {}: {}", path, e);
+                return;
+            }
+
+            ::log::debug!("Watcher active for {}", path);
 
             for result in rx {
-                if let Ok(events) = result {
-                    for $event in events {
-                        handle.spawn(async move {
-                            $action
-                        });
-                    }
+                match result {
+                    Ok(events) => {
+                        for $event in events {
+                            ::log::trace!("File event in {}: {:?}", path, $event);
+                            handle.spawn(async move {
+                                $action
+                            });
+                        }
+                    },
+                    Err(e) => ::log::warn!("Watcher error in {}: {:?}", path, e),
                 }
             }
         });
@@ -411,7 +490,7 @@ macro_rules! watch_dir {
                         $callback(event);
                     }
                 }
-                Err(e) => eprintln!("Watch error: {:?}", e),
+                Err(e) => ::log::warn!("Watch error: {:?}", e),
             }
         }
     };

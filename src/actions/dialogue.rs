@@ -2,6 +2,7 @@ use crate::actions::action::Action;
 use crate::ctx::runtime;
 use crate::subscribe;
 use avi_device::device::AviDevice;
+use log::{info, trace};
 use std::sync::Arc;
 
 /// Manages dialogue-related interactions such as speaking and listening.
@@ -33,10 +34,13 @@ pub struct DialogueConfig {
 impl DialogueAction {
     /// Subscribes to the speaker topic for the current device.
     async fn register_speaker(&mut self) {
+        let device_id = self.device.get_id().await;
+        trace!("Registering speaker for device {}", device_id);
         let _ = subscribe!(
-            &format!("speak/{}/text", self.device.get_id().await),
+            &format!("speak/{}/text", device_id),
             move |_from, _topic, data| {
                 let msg = String::from_utf8_lossy(&data);
+                info!("Speaker received: {}", msg);
                 println!("Speaker: {}", msg);
             }
         );
@@ -44,9 +48,12 @@ impl DialogueAction {
 
     /// Subscribes to the listener topic for the current device.
     async fn register_listener(&mut self) {
+        let device_id = self.device.get_id().await;
+        trace!("Registering listener for device {}", device_id);
         let _ = subscribe!(
-            &format!("listening/{}/start", self.device.get_id().await),
+            &format!("listening/{}/start", device_id),
             |_from, _topic, _data| {
+                info!("Listening started on device");
                 println!("Listening...");
             }
         );

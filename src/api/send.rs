@@ -1,4 +1,5 @@
 use crate::api::response::Response;
+use log::{debug, error, trace};
 use reqwest::Client;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -17,11 +18,31 @@ pub async fn send_dict_to_server(
     url: &str,
     args: HashMap<&str, &str>,
 ) -> Result<Response, Box<dyn std::error::Error>> {
+    trace!("Sending request to server: {} with args: {:?}", url, args);
     let client = Client::new();
 
-    let resp = client.get(url).query(&args).send().await?;
+    let resp = match client.get(url).query(&args).send().await {
+        Ok(r) => r,
+        Err(e) => {
+            error!("Failed to send request to {}: {}", url, e);
+            return Err(e.into());
+        }
+    };
 
-    let json: Value = resp.json().await?;
+    let status = resp.status();
+    if !status.is_success() {
+        error!("Server returned error status for {}: {}", url, status);
+    }
+
+    let json: Value = match resp.json().await {
+        Ok(j) => j,
+        Err(e) => {
+            error!("Failed to parse JSON response from {}: {}", url, e);
+            return Err(e.into());
+        }
+    };
+
+    debug!("Received response from {}: {:?}", url, json);
     let response = Response::new(json);
 
     Ok(response)

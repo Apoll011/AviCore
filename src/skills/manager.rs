@@ -48,12 +48,15 @@ impl SkillManager {
 
                 match Self::load_skill(path.clone()) {
                     Ok((dir, mut v)) => {
-                        if v.start().is_ok() {
-                            info!("Loaded skill {} from {}", v.name(), path.display());
-                            skills.insert(dir.to_string(), v);
+                        match v.start() {
+                            Ok(_) => {
+                                info!("Loaded skill {} from {}", v.name(), path.display());
+                                skills.insert(dir.to_string(), v);
+                            }
+                            Err(e) => warn!("Error loading skill from {} ({}): {}", path.display(), v.name(), e),
                         }
                     }
-                    Err(e) => warn!("Error loading skill: {}", e),
+                    Err(e) => warn!("Error loading skill (SkillManager): {}", e),
                 }
             }
 

@@ -7,6 +7,7 @@ use dyon::{Call, FnIndex, Module, Runtime, error, load};
 use std::ffi::OsStr;
 use std::fs;
 use std::sync::Arc;
+use log::info;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -112,7 +113,7 @@ impl Skill {
         )) {
             return Err(format!("Error loading skill {}", name).into());
         } else {
-            println!("Skill {} loaded", name)
+            info!("Skill {} loaded!", name)
         }
 
         Ok(Arc::new(dyon_module))

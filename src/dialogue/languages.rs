@@ -1,6 +1,6 @@
 use crate::dialogue::intent::YamlValue;
 use crate::lang;
-use log::info;
+use log::{debug, error, info, trace, warn};
 use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -46,37 +46,52 @@ impl LanguageSystem {
     ///
     /// * `path` - The skill's root directory path.
     pub fn new(path: &str) -> Self {
-        info!("Loading language system from {}", path);
+        trace!("Initializing LanguageSystem from {}", path);
         let mut languages: Vec<Language> = Vec::new();
 
         let read_dir = match fs::read_dir(path) {
             Ok(rd) => rd,
-            Err(_) => return Self { languages },
+            Err(e) => {
+                warn!("Failed to read language directory {}: {}", path, e);
+                return Self { languages };
+            }
         };
 
         for entry in read_dir {
             let entry = match entry {
                 Ok(e) => e,
-                Err(_) => continue,
+                Err(e) => {
+                    warn!("Failed to read directory entry in {}: {}", path, e);
+                    continue;
+                }
             };
             let path_buf = entry.path();
             if let Some(ext) = path_buf.extension()
                 && (ext == "yaml" || ext == "lang")
-                && let Ok(content) = fs::read_to_string(&path_buf)
-                && let Ok(parsed) = serde_yaml::from_str::<LanguageFile>(&content)
             {
-                let lang_vec: Vec<IndividualLocale> = parsed
-                    .lang
-                    .into_iter()
-                    .map(|(id, value)| IndividualLocale { id, value })
-                    .collect();
-                languages.push(Language {
-                    code: parsed.code,
-                    lang: lang_vec,
-                });
+                match fs::read_to_string(&path_buf) {
+                    Ok(content) => {
+                        match serde_yaml::from_str::<LanguageFile>(&content) {
+                            Ok(parsed) => {
+                                let lang_vec: Vec<IndividualLocale> = parsed
+                                    .lang
+                                    .into_iter()
+                                    .map(|(id, value)| IndividualLocale { id, value })
+                                    .collect();
+                                debug!("Loaded language {} from {}", parsed.code, path_buf.display());
+                                languages.push(Language {
+                                    code: parsed.code,
+                                    lang: lang_vec,
+                                });
+                            }
+                            Err(e) => error!("Failed to parse language file {}: {}", path_buf.display(), e),
+                        }
+                    }
+                    Err(e) => error!("Failed to read language file {}: {}", path_buf.display(), e),
+                }
             }
         }
-        info!("Loaded language system from {}", path);
+        info!("Loaded {} languages from {}", languages.len(), path);
         Self { languages }
     }
 

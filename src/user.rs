@@ -1,5 +1,6 @@
 use crate::ctx::runtime;
 use crate::{get_ctx, get_user, remove_ctx, set_ctx};
+use log::{debug, info, trace};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -75,7 +76,6 @@ pub struct Metadata {
     pub last_interaction: i64, // Unix timestamp
 }
 
-use log::info;
 use parking_lot::RwLock;
 use std::sync::Arc;
 
@@ -87,13 +87,14 @@ pub struct UserManager {
 #[allow(dead_code)]
 impl UserManager {
     pub fn new() -> Self {
-        info!("Creating user Object.");
+        info!("Creating user Manager.");
         Self {
             user: Arc::new(RwLock::new(Self::create_default_user())),
         }
     }
 
     fn create_default_user() -> User {
+        trace!("Creating default user profile");
         let now = chrono::Utc::now().timestamp();
 
         User {
@@ -127,20 +128,24 @@ impl UserManager {
     // ==================== SAVE METHODS ====================
 
     pub async fn save_all(&self) {
+        trace!("Saving user data to all stores");
         self.save_to_memory();
         self.save_to_device().await;
         self.save_to_persistent();
     }
 
     fn save_to_memory(&self) {
+        trace!("Saving user data to memory context");
         set_ctx!("user", &*self.user.read());
     }
 
     pub async fn save_to_device(&self) {
+        trace!("Saving user data to device context");
         let _ = set_ctx!(device, "avi.user", &*self.user.read());
     }
 
     fn save_to_persistent(&self) {
+        trace!("Saving user data to persistent context");
         set_ctx!("user", &*self.user.read(), persistent: true);
     }
 
@@ -164,14 +169,16 @@ impl UserManager {
     }
 
     pub async fn load_from_device(&self) {
+        trace!("Attempting to load user data from device");
         if let Some(user) = get_user!(device) {
-            info!("Updating user data from device mesh.");
+            info!("Updating user data from device mesh: {}", user.id);
             set_ctx!("user", &user);
             *self.user.write() = user;
             self.save_to_memory();
             self.save_to_persistent();
             return;
         }
+        debug!("No user data found on device context");
     }
 
     // ==================== PROFILE METHODS ====================

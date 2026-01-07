@@ -2,7 +2,7 @@ use crate::actions::action::Action;
 use crate::ctx::runtime;
 use crate::subscribe;
 use avi_device::device::AviDevice;
-use log::{info, warn};
+use log::{error, info, trace, warn};
 use std::sync::Arc;
 
 pub struct MeshConfig {}
@@ -11,6 +11,7 @@ pub struct MeshAction {
     device: Arc<AviDevice>,
 }
 pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
+    trace!("Peer disconnected callback for {}", peer_id);
     match avi_device
         .delete_ctx(&format!("avi.device.caps.{}", peer_id))
         .await
@@ -19,7 +20,13 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         Err(e) => warn!("Error removing peer {} from caps: {}", peer_id, e),
     }
 
-    let mut data = avi_device.get_ctx("").await.unwrap();
+    let mut data = match avi_device.get_ctx("").await {
+        Ok(v) => v,
+        Err(e) => {
+            error!("Failed to get mesh context on peer disconnect: {}", e);
+            return;
+        }
+    };
 
     if let Some(speaker) = data
         .get("avi")
@@ -46,8 +53,12 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
     }
 
     match data.get("avi") {
-        Some(v) => avi_device.update_ctx("avi", v.clone()).await.unwrap(),
-        None => warn!("No avi data, while trying to update the context."),
+        Some(v) => {
+            if let Err(e) = avi_device.update_ctx("avi", v.clone()).await {
+                error!("Failed to update mesh context after peer disconnect: {}", e);
+            }
+        },
+        None => warn!("No avi data while trying to update the context after peer disconnect."),
     }
 }
 

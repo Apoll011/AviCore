@@ -3,7 +3,7 @@ use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::{ReplyConfig, ReplyManager};
 use crate::user::UserManager;
 use avi_device::device::AviDevice;
-use log::{error, info};
+use log::{debug, error, info, trace};
 use std::sync::{Arc, OnceLock};
 use tokio::runtime::Handle;
 
@@ -42,11 +42,15 @@ pub static RUNTIMECTX: OnceLock<Arc<RuntimeContext>> = OnceLock::new();
 pub fn runtime() -> Result<&'static Arc<RuntimeContext>, String> {
     match RUNTIMECTX.get() {
         Some(runtime) => Ok(runtime),
-        None => Err("Runtime Context not initialized".to_string()),
+        None => {
+            debug!("Attempted to access unitialized Runtime Context");
+            Err("Runtime Context not initialized".to_string())
+        }
     }
 }
 
 pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {
+    trace!("Creating runtime with api_url={}, lang={}, config_path={}", api_url, lang, config_path);
     info!("Initializing runtime.");
     RUNTIMECTX
         .set(Arc::from(RuntimeContext {
@@ -64,8 +68,8 @@ pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<
             user: UserManager::new(),
         }))
         .unwrap_or_else(|_| {
-            error!("Runtime Context not initialized.");
+            error!("Failed to set Runtime Context: already initialized.");
             panic!("Runtime context already initialized")
         });
-    info!("Runtime initialized.");
+    info!("Runtime initialized successfully.");
 }

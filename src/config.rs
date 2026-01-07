@@ -1,5 +1,5 @@
 use crate::dialogue::intent::YamlValue;
-use log::info;
+use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -80,20 +80,39 @@ pub struct ConfigSystem {
 
 impl ConfigSystem {
     pub fn new(path: &str) -> Self {
-        let Ok(content) = fs::read_to_string(format!("{}/const.config", path)) else {
-            return ConfigSystem::default();
+        trace!("Attempting to create config system from path: {}", path);
+        let const_path = format!("{}/const.config", path);
+        let content = match fs::read_to_string(&const_path) {
+            Ok(v) => v,
+            Err(e) => {
+                debug!("No const.config found at {}: {}", const_path, e);
+                return ConfigSystem::default();
+            }
         };
 
-        let Ok(parsed_const) = serde_yaml::from_str::<ConstFile>(&content) else {
-            return ConfigSystem::default();
+        let parsed_const = match serde_yaml::from_str::<ConstFile>(&content) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Failed to parse const.config at {}: {}", const_path, e);
+                return ConfigSystem::default();
+            }
         };
 
-        let Ok(content_settings) = fs::read_to_string(format!("{}/settings.config", path)) else {
-            return ConfigSystem::default();
+        let settings_path = format!("{}/settings.config", path);
+        let content_settings = match fs::read_to_string(&settings_path) {
+            Ok(v) => v,
+            Err(e) => {
+                debug!("No settings.config found at {}: {}", settings_path, e);
+                return ConfigSystem::default();
+            }
         };
 
-        let Ok(parsed_settings) = serde_yaml::from_str::<SettingsFile>(&content_settings) else {
-            return ConfigSystem::default();
+        let parsed_settings = match serde_yaml::from_str::<SettingsFile>(&content_settings) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Failed to parse settings.config at {}: {}", settings_path, e);
+                return ConfigSystem::default();
+            }
         };
 
         info!("Created config system from: {}", path);

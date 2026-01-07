@@ -6,13 +6,13 @@ use std::fs::File;
 pub fn create_log() {
     match CombinedLogger::init(vec![
         TermLogger::new(
-            LevelFilter::Warn,
+            LevelFilter::Info,
             Config::default(),
             TerminalMode::Mixed,
             ColorChoice::Auto,
         ),
         WriteLogger::new(
-            LevelFilter::Info,
+            LevelFilter::Trace,
             Config::default(),
             File::create("avi.log").unwrap(),
         ),

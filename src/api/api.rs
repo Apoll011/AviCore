@@ -1,6 +1,7 @@
 use crate::api::send::send_dict_to_server;
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
+use log::{debug, error, trace};
 use std::collections::HashMap;
 
 /// Represents the status and basic information of the server.
@@ -43,31 +44,38 @@ impl Api {
     /// Returns an error if the server is unreachable or the response is invalid.
     #[allow(dead_code)]
     pub async fn alive(&mut self) -> Result<Alive, Box<dyn std::error::Error>> {
+        trace!("Checking server alive status");
         let r = send_dict_to_server(&self.get_url("/avi/alive")?, HashMap::new()).await?;
         let response = r.response;
         match response {
-            Some(v) => Ok(Alive {
-                alive: v
-                    .get("on")
-                    .expect("Expected a boolean")
-                    .as_bool()
-                    .unwrap_or(false),
-                version: v
-                    .get("version")
-                    .expect("Expected a version string")
-                    .as_str()
-                    .unwrap_or("0.0")
-                    .to_string(),
-                installed_lang: v
-                    .get("lang")
-                    .expect("Expected a list of installed lang's")
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .map(|x| x.as_str().unwrap().to_string())
-                    .collect(),
-            }),
-            None => Err("No response from server".into()),
+            Some(v) => {
+                debug!("Server alive response: {:?}", v);
+                Ok(Alive {
+                    alive: v
+                        .get("on")
+                        .expect("Expected a boolean")
+                        .as_bool()
+                        .unwrap_or(false),
+                    version: v
+                        .get("version")
+                        .expect("Expected a version string")
+                        .as_str()
+                        .unwrap_or("0.0")
+                        .to_string(),
+                    installed_lang: v
+                        .get("lang")
+                        .expect("Expected a list of installed lang's")
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|x| x.as_str().unwrap().to_string())
+                        .collect(),
+                })
+            },
+            None => {
+                error!("No response from server for /avi/alive");
+                Err("No response from server".into())
+            },
         }
     }
 
@@ -82,14 +90,21 @@ impl Api {
     /// Returns an error if the server is unreachable or the intent cannot be parsed.
     ///
     pub async fn intent(&mut self, text: &str) -> Result<Intent, Box<dyn std::error::Error>> {
+        trace!("Requesting intent recognition for: {}", text);
         let mut query = HashMap::new();
         query.insert("text", text);
         let r = send_dict_to_server(&self.get_url("/intent_recognition")?, query).await?;
         let response = r.response;
 
         match response {
-            Some(v) => Ok(serde_json::from_value(v)?),
-            None => Err("No response from server".into()),
+            Some(v) => {
+                debug!("Intent recognition response: {:?}", v);
+                Ok(serde_json::from_value(v)?)
+            },
+            None => {
+                error!("No response from server for /intent_recognition");
+                Err("No response from server".into())
+            },
         }
     }
 }

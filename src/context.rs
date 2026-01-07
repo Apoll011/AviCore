@@ -1,6 +1,6 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::JsonValue;
-use log::info;
+use log::{debug, error, info, trace, warn};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -86,6 +86,10 @@ impl ContextManager {
         ttl: Option<Duration>,
         persistent: bool,
     ) {
+        trace!(
+            "Setting context: scope={:?}, key={}, persistent={}, ttl={:?}",
+            scope, key, persistent, ttl
+        );
         let ctx_value = ContextValue::new(value, ttl);
 
         // Save to memory
@@ -104,14 +108,17 @@ impl ContextManager {
     }
 
     pub fn get(&self, scope: &ContextScope, key: &str) -> Option<serde_json::Value> {
+        trace!("Getting context: scope={:?}, key={}", scope, key);
         // Try memory first
         if let Some(value) = self.get_memory(scope, key) {
+            debug!("Found {} in memory for scope {:?}", key, scope);
             return Some(value);
         }
 
         // Try persistent storage
         if let Some(ctx_value) = self.load_persistent(scope, key) {
             if !ctx_value.is_expired() {
+                debug!("Found {} in persistent storage for scope {:?}", key, scope);
                 // Cache it back to memory
                 let mut store = self.memory_store.write().unwrap();
                 store
@@ -120,11 +127,13 @@ impl ContextManager {
                     .insert(key.to_string(), ctx_value.clone());
                 return Some(ctx_value.value);
             } else {
+                debug!("Found expired {} in persistent storage, deleting", key);
                 // Clean up expired persistent value
                 self.delete_persistent(scope, key);
             }
         }
 
+        trace!("Context key {} not found in scope {:?}", key, scope);
         None
     }
     pub fn set_skill_save(
@@ -176,19 +185,41 @@ impl ContextManager {
     fn save_persistent(&self, scope: &ContextScope, key: &str, value: &ContextValue) {
         let scope_path = self.get_scope_path(scope);
         if !scope_path.exists() {
-            fs::create_dir_all(&scope_path).expect("Failed to create scope directory");
+            if let Err(e) = fs::create_dir_all(&scope_path) {
+                error!("Failed to create scope directory {}: {}", scope_path.display(), e);
+                return;
+            }
         }
 
         let file_path = scope_path.join(format!("{}.json", key));
-        let content = serde_json::to_string(value).expect("Failed to serialize context value");
-        fs::write(file_path, content).expect("Failed to write persistent context");
+        match serde_json::to_string(value) {
+            Ok(content) => {
+                if let Err(e) = fs::write(&file_path, content) {
+                    error!("Failed to write persistent context to {}: {}", file_path.display(), e);
+                } else {
+                    trace!("Saved persistent context to {}", file_path.display());
+                }
+            }
+            Err(e) => error!("Failed to serialize context value for {}: {}", key, e),
+        }
     }
 
     fn load_persistent(&self, scope: &ContextScope, key: &str) -> Option<ContextValue> {
         let file_path = self.get_scope_path(scope).join(format!("{}.json", key));
         if file_path.exists() {
-            let content = fs::read_to_string(file_path).ok()?;
-            serde_json::from_str(&content).ok()
+            match fs::read_to_string(&file_path) {
+                Ok(content) => match serde_json::from_str(&content) {
+                    Ok(v) => Some(v),
+                    Err(e) => {
+                        error!("Failed to deserialize context from {}: {}", file_path.display(), e);
+                        None
+                    }
+                },
+                Err(e) => {
+                    error!("Failed to read persistent context from {}: {}", file_path.display(), e);
+                    None
+                }
+            }
         } else {
             None
         }
@@ -197,14 +228,26 @@ impl ContextManager {
     fn delete_persistent(&self, scope: &ContextScope, key: &str) {
         let file_path = self.get_scope_path(scope).join(format!("{}.json", key));
         if file_path.exists() {
-            let _ = fs::remove_file(file_path);
+            if let Err(e) = fs::remove_file(&file_path) {
+                warn!("Failed to delete persistent context {}: {}", file_path.display(), e);
+            } else {
+                trace!("Deleted persistent context {}", file_path.display());
+            }
         }
     }
 
     pub fn cleanup_expired(&self) {
+        trace!("Cleaning up expired context values");
         let mut store = self.memory_store.write().unwrap();
         for scope_map in store.values_mut() {
-            scope_map.retain(|_, v| !v.is_expired());
+            scope_map.retain(|k, v| {
+                if v.is_expired() {
+                    debug!("Memory context expired for key: {}", k);
+                    false
+                } else {
+                    true
+                }
+            });
         }
 
         // Also cleanup persistent files
@@ -218,7 +261,10 @@ impl ContextManager {
                             && let Ok(ctx_value) = serde_json::from_str::<ContextValue>(&content)
                             && ctx_value.is_expired()
                         {
-                            let _ = fs::remove_file(sub_entry.path());
+                            debug!("Persistent context expired for: {}", sub_entry.path().display());
+                            if let Err(e) = fs::remove_file(sub_entry.path()) {
+                                warn!("Failed to remove expired persistent file {}: {}", sub_entry.path().display(), e);
+                            }
                         }
                     }
                 }
