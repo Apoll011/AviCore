@@ -37,7 +37,7 @@ impl SkillManager {
         if let Ok(c) = runtime()
             && let Ok(entries) = fs::read_dir(c.skill_path.clone())
         {
-            info!("Loaded skills from {}", c.skill_path);
+            info!("Searching skills path {}", c.skill_path);
             for entry_dir in entries {
                 let entry = match entry_dir {
                     Ok(v) => v,

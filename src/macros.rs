@@ -312,7 +312,7 @@ macro_rules! get_user {
 #[macro_export]
 macro_rules! register_action {
     ($action_type:ty, { $($field:ident: $value:expr),* $(,)? }) => {{
-        ::log::info!("Registering action '{:?}'", stringify!($action_type));
+        ::log::info!("Registering action {:?}", stringify!($action_type));
         type Config = <$action_type as $crate::actions::action:: Action>::Config;
         if let Ok(mut action) = <$action_type>::new(Config {
             $($field: $value),*
