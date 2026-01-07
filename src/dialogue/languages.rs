@@ -1,5 +1,6 @@
 use crate::dialogue::intent::YamlValue;
 use crate::lang;
+use log::info;
 use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -45,6 +46,7 @@ impl LanguageSystem {
     ///
     /// * `path` - The skill's root directory path.
     pub fn new(path: &str) -> Self {
+        info!("Loading language system from {}", path);
         let mut languages: Vec<Language> = Vec::new();
 
         let read_dir = match fs::read_dir(path) {
@@ -74,7 +76,7 @@ impl LanguageSystem {
                 });
             }
         }
-
+        info!("Loaded language system from {}", path);
         Self { languages }
     }
 

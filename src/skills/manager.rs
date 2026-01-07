@@ -2,6 +2,7 @@ use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::skill::Skill;
 use dyon::embed::PushVariable;
+use log::{info, warn};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -18,6 +19,7 @@ pub struct SkillManager {
 impl SkillManager {
     /// Creates a new `SkillManager` and loads all available skills.
     pub fn new() -> Self {
+        info!("Creating skills manager.");
         Self {
             skills: Self::load_skills(),
         }
@@ -35,6 +37,7 @@ impl SkillManager {
         if let Ok(c) = runtime()
             && let Ok(entries) = fs::read_dir(c.skill_path.clone())
         {
+            info!("Loaded skills from {}", c.skill_path);
             for entry_dir in entries {
                 let entry = match entry_dir {
                     Ok(v) => v,
@@ -43,13 +46,14 @@ impl SkillManager {
 
                 let path = entry.path();
 
-                match Self::load_skill(path) {
+                match Self::load_skill(path.clone()) {
                     Ok((dir, mut v)) => {
                         if v.start().is_ok() {
+                            info!("Loaded skill {} from {}", v.name(), path.display());
                             skills.insert(dir.to_string(), v);
                         }
                     }
-                    Err(e) => println!("Error loading skill: {}", e),
+                    Err(e) => warn!("Error loading skill: {}", e),
                 }
             }
 
@@ -60,6 +64,7 @@ impl SkillManager {
     }
 
     pub fn reload(&mut self) {
+        info!("Reloading skills.");
         self.skills = Self::load_skills();
     }
 
@@ -102,6 +107,7 @@ impl SkillManager {
     ///
     /// Returns an error if the intent is malformed or if the target skill is not found.
     pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
+        info!("Running intent {:?}", intent);
         let intent_info = match intent.intent.clone() {
             Some(v) => v,
             None => return Err("Intent is not defined".into()),

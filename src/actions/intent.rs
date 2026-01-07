@@ -4,6 +4,7 @@ use crate::ctx::runtime;
 use crate::skills::manager::SkillManager;
 use crate::{process_reply_text, subscribe, watch_dir};
 use avi_device::device::AviDevice;
+use log::{info, warn};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -32,13 +33,13 @@ impl IntentAction {
                     &replay.pending_reply.handler,
                     vec![replay.parsed_output],
                 ) {
-                    println!("Error executing replay: {}", e);
+                    warn!("Error executing replay: {}", e);
                 }
                 true
             }
             Err(e) => {
                 if !e.is_empty() {
-                    println!("Error processing replay: {}", e);
+                    warn!("Error processing replay: {}", e);
                     return true;
                 }
                 false
@@ -53,7 +54,7 @@ impl IntentAction {
         let maybe_intent = match api.lock().await.intent(text).await {
             Ok(intent) => Some(intent),
             Err(e) => {
-                println!("Failed to parse intent: {}", e);
+                warn!("Failed to parse intent: {}", e);
                 None
             }
         };
@@ -62,7 +63,7 @@ impl IntentAction {
             let mut mg = skill_manager.lock().await;
 
             if let Err(e) = mg.run_intent(intent) {
-                println!("Error executing intent: {}", e);
+                warn!("Error executing intent: {}", e);
             } else {
                 return true;
             }
@@ -127,7 +128,7 @@ impl Action for IntentAction {
 
                 let mut lock = skill_manager.lock().await;
                 lock.reload();
-                println!("Reloaded skills due to change in: {:?}", event.path);
+                info!("Reloaded skills due to change in: {:?}", event.path);
             });
         }
     }

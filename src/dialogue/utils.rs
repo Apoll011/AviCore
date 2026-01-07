@@ -1,5 +1,6 @@
 use crate::ctx::runtime;
 use crate::{core_id, get_ctx, publish, rt_spawn, set_ctx};
+use log::warn;
 
 /// Retrieves the ID of the last active listener device.
 ///
@@ -11,8 +12,8 @@ use crate::{core_id, get_ctx, publish, rt_spawn, set_ctx};
 #[allow(dead_code)]
 pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
     match get_ctx!(device, "avi.dialogue.listener") {
-        Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
-        Err(_) => Ok(core_id!()?),
+        Some(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
+        None => Ok(core_id!()?),
     }
 }
 
@@ -25,8 +26,8 @@ pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
 /// Returns an error if the context is found but cannot be parsed, or if the core ID retrieval fails.
 pub async fn get_speaker() -> Result<String, Box<dyn std::error::Error>> {
     match get_ctx!(device, "avi.dialogue.speaker") {
-        Ok(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
-        Err(_) => Ok(core_id!()?),
+        Some(v) => Ok(v.as_str().ok_or("Not found!")?.parse()?),
+        None => Ok(core_id!()?),
     }
 }
 
@@ -50,13 +51,13 @@ pub fn speak(text: &str, store: bool) {
         let speaker = match get_speaker().await {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("speaker error: {e}");
+                warn!("speaker error: {e}");
                 return;
             }
         };
 
         if let Err(e) = publish!(&format!("speak/{}/text", speaker), text.into_bytes()) {
-            eprintln!("publish error: {e}");
+            warn!("publish error: {e}");
         }
     }
 }
@@ -69,13 +70,13 @@ pub fn listen() {
         let listener = match get_last_listener().await {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("listener error: {e}");
+                warn!("listener error: {e}");
                 return;
             }
         };
 
         if let Err(e) = publish!(&format!("listening/{}/start", listener)) {
-            eprintln!("publish error: {e}");
+            warn!("publish error: {e}");
         }
     }
 }

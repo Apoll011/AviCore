@@ -1,6 +1,7 @@
 use crate::dialogue::response::{ResponseValidator, ValidationError};
 use crate::locale;
 use crate::speak;
+use log::info;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
@@ -88,6 +89,7 @@ impl ReplyManager {
     pub async fn set_reply(&self, request: RequestReply) {
         self.cancel().await;
 
+        info!("Skill {} requested reply.", request.skill_request);
         let pending = PendingReply {
             skill_request: request.skill_request.clone(),
             handler: request.handler,
@@ -100,6 +102,7 @@ impl ReplyManager {
     }
 
     pub async fn cancel(&self) {
+        info!("Canceled reply.");
         *self.pending_reply.lock().await = None;
     }
 
@@ -115,12 +118,14 @@ impl ReplyManager {
 
         if let Some(mut pending) = pending_lock.take() {
             if pending.created_at.elapsed() > Duration::from_secs(self.config.timeout_secs) {
+                info!("Reply timed-out.");
                 return Err("".to_string());
             }
 
             if let Some(max) = self.config.max_retries
                 && pending.retry_count >= max
             {
+                info!("Too many invalid attempts. Cancelling request.");
                 speak!(locale: "to_many_replay_trys");
                 return Err("Too many invalid attempts. Cancelling request.".to_string());
             }
@@ -133,9 +138,16 @@ impl ReplyManager {
                     pending.retry_count += 1;
                     let error_msg = pending.validator.get_error_txt(&error);
 
+                    info!(
+                        "Reply {}/{} wrong.",
+                        pending.retry_count,
+                        self.config.max_retries.unwrap_or(0)
+                    );
+
                     if let Some(max) = self.config.max_retries
                         && pending.retry_count >= max
                     {
+                        info!("Too many invalid attempts. Cancelling request.");
                         speak!(locale: "to_many_replay_trys");
                         return Err("Too many invalid attempts. Cancelling request.".to_string());
                     }

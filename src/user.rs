@@ -1,5 +1,5 @@
 use crate::ctx::runtime;
-use crate::{get_ctx, remove_ctx, set_ctx};
+use crate::{get_ctx, get_user, remove_ctx, set_ctx};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -75,6 +75,7 @@ pub struct Metadata {
     pub last_interaction: i64, // Unix timestamp
 }
 
+use log::info;
 use parking_lot::RwLock;
 use std::sync::Arc;
 
@@ -86,6 +87,7 @@ pub struct UserManager {
 #[allow(dead_code)]
 impl UserManager {
     pub fn new() -> Self {
+        info!("Creating user Object.");
         Self {
             user: Arc::new(RwLock::new(Self::create_default_user())),
         }
@@ -156,25 +158,20 @@ impl UserManager {
     }
 
     pub fn get_from_disk(&self) {
-        if let Some(user) = get_ctx!("user")
-            && let Ok(data) = serde_json::from_value::<User>(user)
-        {
+        if let Some(data) = get_user!() {
             *self.user.write() = data;
         }
     }
 
     pub async fn load_from_device(&self) {
-        if let Ok(value) = get_ctx!(device, "avi.user")
-            && let Ok(user) = serde_json::from_value::<User>(value)
-        {
+        if let Some(user) = get_user!(device) {
+            info!("Updating user data from device mesh.");
             set_ctx!("user", &user);
             *self.user.write() = user;
+            self.save_to_memory();
+            self.save_to_persistent();
             return;
         }
-
-        let user = Self::create_default_user();
-        *self.user.write() = user;
-        self.save_all().await;
     }
 
     // ==================== PROFILE METHODS ====================
@@ -532,19 +529,8 @@ impl UserManager {
         });
     }
 
-    pub async fn reload(&self) -> Result<(), String> {
-        if let Ok(value) = get_ctx!(device, "avi.user")
-            && let Ok(user) = serde_json::from_value::<User>(value)
-        {
-            *self.user.write() = user;
-            self.save_to_memory();
-            return Ok(());
-        }
-        Err("Failed to reload user from device ctx".to_string())
-    }
-
     pub async fn delete_all(&self) -> Result<(), String> {
-        remove_ctx!("user");
+        remove_ctx!("user")?;
 
         remove_ctx!(device, "avi.user")
     }

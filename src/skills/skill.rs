@@ -190,4 +190,8 @@ impl Skill {
     fn disabled(&self) -> bool {
         self.context.info.disabled
     }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
 }

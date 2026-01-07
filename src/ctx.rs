@@ -3,6 +3,7 @@ use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::{ReplyConfig, ReplyManager};
 use crate::user::UserManager;
 use avi_device::device::AviDevice;
+use log::{error, info};
 use std::sync::{Arc, OnceLock};
 use tokio::runtime::Handle;
 
@@ -46,6 +47,7 @@ pub fn runtime() -> Result<&'static Arc<RuntimeContext>, String> {
 }
 
 pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {
+    info!("Initializing runtime.");
     RUNTIMECTX
         .set(Arc::from(RuntimeContext {
             api_url: api_url.to_string(),
@@ -61,5 +63,9 @@ pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<
             context: ContextManager::new(format!("{}/context", config_path)),
             user: UserManager::new(),
         }))
-        .unwrap_or_else(|_| panic!("Runtime context already initialized"));
+        .unwrap_or_else(|_| {
+            error!("Runtime Context not initialized.");
+            panic!("Runtime context already initialized")
+        });
+    info!("Runtime initialized.");
 }

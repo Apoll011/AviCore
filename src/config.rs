@@ -1,4 +1,5 @@
 use crate::dialogue::intent::YamlValue;
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -94,6 +95,8 @@ impl ConfigSystem {
         let Ok(parsed_settings) = serde_yaml::from_str::<SettingsFile>(&content_settings) else {
             return ConfigSystem::default();
         };
+
+        info!("Created config system from: {}", path);
 
         Self {
             constants: Self::const_to_named(&parsed_const.constants),

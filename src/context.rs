@@ -1,5 +1,6 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::JsonValue;
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -67,7 +68,9 @@ impl ContextManager {
         let path = persistence_path.as_ref().to_path_buf();
         if !path.exists() {
             fs::create_dir_all(&path).expect("Failed to create persistence directory");
+            info!("Created context persistence directory: {}", path.display());
         }
+        info!("Created Context Manager.");
 
         Self {
             memory_store: Arc::new(RwLock::new(HashMap::new())),
@@ -225,6 +228,7 @@ impl ContextManager {
 }
 
 pub fn context_cleanup_task() {
+    info!("Started context cleanup.");
     let ctx = runtime().clone();
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(Duration::from_secs(60 * 5));

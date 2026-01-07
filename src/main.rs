@@ -7,6 +7,7 @@ mod config;
 mod context;
 mod ctx;
 mod dialogue;
+mod log;
 mod macros;
 mod skills;
 mod user;
@@ -17,6 +18,8 @@ use crate::actions::intent::IntentAction;
 use crate::actions::mesh::MeshAction;
 use crate::context::context_cleanup_task;
 use crate::ctx::create_runtime;
+use crate::log::create_log;
+use ::log::info;
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use std::sync::Arc;
@@ -31,6 +34,10 @@ use std::sync::Arc;
 /// Returns an error if device initialization, context setup, or signal handling fails.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    create_log();
+
+    info!("Starting the System");
+
     let config = AviDeviceConfig {
         node_name: "avi-core".to_string(),
         device_type: AviDeviceType::CORE,

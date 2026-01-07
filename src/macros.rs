@@ -52,7 +52,10 @@ macro_rules! subscribe {
     ($topic: expr, async: $body:expr) => {
         match $crate::ctx::runtime() {
             Ok(runtime) => match runtime.device.subscribe_async($topic, $body).await {
-                Ok(_) => Ok(()),
+                Ok(_) => {
+                    ::log::info!("Subscribed to {}", $topic);
+                    Ok(())
+                },
                 Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
             },
             Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
@@ -61,7 +64,10 @@ macro_rules! subscribe {
     ($topic:expr, $body:expr) => {
         match $crate::ctx::runtime() {
             Ok(runtime) => match runtime.device.subscribe($topic, $body).await {
-                Ok(_) => Ok(()),
+                Ok(_) => {
+                    ::log::info!("Subscribed to {}", $topic);
+                    Ok(())
+                },
                 Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
             },
             Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
@@ -81,7 +87,10 @@ macro_rules! subscribe {
                 }).await;
 
                 match result {
-                    Ok(_) => Ok(()),
+                    Ok(_) => {
+                        ::log::info!("Subscribed to {}", $topic);
+                        Ok(())
+                },
                     Err(e) => Err(format!("Error subscribing: {}", e.to_string())),
                 }
             },
@@ -147,10 +156,13 @@ macro_rules! get_ctx {
     (device, $key:expr) => {
         match $crate::ctx::runtime() {
             Ok(c) => match c.device.get_ctx($key).await {
-                Ok(v) => Ok(v),
-                Err(e) => Err(format!("Error getting context: {}", e.to_string())),
+                Ok(v) => Some(v),
+                Err(e) => {
+                    ::log::warn!("Error getting context: {}", e.to_string());
+                    None
+                }
             },
-            Err(e) => Err(e),
+            Err(_) => None,
         }
     };
     (skill: $name:expr, $key:expr) => {
@@ -191,10 +203,12 @@ macro_rules! has_ctx {
 macro_rules! remove_ctx {
     ($key:expr) => {
         match $crate::ctx::runtime() {
-            Ok(c) => c
-                .context
-                .remove(&$crate::context::ContextScope::Global, $key),
-            Err(_) => (),
+            Ok(c) => {
+                c.context
+                    .remove(&$crate::context::ContextScope::Global, $key);
+                Ok(())
+            }
+            Err(e) => Err(e),
         }
     };
     (device, $key:expr) => {
@@ -208,10 +222,12 @@ macro_rules! remove_ctx {
     };
     (skill: $name:expr, $key:expr) => {
         match $crate::ctx::runtime() {
-            Ok(c) => c
-                .context
-                .remove(&$crate::context::ContextScope::Skill($name), $key),
-            Err(_) => (),
+            Ok(c) => {
+                c.context
+                    .remove(&$crate::context::ContextScope::Skill($name), $key);
+                Ok(())
+            }
+            Err(e) => Err(e),
         }
     };
 }
@@ -250,6 +266,7 @@ macro_rules! process_reply_text {
 macro_rules! rt_spawn {
     {$($b:tt)*} => {
         if let Ok(c) = runtime() {
+            ::log::info!("Spawning Thread in current handler.");
             c.rt.spawn(async move {
                 $($b)*
             });
@@ -271,21 +288,42 @@ macro_rules! core_id {
 }
 
 #[macro_export]
+macro_rules! get_user {
+    () => {
+        match get_ctx!("user") {
+            Some(user) => match serde_json::from_value::<$crate::user::User>(user) {
+                Ok(v) => Some(v),
+                Err(_) => None,
+            },
+            None => None,
+        }
+    };
+    (device) => {
+        match get_ctx!(device, "avi.user") {
+            Some(user) => match serde_json::from_value::<$crate::user::User>(user) {
+                Ok(v) => Some(v),
+                Err(_) => None,
+            },
+            None => None,
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! register_action {
     ($action_type:ty, { $($field:ident: $value:expr),* $(,)? }) => {{
+        ::log::info!("Registering action '{:?}'", stringify!($action_type));
         type Config = <$action_type as $crate::actions::action:: Action>::Config;
         if let Ok(mut action) = <$action_type>::new(Config {
             $($field: $value),*
         }) {
+            ::log::info!("Action {:?} registered!", stringify!($action_type));
             action.register().await;
         }
     }};
 
     ($action_type:ty) => {{
-        type Config = <$action_type as $crate::actions::action::Action>::Config;
-        if let Ok(mut action) = <$action_type>::new(Config {}) {
-            action.register().await;
-        }
+        register_action!($action_type, {})
     }};
 }
 
@@ -299,6 +337,7 @@ macro_rules! watch_dir {
         let path = $path.to_string();
         let handle = Handle::current();
 
+        ::log::info!("Watching directory: {}", path);
         std::thread::spawn(move || {
             let (tx, rx) = channel();
             let mut debouncer = new_debouncer($duration, tx).expect("Watcher fail");
@@ -310,7 +349,6 @@ macro_rules! watch_dir {
             for result in rx {
                 if let Ok(events) = result {
                     for $event in events {
-                        // Enter the async context from a sync thread
                         handle.spawn(async move {
                             $action
                         });
@@ -329,6 +367,7 @@ macro_rules! watch_dir {
 
         $(let $cap = $cap.clone();)*
 
+        ::log::info!("Watching directory: {}", path);
         std::thread::spawn(move || {
             let (tx, rx) = channel();
             let mut debouncer = new_debouncer($duration, tx).expect("Watcher fail");
@@ -364,7 +403,7 @@ macro_rules! watch_dir {
             .watch(Path::new($path), RecursiveMode::Recursive)
             .expect("Failed to watch path");
 
-
+        ::log::info!("Watching directory: {}", path);
         for result in rx {
             match result {
                 Ok(events) => {

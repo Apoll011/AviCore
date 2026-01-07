@@ -47,7 +47,7 @@ pub fn remove(rt: &mut Runtime) -> Result<(), String> {
     let key: String = rt.pop()?;
     let skill_name = ctx(rt)?.info.id.clone();
 
-    remove_ctx!(skill: skill_name, &key);
+    remove_ctx!(skill: skill_name, &key)?;
 
     Ok(())
 }

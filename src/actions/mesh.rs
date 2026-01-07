@@ -2,6 +2,7 @@ use crate::actions::action::Action;
 use crate::ctx::runtime;
 use crate::subscribe;
 use avi_device::device::AviDevice;
+use log::{info, warn};
 use std::sync::Arc;
 
 pub struct MeshConfig {}
@@ -14,8 +15,8 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         .delete_ctx(&format!("avi.device.caps.{}", peer_id))
         .await
     {
-        Ok(_) => println!("Peer {} removed from caps", peer_id),
-        Err(e) => println!("Error removing peer {} from caps: {}", peer_id, e),
+        Ok(_) => info!("Peer {} removed from caps", peer_id),
+        Err(e) => warn!("Error removing peer {} from caps: {}", peer_id, e),
     }
 
     let mut data = avi_device.get_ctx("").await.unwrap();
@@ -28,6 +29,7 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         && speaker == peer_id
         && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut())
     {
+        info!("Speaker {} removed", peer_id);
         avi.remove("speaker");
     }
 
@@ -39,22 +41,28 @@ pub async fn on_peer_disconnected(avi_device: AviDevice, peer_id: String) {
         && speaker == peer_id
         && let Some(avi) = data.get_mut("avi").and_then(|v| v.as_object_mut())
     {
+        info!("Listener {} removed", peer_id);
         avi.remove("listener");
     }
 
     match data.get("avi") {
         Some(v) => avi_device.update_ctx("avi", v.clone()).await.unwrap(),
-        None => println!("No avi data"),
+        None => warn!("No avi data, while trying to update the context."),
     }
 }
 
 pub async fn on_started(_device: AviDevice, _peer_id: String, _listening_address: Vec<String>) {
+    info!("Started Avi Device.");
     if let Ok(c) = runtime() {
         c.user.get_from_disk()
     };
 }
 
-pub async fn on_peer_connected(_device: AviDevice, _peer_id: String, _address: String) {
+pub async fn on_peer_connected(_device: AviDevice, peer_id: String, address: String) {
+    info!(
+        "Connected Avi Device {} from {} into the mesh.",
+        peer_id, address
+    );
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current().block_on(match runtime() {
             Ok(c) => c.user.save_to_device(),
