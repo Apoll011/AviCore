@@ -44,12 +44,12 @@ pub struct SkillContext {
     /// The filesystem path to the skill directory.
     pub path: String,
     /// Metadata about the skill.
-    pub(crate) info: Manifest,
+    pub info: Manifest,
 
     pub config: ConfigSystem,
 
     /// Localized resources for the skill.
-    pub(crate) languages: LanguageSystem,
+    pub languages: LanguageSystem,
 }
 
 impl SkillContext {

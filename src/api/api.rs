@@ -8,11 +8,11 @@ use std::collections::HashMap;
 #[allow(dead_code)]
 pub struct Alive {
     /// Indicates if the server is currently online.
-    pub(crate) alive: bool,
+    pub alive: bool,
     /// The version of the server software.
-    pub(crate) version: String,
+    pub version: String,
     /// A list of languages currently installed on the server.
-    pub(crate) installed_lang: Vec<String>,
+    pub installed_lang: Vec<String>,
 }
 
 /// A client for interacting with the Avi server API.

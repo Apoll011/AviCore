@@ -4,7 +4,7 @@ use serde_json::Value;
 #[derive(Debug)]
 pub struct Response {
     /// The extracted "response" field from the server's JSON payload.
-    pub(crate) response: Option<Value>,
+    pub response: Option<Value>,
 }
 
 impl Response {

@@ -35,7 +35,7 @@ pub struct Language {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LanguageSystem {
-    pub(crate) languages: Vec<Language>,
+    pub languages: Vec<Language>,
 }
 
 impl LanguageSystem {
@@ -44,7 +44,7 @@ impl LanguageSystem {
     /// # Arguments
     ///
     /// * `path` - The skill's root directory path.
-    pub(crate) fn new(path: &str) -> Self {
+    pub fn new(path: &str) -> Self {
         let mut languages: Vec<Language> = Vec::new();
 
         let read_dir = match fs::read_dir(path) {

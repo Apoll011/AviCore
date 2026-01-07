@@ -72,9 +72,9 @@ pub struct SettingNamed {
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct ConfigSystem {
     /// Constants defined for the skill.
-    pub(crate) constants: Vec<ConstantNamed>,
+    pub constants: Vec<ConstantNamed>,
     /// Settings defined for the skill.
-    pub(crate) settings: Vec<SettingNamed>,
+    pub settings: Vec<SettingNamed>,
 }
 
 impl ConfigSystem {

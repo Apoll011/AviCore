@@ -39,7 +39,7 @@ impl ResponseValidator for AnyValidator {
 }
 
 pub struct ListOrNoneValidator {
-    pub(crate) allowed_values: Vec<String>,
+    pub allowed_values: Vec<String>,
 }
 
 impl ListOrNoneValidator {
@@ -104,7 +104,7 @@ impl ResponseValidator for OptionalValidator {
 }
 
 pub struct BoolValidator {
-    pub(crate) hard_search: bool,
+    pub hard_search: bool,
 }
 
 impl BoolValidator {
@@ -154,9 +154,9 @@ impl ResponseValidator for BoolValidator {
 }
 
 pub struct MappedValidator<T: Clone> {
-    pub(crate) mappings: Vec<(String, T)>,
-    pub(crate) default: Option<T>,
-    pub(crate) hard_search: bool,
+    pub mappings: Vec<(String, T)>,
+    pub default: Option<T>,
+    pub hard_search: bool,
 }
 
 impl<T: Clone> MappedValidator<T> {
