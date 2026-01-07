@@ -6,7 +6,7 @@ use std::fs::File;
 pub fn create_log() {
     match CombinedLogger::init(vec![
         TermLogger::new(
-            LevelFilter::Info,
+            LevelFilter::Warn,
             Config::default(),
             TerminalMode::Mixed,
             ColorChoice::Auto,
