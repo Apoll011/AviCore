@@ -13,7 +13,11 @@ use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("context");
-    module.add(Arc::new("get".into()), get, Dfn::nl(vec![Str], Any));
+    module.add(
+        Arc::new("get".into()),
+        get,
+        Dfn::nl(vec![Str], Option(Box::from(Any))),
+    );
     module.add(Arc::new("has".into()), has, Dfn::nl(vec![Str], Bool));
     module.add(Arc::new("remove".into()), remove, Dfn::nl(vec![Str], Void));
     module.add(

@@ -3,10 +3,11 @@ use crate::dialogue::intent::{
     Intent, IntentInfo, JsonValue, Slot, SlotRange, SlotValue, YamlValue,
 };
 use crate::dialogue::languages::{IndividualLocale, Language, LanguageSystem};
+use crate::skills::dsl::dyon_helpers::{dyon_variable_to_json, variable_to_json};
 use crate::skills::skill_context::{Manifest, SkillContext};
 use dyon::embed::{PopVariable, PushVariable};
 use dyon::{Runtime, Variable};
-use serde_json::Value;
+use serde_json::json;
 use serde_yaml::{Mapping, Sequence, Value as Yaml};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -67,89 +68,13 @@ dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, ad
 impl PopVariable for JsonValue {
     /// Pops a `JsonValue` from the Dyon runtime.
     fn pop_var(_rt: &Runtime, var: &Variable) -> Result<Self, String> {
-        from_dyon_variable_json(var.clone())
-    }
-}
-
-/// Converts a Dyon `Variable` to a `JsonValue`.
-///
-/// # Errors
-///
-/// Returns an error if the Dyon variable is a complex type (Link/RustObject/UnsafeRef) that cannot be converted to JSON.
-fn from_dyon_variable_json(var: Variable) -> Result<JsonValue, String> {
-    use dyon::Variable::*;
-    match var {
-        F64(n, ..) => {
-            // Dyon’s F64 can be either integer-like or float.
-            Ok(JsonValue(Value::Number(
-                serde_json::Number::from_f64(n).ok_or_else(|| format!("Invalid f64: {}", n))?,
-            )))
-        }
-        Bool(b, _) => Ok(JsonValue(Value::Bool(b))),
-        Str(s) => Ok(JsonValue(Value::String(s.clone().to_string()))),
-        Array(arr) => {
-            let mut values = Vec::with_capacity(arr.len());
-            for v in &*arr {
-                values.push(from_dyon_variable_json(v.clone())?.0);
-            }
-            Ok(JsonValue(Value::Array(values)))
-        }
-        Object(o) => {
-            let mut map = serde_json::Map::new();
-            for (k, v) in o.iter() {
-                map.insert(k.clone().to_string(), from_dyon_variable_json(v.clone())?.0);
-            }
-            Ok(JsonValue(Value::Object(map)))
-        }
-        Option(opt) => match opt {
-            Some(v) => from_dyon_variable_json(*v.clone()),
-            None => Ok(JsonValue(Value::Null)),
-        },
-        Link(_) | RustObject(_) | UnsafeRef(_) => {
-            Err("Cannot convert complex Dyon types (Link/RustObject/UnsafeRef) to Value".into())
-        }
-        _ => Err("Unsupported Dyon type for JSON".into()),
+        Ok(JsonValue(variable_to_json(var)?))
     }
 }
 
 impl PushVariable for JsonValue {
     fn push_var(&self) -> Variable {
-        to_dyon_variable_json(self.clone())
-    }
-}
-
-fn to_dyon_variable_json(value: JsonValue) -> Variable {
-    use dyon::Variable::*;
-    match value {
-        JsonValue(Value::Bool(b)) => Bool(b, None),
-        JsonValue(Value::Number(n)) => {
-            if let Some(i) = n.as_i64() {
-                F64(i as f64, None)
-            } else if let Some(f) = n.as_f64() {
-                F64(f, None)
-            } else {
-                // fallback for very large numbers
-                F64(n.as_f64().unwrap_or(0.0), None)
-            }
-        }
-        JsonValue(Value::String(s)) => Str(Arc::new(s)),
-        JsonValue(Value::Array(vec)) => {
-            let arr: Vec<Variable> = vec
-                .into_iter()
-                .map(|arg0: Value| to_dyon_variable_json(JsonValue(arg0)))
-                .collect();
-            Array(Arc::new(arr))
-        }
-        JsonValue(Value::Object(map)) => {
-            let mut obj: HashMap<Arc<String>, Variable> = HashMap::new();
-
-            for (k, v) in map {
-                obj.insert(Arc::new(k), to_dyon_variable_json(JsonValue(v)));
-            }
-
-            Object(Arc::new(obj))
-        }
-        _ => Option(None),
+        dyon_variable_to_json(&json!(self))
     }
 }
 

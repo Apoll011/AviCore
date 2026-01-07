@@ -1,6 +1,8 @@
 use dyon::Variable;
+use dyon::embed::PushVariable;
 use serde_json::{Value, json};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub fn dyon_obj_into_hashmap(obj: Option<Variable>) -> Result<HashMap<String, Value>, String> {
     match obj {
@@ -41,7 +43,7 @@ pub fn dyon_obj_into_hashmap(obj: Option<Variable>) -> Result<HashMap<String, Va
     }
 }
 
-fn variable_to_json(var: &Variable) -> Result<Value, String> {
+pub fn variable_to_json(var: &Variable) -> Result<Value, String> {
     match var {
         Variable::Str(text) => Ok(json!(text.as_ref())),
         Variable::F64(number, ..) => Ok(json!(number)),
@@ -98,5 +100,39 @@ fn value_to_string(value: Value) -> String {
                     .join(", ")
             )
         }
+    }
+}
+
+pub fn dyon_variable_to_json(value: &Value) -> Variable {
+    use dyon::Variable::*;
+    match value {
+        Value::Bool(b) => PushVariable::push_var(b),
+        Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                PushVariable::push_var(&(i as f64))
+            } else if let Some(f) = n.as_f64() {
+                PushVariable::push_var(&f)
+            } else {
+                PushVariable::push_var(&n.as_f64().unwrap_or(0.0))
+            }
+        }
+        Value::String(s) => PushVariable::push_var(s),
+        Value::Array(vec) => {
+            let arr: Vec<Variable> = vec
+                .into_iter()
+                .map(|arg0: &Value| dyon_variable_to_json(arg0))
+                .collect();
+            PushVariable::push_var(&arr)
+        }
+        Value::Object(map) => {
+            let mut obj: HashMap<Arc<String>, Variable> = HashMap::new();
+
+            for (k, v) in map {
+                obj.insert(Arc::new(k.clone()), dyon_variable_to_json(v));
+            }
+
+            Object(Arc::new(obj))
+        }
+        _ => Option(None),
     }
 }

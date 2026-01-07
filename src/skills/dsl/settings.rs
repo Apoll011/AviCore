@@ -9,14 +9,22 @@ use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("setting");
-    module.add(Arc::new("get".into()), get_setting, Dfn::nl(vec![Str], Any));
+    module.add(
+        Arc::new("get".into()),
+        get_setting,
+        Dfn::nl(vec![Str], Option(Box::from(Any))),
+    );
     module.add(
         Arc::new("full".into()),
         get_setting_full,
         Dfn::nl(vec![Str], Any),
     );
     module.add(Arc::new("list".into()), list_settings, Dfn::nl(vec![], Any));
-    module.add(Arc::new("has".into()), has_setting, Dfn::nl(vec![Str], Any));
+    module.add(
+        Arc::new("has".into()),
+        has_setting,
+        Dfn::nl(vec![Str], Bool),
+    );
 }
 
 #[allow(non_snake_case)]
@@ -25,8 +33,8 @@ pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
     let skill_context = ctx(_rt)?;
 
     match skill_context.config.setting(&name) {
-        Some(v) => Ok(PushVariable::push_var(&v.value.clone())),
-        None => Ok(PushVariable::push_var(&YamlValue(Yaml::Null))),
+        Some(v) => Ok(PushVariable::push_var(&v.value)),
+        None => Ok(Variable::Option(None)),
     }
 }
 

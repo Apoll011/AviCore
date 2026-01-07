@@ -1,4 +1,5 @@
 use crate::get_translation_list;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValidationError {
@@ -154,13 +155,13 @@ impl ResponseValidator for BoolValidator {
 }
 
 pub struct MappedValidator<T: Clone> {
-    pub mappings: Vec<(String, T)>,
+    pub mappings: HashMap<String, T>,
     pub default: Option<T>,
     pub hard_search: bool,
 }
 
 impl<T: Clone> MappedValidator<T> {
-    pub fn new(mappings: Vec<(String, T)>) -> Self {
+    pub fn new(mappings: HashMap<String, T>) -> Self {
         Self {
             mappings,
             default: None,
@@ -187,15 +188,16 @@ impl<T: Clone> ResponseValidator for MappedValidator<T> {
         let cleaned = self.clear_text(text).to_lowercase();
 
         let result = if self.hard_search {
-            self.mappings
-                .iter()
-                .find(|(key, _)| cleaned == key.to_lowercase())
-                .map(|(_, v)| v)
+            self.mappings.get(&cleaned).cloned()
         } else {
-            self.mappings
-                .iter()
-                .find(|(key, _)| cleaned.contains(&key.to_lowercase()))
-                .map(|(_, v)| v)
+            let mut found = None;
+            for (key, value) in &self.mappings {
+                if cleaned.contains(&key.to_lowercase()) {
+                    found = Some(value.clone());
+                    break;
+                }
+            }
+            found
         };
 
         match result {
@@ -355,11 +357,10 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_basic() {
-        let mappings = vec![
-            ("red".to_string(), 1),
-            ("blue".to_string(), 2),
-            ("green".to_string(), 3),
-        ];
+        let mut mappings = HashMap::new();
+        mappings.insert("red".to_string(), 1);
+        mappings.insert("blue".to_string(), 2);
+        mappings.insert("green".to_string(), 3);
 
         let validator = MappedValidator::new(mappings);
 
@@ -370,7 +371,9 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_with_default() {
-        let mappings = vec![("red".to_string(), 1), ("blue".to_string(), 2)];
+        let mut mappings = HashMap::new();
+        mappings.insert("red".to_string(), 1);
+        mappings.insert("blue".to_string(), 2);
 
         let validator = MappedValidator::new(mappings).with_default(0);
 
@@ -381,7 +384,8 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_without_default() {
-        let mappings = vec![("red".to_string(), 1)];
+        let mut mappings = HashMap::new();
+        mappings.insert("red".to_string(), 1);
 
         let validator = MappedValidator::new(mappings);
 
@@ -391,7 +395,9 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_partial_match() {
-        let mappings = vec![("red".to_string(), 1), ("blue".to_string(), 2)];
+        let mut mappings = HashMap::new();
+        mappings.insert("red".to_string(), 1);
+        mappings.insert("blue".to_string(), 2);
 
         let validator = MappedValidator::new(mappings);
 
@@ -401,7 +407,9 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_hard_search() {
-        let mappings = vec![("red".to_string(), 1), ("blue".to_string(), 2)];
+        let mut mappings = HashMap::new();
+        mappings.insert("red".to_string(), 1);
+        mappings.insert("blue".to_string(), 2);
 
         let validator = MappedValidator::new(mappings).hard_search(true);
 
@@ -412,7 +420,8 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_case_insensitive() {
-        let mappings = vec![("red".to_string(), 1)];
+        let mut mappings = HashMap::new();
+        mappings.insert("red".to_string(), 1);
 
         let validator = MappedValidator::new(mappings);
 
@@ -422,11 +431,10 @@ mod tests {
 
     #[test]
     fn test_mapped_validator_with_strings() {
-        let mappings = vec![
-            ("small".to_string(), "S".to_string()),
-            ("medium".to_string(), "M".to_string()),
-            ("large".to_string(), "L".to_string()),
-        ];
+        let mut mappings = HashMap::new();
+        mappings.insert("small".to_string(), "S".to_string());
+        mappings.insert("medium".to_string(), "M".to_string());
+        mappings.insert("large".to_string(), "L".to_string());
 
         let validator = MappedValidator::new(mappings).with_default("?".to_string());
 

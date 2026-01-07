@@ -36,18 +36,18 @@ pub fn add_functions(module: &mut Module) {
     module.add(
         Arc::new("assert_in".into()),
         assert_in,
-        Dfn::nl(vec![Any, Str, Any], Bool),
+        Dfn::nl(vec![Any, Str, Array(Box::from(Any))], Bool),
     );
     module.add(
         Arc::new("assert_in_dict".into()),
         assert_in_dict,
-        Dfn::nl(vec![Any, Str, Any], Bool),
+        Dfn::nl(vec![Any, Str, Object], Bool),
     ); //In key
 }
 
 #[allow(non_snake_case)]
 pub fn require(rt: &mut Runtime) -> Result<Variable, String> {
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     if intent.slots.iter().any(|s| s.slot_name == *name) {
         Ok(Variable::Bool(true, None))
@@ -58,7 +58,7 @@ pub fn require(rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn exists(rt: &mut Runtime) -> Result<Variable, String> {
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     Ok(Variable::Bool(
         intent.slots.iter().any(|s| s.slot_name == *name),
@@ -68,7 +68,7 @@ pub fn exists(rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn get(rt: &mut Runtime) -> Result<Variable, String> {
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
@@ -80,7 +80,7 @@ pub fn get(rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn get_raw(rt: &mut Runtime) -> Result<Variable, String> {
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
@@ -92,7 +92,7 @@ pub fn get_raw(rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn full(rt: &mut Runtime) -> Result<Variable, String> {
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
@@ -105,7 +105,7 @@ pub fn full(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn assert_equal(rt: &mut Runtime) -> Result<Variable, String> {
     let val: Variable = rt.pop()?;
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
@@ -118,7 +118,7 @@ pub fn assert_equal(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn assert_in(rt: &mut Runtime) -> Result<Variable, String> {
     let list: Variable = rt.pop()?;
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
@@ -135,7 +135,7 @@ pub fn assert_in(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn assert_in_dict(rt: &mut Runtime) -> Result<Variable, String> {
     let dict: Variable = rt.pop()?;
-    let name: Arc<String> = rt.pop()?;
+    let name: String = rt.pop()?;
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {

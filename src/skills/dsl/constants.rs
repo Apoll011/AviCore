@@ -12,7 +12,7 @@ pub fn add_functions(module: &mut Module) {
     module.add(
         Arc::new("get".into()),
         get_constant,
-        Dfn::nl(vec![Str], Any),
+        Dfn::nl(vec![Str], Option(Box::from(Any))),
     );
     module.add(
         Arc::new("list".into()),
@@ -22,7 +22,7 @@ pub fn add_functions(module: &mut Module) {
     module.add(
         Arc::new("has".into()),
         has_constant,
-        Dfn::nl(vec![Str], Any),
+        Dfn::nl(vec![Str], Bool),
     );
 }
 

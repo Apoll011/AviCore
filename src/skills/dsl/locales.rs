@@ -9,18 +9,22 @@ use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("locale");
-    module.add(Arc::new("get".into()), locale, Dfn::nl(vec![Str], Any));
+    module.add(
+        Arc::new("get".into()),
+        locale,
+        Dfn::nl(vec![Str], Option(Box::from(Str))),
+    );
     module.add(
         Arc::new("get_fmt".into()),
         locale_fmt,
-        Dfn::nl(vec![Str, Object], Any),
+        Dfn::nl(vec![Str, Object], Option(Box::from(Str))),
     );
     module.add(
         Arc::new("list".into()),
         list_locales,
         Dfn::nl(vec![Str], Any),
     );
-    module.add(Arc::new("has".into()), has_locale, Dfn::nl(vec![Str], Any));
+    module.add(Arc::new("has".into()), has_locale, Dfn::nl(vec![Str], Bool));
     module.add(
         Arc::new("current".into()),
         current_lang,
@@ -34,7 +38,7 @@ pub fn locale(_rt: &mut Runtime) -> Result<Variable, String> {
     let skill_context = ctx(_rt)?;
 
     Ok(PushVariable::push_var(
-        &skill_context.languages.locale(&lang!(), &id).unwrap(),
+        &skill_context.languages.get_translation(&id),
     ))
 }
 
@@ -44,16 +48,11 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
     let id: String = _rt.pop()?;
     let skill_context = ctx(_rt)?;
 
-    Ok(PushVariable::push_var(
-        &skill_context
-            .languages
-            .locale_fmt(
-                &lang!(),
-                &id,
-                &hashmap_value_to_string(dyon_obj_into_hashmap(obj)?),
-            )
-            .unwrap(),
-    ))
+    Ok(PushVariable::push_var(&skill_context.languages.locale_fmt(
+        &lang!(),
+        &id,
+        &hashmap_value_to_string(dyon_obj_into_hashmap(obj)?),
+    )))
 }
 
 #[allow(non_snake_case)]
