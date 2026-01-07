@@ -26,7 +26,7 @@ pub fn add_functions(module: &mut Module) {
 #[allow(non_snake_case)]
 pub fn get(rt: &mut Runtime) -> Result<Variable, String> {
     let key: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     match get_ctx!(skill: skill_name, &key).map(|v| PushVariable::push_var(&JsonValue(v))) {
         Some(v) => Ok(v),
@@ -37,7 +37,7 @@ pub fn get(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn has(rt: &mut Runtime) -> Result<Variable, String> {
     let key: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     Ok(PushVariable::push_var(&has_ctx!(skill: skill_name, &key)))
 }
@@ -45,7 +45,7 @@ pub fn has(rt: &mut Runtime) -> Result<Variable, String> {
 #[allow(non_snake_case)]
 pub fn remove(rt: &mut Runtime) -> Result<(), String> {
     let key: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     remove_ctx!(skill: skill_name, &key);
 
@@ -58,7 +58,7 @@ pub fn set(rt: &mut Runtime) -> Result<(), String> {
     let persistent = rt.pop()?;
     let to_store: JsonValue = rt.pop()?;
     let key: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     match runtime() {
         Ok(c) => c.context.set_skill_save(

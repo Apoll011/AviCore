@@ -18,7 +18,6 @@ pub fn add_functions(module: &mut Module) {
         json_stringify,
         Dfn::nl(vec![Any], Str),
     );
-    module.add(Arc::new("dir".into()), dir, Dfn::nl(vec![], Str));
 }
 
 #[allow(non_snake_case)]
@@ -37,10 +36,4 @@ pub fn json_stringify(rt: &mut Runtime) -> Result<Variable, String> {
         Ok(s) => Ok(PushVariable::push_var(&s)),
         Err(e) => Err(format!("JSON stringify error: {}", e)),
     }
-}
-
-#[allow(non_snake_case)]
-pub fn dir(_rt: &mut Runtime) -> Result<Variable, String> {
-    let skill_context = ctx(_rt)?;
-    Ok(PushVariable::push_var(&skill_context.path))
 }

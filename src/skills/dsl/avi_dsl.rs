@@ -21,13 +21,14 @@ pub fn load_module() -> Option<dyon::Module> {
     super::settings::add_functions(&mut module);
     super::locales::add_functions(&mut module);
     super::manifest::add_functions(&mut module);
-    super::utils::add_functions(&mut module);
+    super::json::add_functions(&mut module);
     super::crypto::add_functions(&mut module);
     super::time::add_functions(&mut module);
     super::dialogue::add_functions(&mut module);
     super::intent::add_functions(&mut module);
     super::context::add_functions(&mut module);
     super::user::add_functions(&mut module);
+    super::skill::add_functions(&mut module);
     module.no_ns();
 
     Some(module)

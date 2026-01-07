@@ -177,7 +177,7 @@ where
 pub fn on_reply_any(rt: &mut Runtime) -> Result<(), String> {
     let validator: AnyValidator = rt.pop()?;
     let handler: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     handle_on_reply(handler, validator, skill_name);
     Ok(())
@@ -187,7 +187,7 @@ pub fn on_reply_any(rt: &mut Runtime) -> Result<(), String> {
 pub fn on_reply_list_or_none(rt: &mut Runtime) -> Result<(), String> {
     let validator: ListOrNoneValidator = rt.pop()?;
     let handler: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     handle_on_reply(handler, validator, skill_name);
     Ok(())
@@ -197,7 +197,7 @@ pub fn on_reply_list_or_none(rt: &mut Runtime) -> Result<(), String> {
 pub fn on_reply_optional(rt: &mut Runtime) -> Result<(), String> {
     let validator: OptionalValidator = rt.pop()?;
     let handler: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     handle_on_reply(handler, validator, skill_name);
     Ok(())
@@ -207,7 +207,7 @@ pub fn on_reply_optional(rt: &mut Runtime) -> Result<(), String> {
 pub fn on_reply_bool(rt: &mut Runtime) -> Result<(), String> {
     let validator: BoolValidator = rt.pop()?;
     let handler: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     handle_on_reply(handler, validator, skill_name);
     Ok(())
@@ -217,7 +217,7 @@ pub fn on_reply_bool(rt: &mut Runtime) -> Result<(), String> {
 pub fn on_reply_mapped_str(rt: &mut Runtime) -> Result<(), String> {
     let validator: MappedValidatorString = rt.pop()?;
     let handler: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     handle_on_reply(handler, validator, skill_name);
     Ok(())
@@ -227,7 +227,7 @@ pub fn on_reply_mapped_str(rt: &mut Runtime) -> Result<(), String> {
 pub fn on_reply_mapped_num(rt: &mut Runtime) -> Result<(), String> {
     let validator: MappedValidatorF64 = rt.pop()?;
     let handler: String = rt.pop()?;
-    let skill_name = ctx(rt)?.info.name.clone();
+    let skill_name = ctx(rt)?.info.id.clone();
 
     handle_on_reply(handler, validator, skill_name);
     Ok(())
@@ -238,7 +238,7 @@ pub fn confirm(_rt: &mut Runtime) -> Result<(), String> {
     let handler: String = _rt.pop()?;
     let question_locale_id: String = _rt.pop()?;
     let skill_context = ctx(_rt)?;
-    let skill_name = ctx(_rt)?.info.name.clone();
+    let skill_name = ctx(_rt)?.info.id.clone();
 
     speak!(
         &skill_context
