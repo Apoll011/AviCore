@@ -28,6 +28,7 @@ pub fn load_module() -> Option<dyon::Module> {
     super::context::add_functions(&mut module);
     super::user::add_functions(&mut module);
     super::skill::add_functions(&mut module);
+    super::log::add_functions(&mut module);
     module.no_ns();
 
     Some(module)

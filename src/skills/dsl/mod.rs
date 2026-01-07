@@ -10,3 +10,4 @@ pub mod settings;
 mod skill;
 pub mod time;
 mod user;
+mod log;
