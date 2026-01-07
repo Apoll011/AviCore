@@ -1,5 +1,6 @@
 use super::avi_dsl::ctx;
-use crate::{lang, locale};
+use crate::lang;
+use crate::skills::dsl::dyon_helpers::{dyon_obj_into_hashmap, hashmap_value_to_string};
 use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
@@ -42,26 +43,15 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
     let obj = _rt.stack.pop();
     let id: String = _rt.pop()?;
     let skill_context = ctx(_rt)?;
-    let hashmap = match obj {
-        Some(Variable::Object(v)) => v
-            .iter()
-            .filter_map(|(k, v)| match v {
-                Variable::Str(text) => Some((k.clone().to_string(), text.as_ref().clone())),
-                Variable::F64(number, ..) => Some((k.clone().to_string(), number.to_string())),
-                Variable::Bool(bool, ..) => Some((
-                    k.clone().to_string(),
-                    locale!(&bool.to_string()).unwrap_or("Erro".to_string()),
-                )),
-                _ => None,
-            })
-            .collect(),
-        _ => return Err(format!("Expected object, got {:?}", obj)),
-    };
 
     Ok(PushVariable::push_var(
         &skill_context
             .languages
-            .locale_fmt(&lang!(), &id, &hashmap)
+            .locale_fmt(
+                &lang!(),
+                &id,
+                &hashmap_value_to_string(dyon_obj_into_hashmap(obj)?),
+            )
             .unwrap(),
     ))
 }
