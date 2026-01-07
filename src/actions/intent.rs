@@ -17,7 +17,7 @@ pub struct IntentAction {
 
 pub struct IntentConfig {
     pub watch_skill_dir: bool,
-    pub watch_dir_debounce_time: u64
+    pub watch_dir_debounce_time: u64,
 }
 
 impl IntentAction {

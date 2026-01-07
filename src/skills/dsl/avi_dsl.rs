@@ -20,7 +20,6 @@ pub fn load_module() -> Option<dyon::Module> {
     super::constants::add_functions(&mut module);
     super::settings::add_functions(&mut module);
     super::locales::add_functions(&mut module);
-    super::manifest::add_functions(&mut module);
     super::json::add_functions(&mut module);
     super::crypto::add_functions(&mut module);
     super::time::add_functions(&mut module);
