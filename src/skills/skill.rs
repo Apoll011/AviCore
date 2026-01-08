@@ -77,7 +77,7 @@ impl Skill {
         name: &str,
         ctx: &SkillContext,
     ) -> Result<Arc<Module>, Box<dyn std::error::Error>> {
-        let mut dyon_module= load_module();
+        let mut dyon_module = load_module();
 
         let entry = ctx.info.entry.clone();
 

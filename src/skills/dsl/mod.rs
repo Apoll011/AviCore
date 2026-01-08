@@ -1,4 +1,5 @@
 pub mod avi_dsl;
+mod color;
 pub mod constants;
 mod context;
 pub mod crypto;
@@ -7,6 +8,7 @@ mod dyon_helpers;
 mod fs;
 mod intent;
 pub mod json;
+mod linear;
 pub mod locales;
 mod log;
 pub mod settings;
