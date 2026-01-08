@@ -1,5 +1,5 @@
 use crate::api::send::send_dict_to_server;
-use crate::ctx::runtime;
+use crate::config::setting;
 use crate::dialogue::intent::Intent;
 use log::{debug, error, trace};
 use std::collections::HashMap;
@@ -31,9 +31,9 @@ impl Api {
     ///
     /// * `path` - The specific API endpoint path (e.g., "/avi/alive").
     fn get_url(&self, path: &str) -> Result<String, String> {
-        match runtime() {
-            Ok(c) => Ok(format!("{}{}", c.api_url, path).to_string()),
-            Err(e) => Err(e),
+        match setting::<String>("api_url") {
+            Some(path_api) => Ok(format!("{}{}", path_api, path).to_string()),
+            None => Err("api_url Not defined".to_string()),
         }
     }
 

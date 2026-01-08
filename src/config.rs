@@ -1,5 +1,6 @@
 use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -195,5 +196,14 @@ impl ConfigSystem {
                 name: name.to_string(),
                 setting: Setting::default(),
             })
+    }
+}
+
+pub fn setting<T: DeserializeOwned>(name: &str) -> Option<T> {
+    let c = crate::ctx::runtime().ok()?;
+    let yaml_value = c.configuration.setting(name)?.value.clone();
+
+    match yaml_value {
+        YamlValue(v) => serde_yaml::from_value(v).ok(),
     }
 }

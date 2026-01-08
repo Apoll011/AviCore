@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     device.start_event_loop();
 
-    create_runtime("http://localhost:1178", "pt", "./config", device);
+    create_runtime("./config", device);
 
     register_action!(IntentAction, {
         watch_skill_dir: true,

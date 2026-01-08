@@ -1,3 +1,4 @@
+use crate::config::ConfigSystem;
 use crate::context::ContextManager;
 use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::{ReplyConfig, ReplyManager};
@@ -9,10 +10,6 @@ use tokio::runtime::Handle;
 
 /// Holds the runtime configuration and shared resources for the AviCore application.
 pub struct RuntimeContext {
-    /// The base URL for the Avi API.
-    pub api_url: String,
-    /// The language setting for the application (e.g., "pt", "en").
-    pub lang: String,
     /// The filesystem path where skills are located.
     pub skill_path: String,
     /// A handle to the Tokio runtime for spawning async tasks.
@@ -23,6 +20,8 @@ pub struct RuntimeContext {
     pub reply_manager: ReplyManager,
 
     pub language_system: LanguageSystem,
+
+    pub configuration: ConfigSystem,
 
     pub context: ContextManager,
 
@@ -49,16 +48,11 @@ pub fn runtime() -> Result<&'static Arc<RuntimeContext>, String> {
     }
 }
 
-pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<AviDevice>) {
-    trace!(
-        "Creating runtime with api_url={}, lang={}, config_path={}",
-        api_url, lang, config_path
-    );
+pub fn create_runtime(config_path: &str, device: Arc<AviDevice>) {
+    trace!("Creating runtime with config_path={}", config_path);
     info!("Initializing runtime.");
     RUNTIMECTX
         .set(Arc::from(RuntimeContext {
-            api_url: api_url.to_string(),
-            lang: lang.to_string(),
             skill_path: format!("{}/skills", config_path),
             device,
             rt: Handle::current(),
@@ -67,6 +61,7 @@ pub fn create_runtime(api_url: &str, lang: &str, config_path: &str, device: Arc<
                 max_retries: Some(3),
             })),
             language_system: LanguageSystem::new(&format!("{}/lang", config_path)),
+            configuration: ConfigSystem::new(config_path),
             context: ContextManager::new(format!("{}/context", config_path)),
             user: UserManager::new(),
         }))

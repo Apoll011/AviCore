@@ -295,10 +295,7 @@ macro_rules! remove_ctx {
 #[macro_export]
 macro_rules! lang {
     () => {
-        match $crate::ctx::runtime() {
-            Ok(c) => c.lang.to_string(),
-            Err(_) => "en".to_string(),
-        }
+        $crate::config::setting::<String>("lang").unwrap_or("en".to_string())
     };
 }
 
