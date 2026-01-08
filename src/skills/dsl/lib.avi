@@ -163,9 +163,6 @@ fn trim_right(text: str) -> str { ... }
 /// Returns a string representation of variable.
 fn str(var: any) -> str { ... }
 
-/// Formats text with newlines and tab shifts using spaces.
-fn fmt__tab_string(tab: f64, text: str) -> str { ... }
-
 /// Creates a JSON string of text.
 fn json_string(text: str) -> str { ... }
 
@@ -244,17 +241,6 @@ fn load__source_imports(source: str, imports: [any]) -> res[any] { ... }
 /// Creates module from string.
 /// Returns `ok(module)` if it succeeds.
 fn module__in_string_imports(name: str, code: str, imports: [any]) -> res[any] { ... }
-
-/// Returns data from lifetime/type-checker from source.
-/// Ignores any lifetime or type error.
-/// Returns an error if there are any syntax errors.
-fn check__in_string_imports(name: str, code: str, imports: [any]) -> res[[{}]] { ... }
-
-/// Calls function in module with arguments.
-fn call(module: any, function: str, arguments: [any]) { ... }
-
-/// Calls function in module with arguments and returns the result.
-fn call_ret(module: any, function: str, arguments: [any]) -> any { ... }
 
 /// Returns list of available functions, sorted by name.
 fn functions() -> any { ... }
@@ -531,11 +517,6 @@ fn args_os() -> [str] { ... }
 
 /// Generates JSON data from meta data.
 fn json_from_meta_data(meta_data: [[any]]) -> str { ... }
-
-/// Generates string for error message.
-/// Uses same format as [Piston-Meta](https://github.com/PistonDevelopers/meta).
-/// The range is in characters by `start` and `len`.
-fn errstr__string_start_len_msg(text: str, start: f64, len: f64, msg: str) -> str { ... }
 
 /// Returns `true` if object has key.
 fn has(obj: {}, key: str) -> bool { ... }

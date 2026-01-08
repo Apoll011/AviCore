@@ -76,7 +76,7 @@ pub fn hashmap_value_to_string(map: HashMap<String, Value>) -> HashMap<String, S
         .collect()
 }
 
-fn value_to_string(value: Value) -> String {
+pub fn value_to_string(value: Value) -> String {
     match value {
         Value::String(s) => s,
         Value::Number(n) => n.to_string(),

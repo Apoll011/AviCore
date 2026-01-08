@@ -16,8 +16,9 @@ use std::sync::Arc;
 pub fn load_module() -> Option<dyon::Module> {
     use dyon::Module;
 
-    let mut module = Module::new();
+    let mut module = Module::empty();
 
+    super::std::add_functions(&mut module);
     super::constants::add_functions(&mut module);
     super::settings::add_functions(&mut module);
     super::locales::add_functions(&mut module);
@@ -32,6 +33,7 @@ pub fn load_module() -> Option<dyon::Module> {
     super::log::add_functions(&mut module);
     super::utils::add_functions(&mut module);
     super::string::add_functions(&mut module);
+    super::fs::add_functions(&mut module);
     module.no_ns();
 
     Some(module)

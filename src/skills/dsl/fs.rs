@@ -1,11 +1,11 @@
+use dyon::{Dfn, Module, Runtime};
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
-use dyon::{Dfn, Module, Runtime};
 use std::result::Result;
 
-use std::sync::Arc;
 use log::warn;
+use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     use dyon::Type::*;

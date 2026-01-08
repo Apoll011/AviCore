@@ -15,6 +15,7 @@ dependencies = [
  "hex",
  "hmac 0.13.0-rc.3",
  "humantime",
+ "lazy_static",
  "log",
  "notify-debouncer-mini",
  "parking_lot 0.12.5",
@@ -29,6 +30,7 @@ dependencies = [
  "titlecase",
  "tokio 1.48.0",
  "uuid 1.19.0",
+ "vecmath",
 ]
 
 [[package]]
