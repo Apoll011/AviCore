@@ -1,5 +1,5 @@
 use super::avi_dsl::ctx;
-use crate::lang;
+use crate::dialogue::languages::lang;
 use crate::skills::dsl::dyon_helpers::{dyon_obj_into_hashmap, hashmap_value_to_string};
 use dyon::Type::*;
 use dyon::embed::PushVariable;
@@ -49,7 +49,7 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
     let skill_context = ctx(_rt)?;
 
     Ok(PushVariable::push_var(&skill_context.languages.locale_fmt(
-        &lang!(),
+        &lang(),
         &id,
         &hashmap_value_to_string(dyon_obj_into_hashmap(obj)?),
     )))
@@ -57,7 +57,7 @@ pub fn locale_fmt(_rt: &mut Runtime) -> Result<Variable, String> {
 
 #[allow(non_snake_case)]
 pub fn current_lang(_rt: &mut Runtime) -> Result<Variable, String> {
-    Ok(PushVariable::push_var(&lang!()))
+    Ok(PushVariable::push_var(&lang()))
 }
 
 #[allow(non_snake_case)]

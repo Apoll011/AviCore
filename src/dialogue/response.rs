@@ -1,4 +1,4 @@
-use crate::get_translation_list;
+use crate::dialogue::languages::get_translation_list;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -55,7 +55,7 @@ impl ResponseValidator for ListOrNoneValidator {
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text).to_lowercase();
 
-        let none_translations = get_translation_list!("none");
+        let none_translations = get_translation_list("none");
 
         for none_text in none_translations {
             if cleaned.contains(&none_text.to_lowercase()) {
@@ -88,7 +88,7 @@ impl ResponseValidator for OptionalValidator {
         let cleaned = self.clear_text(text);
         let cleaned_lower = cleaned.to_lowercase();
 
-        let none_translations = get_translation_list!("none");
+        let none_translations = get_translation_list("none");
 
         for none_text in none_translations {
             if cleaned_lower.contains(&none_text.to_lowercase()) {
@@ -120,8 +120,8 @@ impl ResponseValidator for BoolValidator {
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text).to_lowercase();
 
-        let yes_translations = get_translation_list!("yes");
-        let no_translations = get_translation_list!("no");
+        let yes_translations = get_translation_list("yes");
+        let no_translations = get_translation_list("no");
 
         if self.hard_search {
             for yes_text in &yes_translations {

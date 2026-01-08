@@ -1,5 +1,6 @@
+use crate::config::setting;
+use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
-use crate::lang;
 use log::{debug, error, info, trace, warn};
 use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
@@ -147,7 +148,7 @@ impl LanguageSystem {
     }
 
     pub fn get_translation(&self, id: &str) -> Option<String> {
-        match self.locale(&lang!(), id) {
+        match self.locale(&lang(), id) {
             Some(value) => self.value_to_string(&value),
             None => None,
         }
@@ -156,7 +157,7 @@ impl LanguageSystem {
     pub fn get_translation_list(&self, id: &str) -> Vec<String> {
         self.languages
             .iter()
-            .find(|l| l.code == *lang!())
+            .find(|l| l.code == *lang())
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
             .map(|i| match &i.value.0 {
                 serde_yaml::Value::Sequence(seq) if !seq.is_empty() => seq
@@ -191,4 +192,28 @@ impl LanguageSystem {
             .iter()
             .any(|lang| lang.lang.iter().any(|l| l.id == id))
     }
+}
+
+pub fn locale(key: &str) -> Option<String> {
+    match runtime() {
+        Ok(c) => c.language_system.get_translation(key),
+        Err(e) => {
+            debug!("Failed to get translation for {}: {}", key, e);
+            None
+        }
+    }
+}
+
+pub fn get_translation_list(key: &str) -> Vec<String> {
+    match runtime() {
+        Ok(c) => c.language_system.get_translation_list(key),
+        Err(e) => {
+            debug!("Failed to get translation list for {}: {}", key, e);
+            Vec::new()
+        }
+    }
+}
+
+pub fn lang() -> String {
+    setting::<String>("lang").unwrap_or("en".to_string())
 }

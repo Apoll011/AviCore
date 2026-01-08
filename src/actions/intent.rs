@@ -1,8 +1,9 @@
 use crate::actions::action::Action;
 use crate::api::api::Api;
 use crate::ctx::runtime;
+use crate::dialogue::reply::Replayed;
 use crate::skills::manager::SkillManager;
-use crate::{process_reply_text, subscribe, watch_dir};
+use crate::{subscribe, watch_dir};
 use avi_device::device::AviDevice;
 use log::{info, warn};
 use std::sync::Arc;
@@ -22,10 +23,17 @@ pub struct IntentConfig {
 }
 
 impl IntentAction {
+    pub async fn process_reply_text(text: &str) -> Result<Replayed, String> {
+        match runtime() {
+            Ok(c) => c.reply_manager.process_text(text).await,
+            Err(e) => Err(e),
+        }
+    }
+
     pub async fn parse_as_reply(&self, text: &str) -> bool {
         let skill_manager = Arc::clone(&self.skill_manager);
 
-        match process_reply_text!(text) {
+        match IntentAction::process_reply_text(text).await {
             Ok(replay) => {
                 let mut mg = skill_manager.lock().await;
                 if let Err(e) = mg.run_skill_function(

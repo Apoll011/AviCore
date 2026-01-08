@@ -11,6 +11,7 @@ mod log;
 mod macros;
 mod skills;
 mod user;
+mod utils;
 
 use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability};

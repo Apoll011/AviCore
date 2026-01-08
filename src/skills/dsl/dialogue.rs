@@ -7,7 +7,8 @@ use crate::dialogue::response::{
 use crate::dialogue::utils::{listen as device_listen, speak};
 use crate::skills::dsl::avi_dsl::ctx;
 use crate::skills::dsl::dyon_helpers::{dyon_obj_into_hashmap, hashmap_value_to_string};
-use crate::{get_ctx, rt_spawn, speak, user_name};
+use crate::user::user_name;
+use crate::{get_ctx, rt_spawn, speak};
 use dyon::Type::*;
 use dyon::embed::{PopVariable, PushVariable};
 use dyon::{Dfn, Module, Runtime, Variable};
@@ -92,7 +93,7 @@ dyon_fn! {fn say(text: String) {
 }}
 
 dyon_fn! {fn req_attention() {
-    speak!(&format!("{}!", user_name!()));
+    speak!(&format!("{}!", user_name()));
     device_listen();
 }}
 

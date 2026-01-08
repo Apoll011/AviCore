@@ -1,5 +1,5 @@
 use crate::ctx::runtime;
-use crate::{get_ctx, get_user, remove_ctx, set_ctx};
+use crate::{get_ctx, remove_ctx, set_ctx};
 use log::{debug, info, trace};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -163,14 +163,14 @@ impl UserManager {
     }
 
     pub fn get_from_disk(&self) {
-        if let Some(data) = get_user!() {
+        if let Some(data) = get_user() {
             *self.user.write() = data;
         }
     }
 
     pub async fn load_from_device(&self) {
         trace!("Attempting to load user data from device");
-        if let Some(user) = get_user!(device) {
+        if let Some(user) = get_user_from_mesh().await {
             info!("Updating user data from device mesh: {}", user.id);
             set_ctx!("user", &user);
             *self.user.write() = user;
@@ -585,6 +585,32 @@ impl UserManager {
         }
 
         Err("Failed to set value".to_string())
+    }
+}
+
+pub fn user_name() -> String {
+    match runtime() {
+        Ok(c) => c.user.get_name().to_string(),
+        Err(_) => "User".to_string(),
+    }
+}
+
+pub fn get_user() -> Option<User> {
+    match get_ctx!("user") {
+        Some(user) => match serde_json::from_value::<User>(user) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        },
+        None => None,
+    }
+}
+pub async fn get_user_from_mesh() -> Option<User> {
+    match get_ctx!(device, "avi.user") {
+        Some(user) => match serde_json::from_value::<User>(user) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        },
+        None => None,
     }
 }
 

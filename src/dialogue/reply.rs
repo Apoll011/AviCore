@@ -1,5 +1,5 @@
+use crate::dialogue::languages::locale;
 use crate::dialogue::response::{ResponseValidator, ValidationError};
-use crate::locale;
 use crate::speak;
 use log::{debug, info, trace, warn};
 use std::sync::Arc;
@@ -176,7 +176,7 @@ impl ReplyManager {
                     *pending_lock = Some(pending);
                     speak!(locale: error_msg.as_str());
 
-                    match locale!(&error_msg) {
+                    match locale(&error_msg) {
                         Some(v) => Err(v.to_string()),
                         None => Err(error_msg),
                     }

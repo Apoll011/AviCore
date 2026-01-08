@@ -1,5 +1,6 @@
 use crate::ctx::runtime;
-use crate::{core_id, get_ctx, publish, rt_spawn, set_ctx};
+use crate::utils::core_id;
+use crate::{get_ctx, publish, rt_spawn, set_ctx};
 use log::{debug, error, trace};
 
 /// Retrieves the ID of the last active listener device.
@@ -22,7 +23,7 @@ pub async fn get_last_listener() -> Result<String, Box<dyn std::error::Error>> {
             Ok(id)
         }
         None => {
-            let id = core_id!()?;
+            let id = core_id().await.ok_or("Failed to get last listener ID")?;
             debug!(
                 "No listener found in context, defaulting to core ID: {}",
                 id
@@ -51,7 +52,7 @@ pub async fn get_speaker() -> Result<String, Box<dyn std::error::Error>> {
             Ok(id)
         }
         None => {
-            let id = core_id!()?;
+            let id = core_id().await.ok_or("Failed to get last listener ID")?;
             debug!("No speaker found in context, defaulting to core ID: {}", id);
             Ok(id)
         }

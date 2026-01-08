@@ -1,33 +1,7 @@
 #[macro_export]
-macro_rules! locale {
-    ($key:expr) => {
-        match $crate::ctx::runtime() {
-            Ok(c) => c.language_system.get_translation($key),
-            Err(e) => {
-                ::log::debug!("Failed to get translation for {}: {}", $key, e);
-                None
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! get_translation_list {
-    ($key:expr) => {
-        match $crate::ctx::runtime() {
-            Ok(c) => c.language_system.get_translation_list($key),
-            Err(e) => {
-                ::log::debug!("Failed to get translation list for {}: {}", $key, e);
-                Vec::new()
-            }
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! speak {
     (locale: $a: expr) => {
-        match locale!($a) {
+        match $crate::dialogue::languages::locale($a) {
             Some(v) => speak!(&v),
             None => {
                 ::log::warn!("Attempted to speak missing locale key: {}", $a);
@@ -293,33 +267,6 @@ macro_rules! remove_ctx {
 }
 
 #[macro_export]
-macro_rules! lang {
-    () => {
-        $crate::config::setting::<String>("lang").unwrap_or("en".to_string())
-    };
-}
-
-#[macro_export]
-macro_rules! user_name {
-    () => {
-        match runtime() {
-            Ok(c) => c.user.get_name().to_string(),
-            Err(_) => "User".to_string(),
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! process_reply_text {
-    ($text:expr) => {
-        match runtime() {
-            Ok(c) => c.reply_manager.process_text($text).await,
-            Err(e) => Err(e),
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! rt_spawn {
     {$($b:tt)*} => {
         if let Ok(c) = runtime() {
@@ -327,41 +274,6 @@ macro_rules! rt_spawn {
             c.rt.spawn(async move {
                 $($b)*
             });
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! core_id {
-    () => {
-        match $crate::ctx::runtime() {
-            Ok(c) => match c.device.get_core_id().await {
-                Ok(v) => Ok(v),
-                Err(e) => Err(format!("Error getting core id: {}", e.to_string())),
-            },
-            Err(e) => Err(e),
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! get_user {
-    () => {
-        match get_ctx!("user") {
-            Some(user) => match serde_json::from_value::<$crate::user::User>(user) {
-                Ok(v) => Some(v),
-                Err(_) => None,
-            },
-            None => None,
-        }
-    };
-    (device) => {
-        match get_ctx!(device, "avi.user") {
-            Some(user) => match serde_json::from_value::<$crate::user::User>(user) {
-                Ok(v) => Some(v),
-                Err(_) => None,
-            },
-            None => None,
         }
     };
 }
