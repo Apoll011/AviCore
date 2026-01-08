@@ -3,5 +3,5 @@ use setting as setting
 
 fn is_eco() -> {
     to_check := "eco"
-    return setting::get("mode") == to_check
+    return unwrap(setting::get("mode")) == to_check
 }

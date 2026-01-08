@@ -8,7 +8,7 @@ use user as user
 
 fn intent_hi(intent: Intent) {
     if (test::is_eco()) {
-        say(locale::get_fmt("hello", {"name": user::name()}))
+        say(unwrap(locale::get_fmt("hello", {"name": user::name()})))
         d::confirm("ask", "reply")
     }
     else {
