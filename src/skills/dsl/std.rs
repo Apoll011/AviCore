@@ -1,13 +1,12 @@
 #![allow(non_snake_case)]
 
-use std::f64::consts::PI;
-use crate::skills::dsl::dyon_helpers::{value_to_string, variable_to_json};
-use dyon::Type::{Any, Bool, F64, Link, Secret, Str, Void, Array};
+use dyon::Type::{Any, Array, Bool, F64, Link, Secret, Str, Void};
 use dyon::{
     Dfn, Error, LAZY_AND, LAZY_NO, LAZY_OR, LAZY_UNWRAP_OR, Lt, Mat4, Module, Runtime, Thread,
     Type, Variable, Vec4, load_str,
 };
 use lazy_static::lazy_static;
+use std::f64::consts::PI;
 use std::result::Result;
 use std::sync::{Arc, Mutex};
 
@@ -954,44 +953,6 @@ pub(crate) fn swap(rt: &mut Runtime) -> Result<(), String> {
     Ok(())
 }
 
-dyon_fn! {fn parse_number(text: Arc<String>) -> Option<f64> {text.trim().parse::<f64>().ok()}}
-dyon_fn! {fn trim(v: Arc<String>) -> Arc<String> {Arc::new(v.trim().into())}}
-dyon_fn! {fn trim_left(v: Arc<String>) -> Arc<String> {Arc::new(v.trim_start().into())}}
-dyon_fn! {fn trim_right(v: Arc<String>) -> Arc<String> {Arc::new(v.trim_end().into())}}
-
-pub(crate) fn _str(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::Str(Arc::new(value_to_string(variable_to_json(
-        &v,
-    )?))))
-}
-
-dyon_fn! {fn str__color(v: Vec4) -> Arc<String> {
-    let v = v.0;
-    let mut buf: Vec<u8> = vec![];
-    let clamp = |x| {
-        if x < 0.0 { 0.0 } else if x > 1.0 { 1.0 } else { x }
-    };
-    let r = (clamp(v[0]) * 255.0) as usize;
-    let g = (clamp(v[1]) * 255.0) as usize;
-    let b = (clamp(v[2]) * 255.0) as usize;
-    let a = (clamp(v[3]) * 255.0) as usize;
-    let map = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-               'a', 'b', 'c', 'd', 'e', 'f'];
-    let (r1, r2) = (r >> 4, r & 0xf);
-    let (g1, g2) = (g >> 4, g & 0xf);
-    let (b1, b2) = (b >> 4, b & 0xf);
-    let (a1, a2) = (a >> 4, a & 0xf);
-    buf.push(b'#');
-    buf.push(map[r1] as u8); buf.push(map[r2] as u8);
-    buf.push(map[g1] as u8); buf.push(map[g2] as u8);
-    buf.push(map[b1] as u8); buf.push(map[b2] as u8);
-    if a != 255 {
-        buf.push(map[a1] as u8); buf.push(map[a2] as u8);
-    }
-    Arc::new(String::from_utf8(buf).unwrap())
-}}
-
 dyon_fn! {fn srgb_to_linear__color(v: Vec4) -> Vec4 {
     let v = v.0;
     let to_linear = |f: f32| {
@@ -1041,17 +1002,6 @@ pub(crate) fn _typeof(rt: &mut Runtime) -> Result<Variable, String> {
     }))
 }
 
-pub(crate) fn debug(rt: &mut Runtime) -> Result<(), String> {
-    println!("Stack {:#?}", rt.stack);
-    println!("Locals {:#?}", rt.local_stack);
-    println!("Currents {:#?}", rt.current_stack);
-    Ok(())
-}
-
-pub(crate) fn backtrace(rt: &mut Runtime) -> Result<(), String> {
-    println!("{:#?}", rt.call_stack);
-    Ok(())
-}
 pub(crate) fn load__source_imports(rt: &mut Runtime) -> Result<Variable, String> {
     use dyon::load;
 
@@ -1383,60 +1333,16 @@ pub fn add_functions(module: &mut Module) {
     add_mat_operations(module);
 
     add_math_functions(module);
+    add_vector_functions(module);
+    add_color_functions(module);
 
-    module.add_str(
-        "rot__axis_angle",
-        rot__axis_angle,
-        Dfn::nl(vec![Vec4, F64], Mat4),
-    );
-    module.add_str(
-        "ortho__pos_right_up_forward",
-        ortho__pos_right_up_forward,
-        Dfn::nl(vec![Vec4; 4], Mat4),
-    );
-    module.add_str(
-        "proj__fov_near_far_ar",
-        proj__fov_near_far_ar,
-        Dfn::nl(vec![F64; 4], Mat4),
-    );
-    module.add_str(
-        "mvp__model_view_projection",
-        mvp__model_view_projection,
-        Dfn::nl(vec![Mat4; 3], Mat4),
-    );
     module.add_str("clone", clone, Dfn::nl(vec![Any], Any));
-    module.add_str("rv", rv, Dfn::nl(vec![Mat4, F64], Vec4));
-    module.add_str("s", s, Dfn::nl(vec![Vec4, F64], F64));
 
-
-    module.add_str(
-        "parse_number",
-        parse_number,
-        Dfn::nl(vec![Str], Option(Box::new(F64))),
-    );
-    module.add_str("trim", trim, Dfn::nl(vec![Str], Str));
-    module.add_str("trim_left", trim_left, Dfn::nl(vec![Str], Str));
-    module.add_str("trim_right", trim_right, Dfn::nl(vec![Str], Str));
-    module.add_str("str", _str, Dfn::nl(vec![Any], Str));
-    module.add_str("str__color", str__color, Dfn::nl(vec![Vec4], Str));
-    module.add_str(
-        "srgb_to_linear__color",
-        srgb_to_linear__color,
-        Dfn::nl(vec![Vec4], Vec4),
-    );
-    module.add_str(
-        "linear_to_srgb__color",
-        linear_to_srgb__color,
-        Dfn::nl(vec![Vec4], Vec4),
-    );
     module.add_str("typeof", _typeof, Dfn::nl(vec![Any], Str));
-    module.add_str("debug", debug, Dfn::nl(vec![], Void));
-    module.add_str("backtrace", backtrace, Dfn::nl(vec![], Void));
     module.add_str("none", none, Dfn::nl(vec![], Type::option()));
     module.add_str("some", some, Dfn::nl(vec![Any], Type::option()));
     module.add_str("ok", ok, Dfn::nl(vec![Any], Type::result()));
     module.add_str("err", err, Dfn::nl(vec![Any], Type::result()));
-    module.add_str("dir__angle", dir__angle, Dfn::nl(vec![F64], Vec4));
 
     module.add_str(
         "join__thread",
@@ -1564,8 +1470,16 @@ pub fn add_functions(module: &mut Module) {
     module.add_str("keys", keys, Dfn::nl(vec![Object], Array(Box::new(Str))));
     module.add_str("chars", chars, Dfn::nl(vec![Str], Array(Box::new(Str))));
 
-    module.add_str("wait_next", keys, Dfn::nl(vec![In(Box::new(Any))], Option(Box::new(Str))));
-    module.add_str("next", keys, Dfn::nl(vec![In(Box::new(Any))], Option(Box::new(Str))));
+    module.add_str(
+        "wait_next",
+        wait_next,
+        Dfn::nl(vec![In(Box::new(Any))], Option(Box::new(Str))),
+    );
+    module.add_str(
+        "next",
+        next,
+        Dfn::nl(vec![In(Box::new(Any))], Option(Box::new(Str))),
+    );
 }
 
 pub fn add_mat_operations(module: &mut Module) {
@@ -1897,11 +1811,7 @@ pub fn add_boolean_operations(module: &mut Module) {
             tys: vec![Any],
             ret: Any,
             ext: vec![
-                (
-                    vec![],
-                    vec![Secret(Box::new(Bool))],
-                    Secret(Box::new(Bool)),
-                ),
+                (vec![], vec![Secret(Box::new(Bool))], Secret(Box::new(Bool))),
                 (vec![], vec![Bool], Bool),
             ],
             lazy: LAZY_NO,
@@ -1909,13 +1819,39 @@ pub fn add_boolean_operations(module: &mut Module) {
     );
 }
 
-pub fn add_math_functions(module: &mut Module) {
-    module.add_str("cross", cross, Dfn::nl(vec![Type::Vec4, Type::Vec4], Type::Vec4));
+pub fn add_vector_functions(module: &mut Module) {
+    module.add_str(
+        "rot__axis_angle",
+        rot__axis_angle,
+        Dfn::nl(vec![Type::Vec4, F64], Type::Mat4),
+    );
+    module.add_str(
+        "ortho__pos_right_up_forward",
+        ortho__pos_right_up_forward,
+        Dfn::nl(vec![Type::Vec4; 4], Type::Mat4),
+    );
+    module.add_str(
+        "proj__fov_near_far_ar",
+        proj__fov_near_far_ar,
+        Dfn::nl(vec![F64; 4], Type::Mat4),
+    );
+    module.add_str(
+        "mvp__model_view_projection",
+        mvp__model_view_projection,
+        Dfn::nl(vec![Type::Mat4; 3], Type::Mat4),
+    );
+    module.add_str(
+        "cross",
+        cross,
+        Dfn::nl(vec![Type::Vec4, Type::Vec4], Type::Vec4),
+    );
     module.add_str("x", x, Dfn::nl(vec![Type::Vec4], F64));
     module.add_str("y", y, Dfn::nl(vec![Type::Vec4], F64));
     module.add_str("z", z, Dfn::nl(vec![Type::Vec4], F64));
     module.add_str("w", w, Dfn::nl(vec![Type::Vec4], F64));
     module.add_unop_str("norm", norm, Dfn::nl(vec![Type::Vec4], F64));
+    module.add_str("rv", rv, Dfn::nl(vec![Type::Mat4, F64], Type::Vec4));
+    module.add_str("s", s, Dfn::nl(vec![Type::Vec4, F64], F64));
     module.add_str("det", det, Dfn::nl(vec![Type::Mat4], F64));
     module.add_str("inv", inv, Dfn::nl(vec![Type::Mat4], Type::Mat4));
     module.add_str("mov", mov, Dfn::nl(vec![Type::Vec4], Type::Mat4));
@@ -1929,7 +1865,14 @@ pub fn add_math_functions(module: &mut Module) {
     module.add_str("cz", cz, Dfn::nl(vec![Type::Mat4], Type::Vec4));
     module.add_str("cw", cw, Dfn::nl(vec![Type::Mat4], Type::Vec4));
     module.add_str("cv", cv, Dfn::nl(vec![Type::Mat4, F64], Type::Vec4));
+    module.add_str(
+        "dir__angle",
+        dir__angle,
+        Dfn::nl(vec![F64], dyon::Type::Vec4),
+    );
+}
 
+pub fn add_math_functions(module: &mut Module) {
     module.add_str("sqrt", sqrt, Dfn::nl(vec![F64], F64));
     module.add_str("sin", sin, Dfn::nl(vec![F64], F64));
     module.add_str("asin", asin, Dfn::nl(vec![F64], F64));
@@ -1953,4 +1896,17 @@ pub fn add_math_functions(module: &mut Module) {
     module.add_str("is_nan", is_nan, Dfn::nl(vec![F64], Bool));
     module.add_str("min", min, Dfn::nl(vec![Array(Box::new(F64))], F64));
     module.add_str("max", max, Dfn::nl(vec![Array(Box::new(F64))], F64));
+}
+
+pub fn add_color_functions(module: &mut Module) {
+    module.add_str(
+        "srgb_to_linear__color",
+        srgb_to_linear__color,
+        Dfn::nl(vec![Type::Vec4], Type::Vec4),
+    );
+    module.add_str(
+        "linear_to_srgb__color",
+        linear_to_srgb__color,
+        Dfn::nl(vec![Type::Vec4], Type::Vec4),
+    );
 }

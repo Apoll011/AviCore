@@ -23,7 +23,7 @@ pub fn add_functions(module: &mut Module) {
     );
     module.add(
         Arc::new("append".into()),
-        write,
+        append,
         Dfn::nl(vec![Str, Str], Void),
     );
 }

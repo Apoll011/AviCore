@@ -1,4 +1,7 @@
-use crate::skills::dsl::dyon_helpers::{dyon_obj_into_hashmap, hashmap_value_to_string};
+use crate::skills::dsl::dyon_helpers::{
+    dyon_obj_into_hashmap, hashmap_value_to_string, value_to_string, variable_to_json,
+};
+use crate::skills::dsl::std::TINVOTS;
 use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
@@ -53,6 +56,17 @@ pub fn add_functions(module: &mut Module) {
         format,
         Dfn::nl(vec![Str, Object], Str),
     );
+
+    module.add_str(
+        "parse_number",
+        parse_number,
+        Dfn::nl(vec![Str], Option(Box::new(F64))),
+    );
+    module.add_str("trim", trim, Dfn::nl(vec![Str], Str));
+    module.add_str("trim_left", trim_left, Dfn::nl(vec![Str], Str));
+    module.add_str("trim_right", trim_right, Dfn::nl(vec![Str], Str));
+    module.add_str("str", _str, Dfn::nl(vec![Any], Str));
+    module.add_str("str__color", str__color, Dfn::nl(vec![Vec4], Str));
 }
 
 dyon_fn! { fn upper(text: String) -> String {
@@ -109,3 +123,41 @@ pub fn format(_rt: &mut Runtime) -> Result<Variable, String> {
         Err(e) => Err(format!("{}", e)),
     }
 }
+
+dyon_fn! {fn parse_number(text: Arc<String>) -> std::option::Option<f64> {text.trim().parse::<f64>().ok()}}
+dyon_fn! {fn trim(v: Arc<String>) -> Arc<String> {Arc::new(v.trim().into())}}
+dyon_fn! {fn trim_left(v: Arc<String>) -> Arc<String> {Arc::new(v.trim_start().into())}}
+dyon_fn! {fn trim_right(v: Arc<String>) -> Arc<String> {Arc::new(v.trim_end().into())}}
+
+pub(crate) fn _str(rt: &mut Runtime) -> Result<Variable, String> {
+    let v = rt.stack.pop().expect(TINVOTS);
+    Ok(Variable::Str(Arc::new(value_to_string(variable_to_json(
+        &v,
+    )?))))
+}
+
+dyon_fn! {fn str__color(v: dyon::Vec4) -> Arc<String> {
+    let v = v.0;
+    let mut buf: Vec<u8> = vec![];
+    let clamp = |x| {
+        if x < 0.0 { 0.0 } else if x > 1.0 { 1.0 } else { x }
+    };
+    let r = (clamp(v[0]) * 255.0) as usize;
+    let g = (clamp(v[1]) * 255.0) as usize;
+    let b = (clamp(v[2]) * 255.0) as usize;
+    let a = (clamp(v[3]) * 255.0) as usize;
+    let map = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+               'a', 'b', 'c', 'd', 'e', 'f'];
+    let (r1, r2) = (r >> 4, r & 0xf);
+    let (g1, g2) = (g >> 4, g & 0xf);
+    let (b1, b2) = (b >> 4, b & 0xf);
+    let (a1, a2) = (a >> 4, a & 0xf);
+    buf.push(b'#');
+    buf.push(map[r1] as u8); buf.push(map[r2] as u8);
+    buf.push(map[g1] as u8); buf.push(map[g2] as u8);
+    buf.push(map[b1] as u8); buf.push(map[b2] as u8);
+    if a != 255 {
+        buf.push(map[a1] as u8); buf.push(map[a2] as u8);
+    }
+    Arc::new(String::from_utf8(buf).unwrap())
+}}

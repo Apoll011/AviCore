@@ -77,11 +77,7 @@ impl Skill {
         name: &str,
         ctx: &SkillContext,
     ) -> Result<Arc<Module>, Box<dyn std::error::Error>> {
-        let mut dyon_module;
-        match load_module() {
-            Some(v) => dyon_module = v,
-            None => return Err("Could not load avi_dsl module".into()),
-        }
+        let mut dyon_module= load_module();
 
         let entry = ctx.info.entry.clone();
 
@@ -97,7 +93,7 @@ impl Skill {
             if path.extension().and_then(|e| e.to_str()) == Some("avi")
                 && file_name != OsStr::new(&entry)
             {
-                let mut m = Module::new();
+                let mut m = load_module();
                 m.import_ext_prelude(&dyon_module);
                 if error(load(path.to_str().unwrap(), &mut m)) {
                     return Err(format!("Error loading skill {}", name).into());

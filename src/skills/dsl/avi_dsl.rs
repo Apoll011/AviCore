@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Loads and initializes the core Avi Dyon module with all submodules and functions.
-pub fn load_module() -> Option<dyon::Module> {
+pub fn load_module() -> dyon::Module {
     use dyon::Module;
 
     let mut module = Module::empty();
@@ -36,7 +36,7 @@ pub fn load_module() -> Option<dyon::Module> {
     super::fs::add_functions(&mut module);
     module.no_ns();
 
-    Some(module)
+    module
 }
 
 /// Retrieves the `SkillContext` from the Dyon runtime stack.

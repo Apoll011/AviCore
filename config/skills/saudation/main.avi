@@ -26,5 +26,5 @@ fn reply(response) {
 }
 
 fn main() {
-    println("Greeting Skill Loaded!")
+    info("Greeting Skill Loaded!")
 }
