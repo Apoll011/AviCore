@@ -79,7 +79,9 @@ impl Log for AviCoreLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            self.format_console(record);
+            if record.level() <= Level::Info {
+                self.format_console(record);
+            }
 
             self.format_file(record);
         }
