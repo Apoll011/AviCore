@@ -1,4 +1,4 @@
-use crate::config::setting;
+use crate::config::setting_or;
 use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace, warn};
@@ -215,5 +215,5 @@ pub fn get_translation_list(key: &str) -> Vec<String> {
 }
 
 pub fn lang() -> String {
-    setting::<String>("lang").unwrap_or("en".to_string())
+    setting_or::<String>("lang", "en".to_string())
 }

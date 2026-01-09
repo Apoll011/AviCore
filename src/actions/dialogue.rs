@@ -25,6 +25,18 @@ pub enum DialogueCapability {
     Listener = 2,
 }
 
+impl DialogueCapability {
+    pub fn new(cap: String) -> Self {
+        if cap.eq("speaker") {
+            DialogueCapability::Speaker
+        } else if cap.eq("listener") {
+            DialogueCapability::Listener
+        } else {
+            DialogueCapability::Both
+        }
+    }
+}
+
 /// Configuration for the `DialogueAction`.
 pub struct DialogueConfig {
     /// The capability set for this dialogue action.

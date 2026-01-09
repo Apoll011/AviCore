@@ -4,6 +4,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use crate::ctx::runtime;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.
@@ -200,10 +201,14 @@ impl ConfigSystem {
 }
 
 pub fn setting<T: DeserializeOwned>(name: &str) -> Option<T> {
-    let c = crate::ctx::runtime().ok()?;
+    let c = runtime().ok()?;
     let yaml_value = c.configuration.setting(name)?.value.clone();
 
     match yaml_value {
         YamlValue(v) => serde_yaml::from_value(v).ok(),
     }
+}
+
+pub fn setting_or<T: DeserializeOwned>(name: &str, default: T) -> T {
+    setting::<T>(name).unwrap_or_else(|| default)
 }

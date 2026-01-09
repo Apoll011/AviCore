@@ -24,6 +24,7 @@ use ::log::info;
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use std::sync::Arc;
+use crate::config::setting_or;
 
 /// Entry point for the AviCore application.
 ///
@@ -53,12 +54,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     create_runtime("./config", device);
 
     register_action!(IntentAction, {
-        watch_skill_dir: true,
-        watch_dir_debounce_time: 1,
+        watch_skill_dir: setting_or::<bool>("watch_skill_dir", false),
+        watch_dir_debounce_time: setting_or::<u64>("watch_dir_debounce_time", 1),
     });
 
     register_action!(DialogueAction, {
-        capability: DialogueCapability::Speaker,
+        capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "both".to_string())),
     });
 
     register_action!(MeshAction);
