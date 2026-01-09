@@ -7,39 +7,23 @@ use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("slots");
-    module.add(
-        Arc::new("require".into()),
-        require,
-        Dfn::nl(vec![Any, Str], Void),
-    ); //Gets a slot name and if the slot exists dont do nothing if the sloth dont exist stop de execution by exiting or somthing
-    module.add(
-        Arc::new("exists".into()),
-        exists,
-        Dfn::nl(vec![Any, Str], Bool),
-    ); //Return true or false if a slot exists
-    module.add(Arc::new("get".into()), get, Dfn::nl(vec![Any, Str], Any)); //Gets the Value inside of a slot.value.value
-    module.add(
-        Arc::new("get_raw".into()),
-        get_raw,
-        Dfn::nl(vec![Any, Str], Any),
-    ); //Gets the raw value inside of a slot.raw_value
-    module.add(
-        Arc::new("full".into()),
-        full,
-        Dfn::nl(vec![Any, Str], Object),
-    ); //Gets the full sloth object
-    module.add(
-        Arc::new("assert_equal".into()),
+    module.add_str("require", require, Dfn::nl(vec![Any, Str], Void)); //Gets a slot name and if the slot exists dont do nothing if the sloth dont exist stop de execution by exiting or somthing
+    module.add_str("exists", exists, Dfn::nl(vec![Any, Str], Bool)); //Return true or false if a slot exists
+    module.add_str("get", get, Dfn::nl(vec![Any, Str], Any)); //Gets the Value inside of a slot.value.value
+    module.add_str("get_raw", get_raw, Dfn::nl(vec![Any, Str], Any)); //Gets the raw value inside of a slot.raw_value
+    module.add_str("full", full, Dfn::nl(vec![Any, Str], Object)); //Gets the full sloth object
+    module.add_str(
+        "assert_equal",
         assert_equal,
         Dfn::nl(vec![Any, Str, Any], Bool),
     ); //Returns true or false if the value of the slot is equal to the value passed as the 2 parameter
-    module.add(
-        Arc::new("assert_in".into()),
+    module.add_str(
+        "assert_in",
         assert_in,
         Dfn::nl(vec![Any, Str, Array(Box::from(Any))], Bool),
     );
-    module.add(
-        Arc::new("assert_in_dict".into()),
+    module.add_str(
+        "assert_in_dict",
         assert_in_dict,
         Dfn::nl(vec![Any, Str, Object], Bool),
     ); //In key

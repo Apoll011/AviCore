@@ -3,27 +3,14 @@ use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
 use std::result::Result;
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("skill");
-    module.add(Arc::new("dir".into()), dir, Dfn::nl(vec![], Str));
-    module.add(Arc::new("version".into()), version, Dfn::nl(vec![], Str));
-    module.add(
-        Arc::new("manifest".into()),
-        get_manifest,
-        Dfn::nl(vec![], Any),
-    );
-    module.add(
-        Arc::new("get_permissions".into()),
-        get_permissions,
-        Dfn::nl(vec![], Any),
-    );
-    module.add(
-        Arc::new("is_disabled".into()),
-        is_disabled,
-        Dfn::nl(vec![], Any),
-    );
+    module.add_str("dir", dir, Dfn::nl(vec![], Str));
+    module.add_str("version", version, Dfn::nl(vec![], Str));
+    module.add_str("manifest", get_manifest, Dfn::nl(vec![], Any));
+    module.add_str("get_permissions", get_permissions, Dfn::nl(vec![], Any));
+    module.add_str("is_disabled", is_disabled, Dfn::nl(vec![], Any));
 }
 
 #[allow(non_snake_case)]

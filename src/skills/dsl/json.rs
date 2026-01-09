@@ -3,20 +3,11 @@ use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
 use std::result::Result;
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("json");
-    module.add(
-        Arc::new("parse".into()),
-        json_parse,
-        Dfn::nl(vec![Str], Any),
-    );
-    module.add(
-        Arc::new("stringify".into()),
-        json_stringify,
-        Dfn::nl(vec![Any], Str),
-    );
+    module.add_str("parse", json_parse, Dfn::nl(vec![Str], Any));
+    module.add_str("stringify", json_stringify, Dfn::nl(vec![Any], Str));
 }
 
 #[allow(non_snake_case)]

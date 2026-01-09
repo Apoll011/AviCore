@@ -1,6 +1,6 @@
-use dyon::{Dfn, Module, Runtime, Variable};
+use crate::skills::dsl::std::TINVOTS;
 use dyon::Type::{Array, Bool, F64};
-use crate::skills::dsl::std::{TINVOTS};
+use dyon::{Dfn, Module, Runtime, Variable};
 
 pub fn add_functions(module: &mut Module) {
     module.ns("math");

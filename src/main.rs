@@ -17,6 +17,7 @@ use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability};
 use crate::actions::intent::IntentAction;
 use crate::actions::mesh::MeshAction;
+use crate::config::setting_or;
 use crate::context::context_cleanup_task;
 use crate::ctx::create_runtime;
 use crate::log::AviCoreLogger;
@@ -24,7 +25,6 @@ use ::log::info;
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use std::sync::Arc;
-use crate::config::setting_or;
 
 /// Entry point for the AviCore application.
 ///

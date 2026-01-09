@@ -5,25 +5,16 @@ use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
 use serde_yaml::Value as Yaml;
 use std::result::Result;
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("constant");
-    module.add(
-        Arc::new("get".into()),
+    module.add_str(
+        "get",
         get_constant,
         Dfn::nl(vec![Str], Option(Box::from(Any))),
     );
-    module.add(
-        Arc::new("list".into()),
-        list_constants,
-        Dfn::nl(vec![], Any),
-    );
-    module.add(
-        Arc::new("has".into()),
-        has_constant,
-        Dfn::nl(vec![Str], Bool),
-    );
+    module.add_str("list", list_constants, Dfn::nl(vec![], Any));
+    module.add_str("has", has_constant, Dfn::nl(vec![Str], Bool));
 }
 
 #[allow(non_snake_case)]

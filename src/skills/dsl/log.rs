@@ -2,15 +2,14 @@ use crate::skills::dsl::avi_dsl::ctx;
 use dyon::Type::{Str, Void};
 use dyon::{Dfn, Module, Runtime};
 use log::{debug, error, info, trace, warn};
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("log");
-    module.add(Arc::new("info".into()), info, Dfn::nl(vec![Str], Void));
-    module.add(Arc::new("trace".into()), trace, Dfn::nl(vec![Str], Void));
-    module.add(Arc::new("debug".into()), debug, Dfn::nl(vec![Str], Void));
-    module.add(Arc::new("warn".into()), warn, Dfn::nl(vec![Str], Void));
-    module.add(Arc::new("error".into()), error, Dfn::nl(vec![Str], Void));
+    module.add_str("info", info, Dfn::nl(vec![Str], Void));
+    module.add_str("trace", trace, Dfn::nl(vec![Str], Void));
+    module.add_str("debug", debug, Dfn::nl(vec![Str], Void));
+    module.add_str("warn", warn, Dfn::nl(vec![Str], Void));
+    module.add_str("error", error, Dfn::nl(vec![Str], Void));
 }
 
 #[allow(non_snake_case)]

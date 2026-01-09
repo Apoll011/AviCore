@@ -2,25 +2,16 @@ use dyon::Type::*;
 use dyon::{Dfn, Module};
 use std::process::Command;
 use std::result::Result;
-use std::sync::Arc;
 use uuid::Uuid;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("util");
-    module.add(Arc::new("uuid".into()), uuid, Dfn::nl(vec![], Str));
-    module.add(
-        Arc::new("timestamp".into()),
-        timestamp,
-        Dfn::nl(vec![], F64),
-    );
-    module.add(
-        Arc::new("assert".into()),
-        assert,
-        Dfn::nl(vec![Bool, Str], Void),
-    );
-    module.add(Arc::new("cmd".into()), cmd, Dfn::nl(vec![Str], F64));
-    module.add(Arc::new("os".into()), os, Dfn::nl(vec![], Str));
-    module.add(Arc::new("env".into()), env, Dfn::nl(vec![Str, Str], Str));
+    module.add_str("uuid", uuid, Dfn::nl(vec![], Str));
+    module.add_str("timestamp", timestamp, Dfn::nl(vec![], F64));
+    module.add_str("assert", assert, Dfn::nl(vec![Bool, Str], Void));
+    module.add_str("cmd", cmd, Dfn::nl(vec![Str], F64));
+    module.add_str("os", os, Dfn::nl(vec![], Str));
+    module.add_str("env", env, Dfn::nl(vec![Str, Str], Str));
 }
 
 dyon_fn! { fn uuid() -> String {

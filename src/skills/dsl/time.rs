@@ -4,17 +4,16 @@ use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
 use humantime::parse_duration;
 use std::result::Result;
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("time");
-    module.add(
-        Arc::new("parse_duration".into()),
+    module.add_str(
+        "parse_duration",
         time_parse_duration,
         Dfn::nl(vec![Str], F64),
     );
-    module.add(
-        Arc::new("format_date".into()),
+    module.add_str(
+        "format_date",
         time_format_date,
         Dfn::nl(vec![F64, Str], Str),
     );

@@ -1,14 +1,14 @@
 #![allow(non_snake_case)]
 
+use crate::skills::dsl::dyon_helpers::deep_clone;
 use dyon::Type::{Any, Bool, F64, Link, Secret, Str};
 use dyon::{
-    Dfn, Error, LAZY_AND, LAZY_NO, LAZY_OR, LAZY_UNWRAP_OR, Lt, Module, Runtime,
-    Type, Variable, load_str,
+    Dfn, Error, LAZY_AND, LAZY_NO, LAZY_OR, LAZY_UNWRAP_OR, Lt, Module, Runtime, Type, Variable,
+    load_str,
 };
 use lazy_static::lazy_static;
 use std::result::Result;
 use std::sync::{Arc, Mutex};
-use crate::skills::dsl::dyon_helpers::deep_clone;
 
 lazy_static! {
     pub(crate) static ref LESS: Arc<String> = Arc::new("less".into());
@@ -682,7 +682,6 @@ pub(crate) fn unwrap_err(rt: &mut Runtime) -> Result<Variable, String> {
     })
 }
 
-
 pub(crate) fn has(rt: &mut Runtime) -> Result<Variable, String> {
     let key = rt.stack.pop().expect(TINVOTS);
     let key = match rt.get(&key) {
@@ -727,7 +726,6 @@ pub fn add_functions(module: &mut Module) {
         Dfn::nl(vec![Str, Str, Type::array()], Type::result()),
     );
 
-
     module.add_str(
         "why",
         why,
@@ -749,14 +747,11 @@ pub fn add_functions(module: &mut Module) {
         Dfn::nl(vec![F64, Any], Secret(Box::new(F64))),
     );
 
-
-
     module.add_str("head", head, Dfn::nl(vec![Link], Any));
     module.add_str("tip", tip, Dfn::nl(vec![Link], Option(Box::new(Any))));
     module.add_str("tail", tail, Dfn::nl(vec![Link], Link));
     module.add_str("neck", neck, Dfn::nl(vec![Link], Link));
     module.add_str("is_empty", is_empty, Dfn::nl(vec![Link], Bool));
-
 
     module.add_str(
         "unwrap_or",

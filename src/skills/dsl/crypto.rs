@@ -4,22 +4,13 @@ use dyon::{Dfn, Module, Runtime, Variable};
 use hmac::{Hmac, KeyInit, Mac};
 use sha2::{Digest, Sha256};
 use std::result::Result;
-use std::sync::Arc;
 
 type HmacSha256 = Hmac<Sha256>;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("crypto");
-    module.add(
-        Arc::new("hash".into()),
-        crypto_hash,
-        Dfn::nl(vec![Str, Str], Str),
-    );
-    module.add(
-        Arc::new("hmac".into()),
-        crypto_hmac,
-        Dfn::nl(vec![Str, Str, Str], Str),
-    );
+    module.add_str("hash", crypto_hash, Dfn::nl(vec![Str, Str], Str));
+    module.add_str("hmac", crypto_hmac, Dfn::nl(vec![Str, Str, Str], Str));
 }
 
 #[allow(non_snake_case)]

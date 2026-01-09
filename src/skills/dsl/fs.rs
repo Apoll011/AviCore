@@ -12,61 +12,21 @@ pub fn add_functions(module: &mut Module) {
     use dyon::Type::*;
 
     module.ns("fs");
-    module.add(
-        Arc::new("read".into()),
-        read,
-        Dfn::nl(vec![Str], Option(Box::from(Str))),
-    );
-    module.add(
-        Arc::new("write".into()),
-        write,
-        Dfn::nl(vec![Str, Str], Void),
-    );
-    module.add(
-        Arc::new("append".into()),
-        append,
-        Dfn::nl(vec![Str, Str], Void),
-    );
-    module.add(
-        Arc::new("exists".into()),
-        exists,
-        Dfn::nl(vec![Str], Bool),
-    );
-    module.add(
-        Arc::new("delete".into()),
-        delete,
-        Dfn::nl(vec![Str], Bool),
-    );
-    module.add(
-        Arc::new("copy".into()),
-        copy,
-        Dfn::nl(vec![Str, Str], Bool),
-    );
-    module.add(
-        Arc::new("move".into()),
-        _move,
-        Dfn::nl(vec![Str, Str], Bool),
-    );
-    module.add(
-        Arc::new("list_files".into()),
+    module.add_str("read", read, Dfn::nl(vec![Str], Option(Box::from(Str))));
+    module.add_str("write", write, Dfn::nl(vec![Str, Str], Void));
+    module.add_str("append", append, Dfn::nl(vec![Str, Str], Void));
+    module.add_str("exists", exists, Dfn::nl(vec![Str], Bool));
+    module.add_str("delete", delete, Dfn::nl(vec![Str], Bool));
+    module.add_str("copy", copy, Dfn::nl(vec![Str, Str], Bool));
+    module.add_str("move", _move, Dfn::nl(vec![Str, Str], Bool));
+    module.add_str(
+        "list_files",
         list_files,
         Dfn::nl(vec![Str], Array(Box::from(Str))),
     );
-    module.add(
-        Arc::new("mkdir".into()),
-        mkdir,
-        Dfn::nl(vec![Str], Bool),
-    );
-    module.add(
-        Arc::new("basename".into()),
-        basename,
-        Dfn::nl(vec![Str], Str),
-    );
-    module.add(
-        Arc::new("dirname".into()),
-        dirname,
-        Dfn::nl(vec![Str], Str),
-    );
+    module.add_str("mkdir", mkdir, Dfn::nl(vec![Str], Bool));
+    module.add_str("basename", basename, Dfn::nl(vec![Str], Str));
+    module.add_str("dirname", dirname, Dfn::nl(vec![Str], Str));
 }
 
 dyon_fn! { fn read(path: String) -> Option<String> {

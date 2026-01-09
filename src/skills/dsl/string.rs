@@ -12,50 +12,18 @@ use titlecase::Titlecase;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("string");
-    module.add(Arc::new("upper".into()), upper, Dfn::nl(vec![Str], Str));
-    module.add(Arc::new("lower".into()), lower, Dfn::nl(vec![Str], Str));
-    module.add(Arc::new("title".into()), lower, Dfn::nl(vec![Str], Str));
-    module.add(
-        Arc::new("split".into()),
-        split,
-        Dfn::nl(vec![Str, Str], Str),
-    );
-    module.add(
-        Arc::new("join".into()),
-        join,
-        Dfn::nl(vec![Array(Box::from(Str)), Str], Str),
-    );
-    module.add(
-        Arc::new("replace".into()),
-        replace,
-        Dfn::nl(vec![Str, Str, Str], Str),
-    );
-    module.add(
-        Arc::new("contains".into()),
-        cointains,
-        Dfn::nl(vec![Str, Str], Bool),
-    );
-    module.add(
-        Arc::new("starts_with".into()),
-        starts_with,
-        Dfn::nl(vec![Str, Str], Bool),
-    );
-    module.add(
-        Arc::new("ends_with".into()),
-        ends_with,
-        Dfn::nl(vec![Str, Str], Bool),
-    );
-    module.add(
-        Arc::new("substring".into()),
-        substring,
-        Dfn::nl(vec![Str, F64, F64], Bool),
-    );
-    module.add(Arc::new("length".into()), length, Dfn::nl(vec![Str], F64));
-    module.add(
-        Arc::new("format".into()),
-        format,
-        Dfn::nl(vec![Str, Object], Str),
-    );
+    module.add_str("upper", upper, Dfn::nl(vec![Str], Str));
+    module.add_str("lower", lower, Dfn::nl(vec![Str], Str));
+    module.add_str("title", lower, Dfn::nl(vec![Str], Str));
+    module.add_str("split", split, Dfn::nl(vec![Str, Str], Str));
+    module.add_str("join", join, Dfn::nl(vec![Array(Box::from(Str)), Str], Str));
+    module.add_str("replace", replace, Dfn::nl(vec![Str, Str, Str], Str));
+    module.add_str("contains", cointains, Dfn::nl(vec![Str, Str], Bool));
+    module.add_str("starts_with", starts_with, Dfn::nl(vec![Str, Str], Bool));
+    module.add_str("ends_with", ends_with, Dfn::nl(vec![Str, Str], Bool));
+    module.add_str("substring", substring, Dfn::nl(vec![Str, F64, F64], Bool));
+    module.add_str("length", length, Dfn::nl(vec![Str], F64));
+    module.add_str("format", format, Dfn::nl(vec![Str, Object], Str));
 
     module.add_str(
         "parse_number",

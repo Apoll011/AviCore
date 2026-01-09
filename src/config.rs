@@ -1,10 +1,10 @@
+use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use crate::ctx::runtime;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.

@@ -9,22 +9,13 @@ use serde_json::Value;
 use std::result::Result;
 
 use crate::{get_ctx, has_ctx, remove_ctx};
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("context");
-    module.add(
-        Arc::new("get".into()),
-        get,
-        Dfn::nl(vec![Str], Option(Box::from(Any))),
-    );
-    module.add(Arc::new("has".into()), has, Dfn::nl(vec![Str], Bool));
-    module.add(Arc::new("remove".into()), remove, Dfn::nl(vec![Str], Void));
-    module.add(
-        Arc::new("set".into()),
-        set,
-        Dfn::nl(vec![Str, Any, Bool, F64], Void),
-    );
+    module.add_str("get", get, Dfn::nl(vec![Str], Option(Box::from(Any))));
+    module.add_str("has", has, Dfn::nl(vec![Str], Bool));
+    module.add_str("remove", remove, Dfn::nl(vec![Str], Void));
+    module.add_str("set", set, Dfn::nl(vec![Str, Any, Bool, F64], Void));
 }
 
 #[allow(non_snake_case)]

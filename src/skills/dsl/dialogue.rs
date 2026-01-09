@@ -18,74 +18,54 @@ use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("dialogue");
-    module.add(Arc::new("say".into()), say, Dfn::nl(vec![Str], Void));
-    module.add(Arc::new("say_once".into()), say, Dfn::nl(vec![Str], Void));
-    module.add(Arc::new("listen".into()), listen, Dfn::nl(vec![], Void)); // Last device that sent a utterance will start listening again
+    module.add_str("say", say, Dfn::nl(vec![Str], Void));
+    module.add_str("say_once", say, Dfn::nl(vec![Str], Void));
+    module.add_str("listen", listen, Dfn::nl(vec![], Void)); // Last device that sent a utterance will start listening again
 
-    module.add(
-        Arc::new("on_reply_any".into()),
-        on_reply_any,
-        Dfn::nl(vec![Str, Any], Void),
-    );
-    module.add(
-        Arc::new("on_reply_list_or_none".into()),
+    module.add_str("on_reply_any", on_reply_any, Dfn::nl(vec![Str, Any], Void));
+    module.add_str(
+        "on_reply_list_or_none",
         on_reply_list_or_none,
         Dfn::nl(vec![Str, Any], Void),
     );
-    module.add(
-        Arc::new("on_reply_optional".into()),
+    module.add_str(
+        "on_reply_optional",
         on_reply_optional,
         Dfn::nl(vec![Str, Any], Void),
     );
-    module.add(
-        Arc::new("on_reply_bool".into()),
+    module.add_str(
+        "on_reply_bool",
         on_reply_bool,
         Dfn::nl(vec![Str, Any], Void),
     );
-    module.add(
-        Arc::new("on_reply_mapped".into()),
+    module.add_str(
+        "on_reply_mapped",
         on_reply_mapped,
         Dfn::nl(vec![Str, Any], Void),
     );
 
-    module.add(
-        Arc::new("any_validator".into()),
-        any_validator,
-        Dfn::nl(vec![], Any),
-    );
-    module.add(
-        Arc::new("list_or_none_validator".into()),
+    module.add_str("any_validator", any_validator, Dfn::nl(vec![], Any));
+    module.add_str(
+        "list_or_none_validator",
         list_or_none_validator,
         Dfn::nl(vec![Any], Any),
     );
-    module.add(
-        Arc::new("optional_validator".into()),
+    module.add_str(
+        "optional_validator",
         optional_validator,
         Dfn::nl(vec![], Any),
     );
-    module.add(
-        Arc::new("bool_validator".into()),
-        bool_validator,
-        Dfn::nl(vec![Bool], Any),
-    );
-    module.add(
-        Arc::new("mapped_validator".into()),
+    module.add_str("bool_validator", bool_validator, Dfn::nl(vec![Bool], Any));
+    module.add_str(
+        "mapped_validator",
         mapped_validator,
         Dfn::nl(vec![Any, Any], Any),
     );
 
-    module.add(
-        Arc::new("confirm".into()),
-        confirm,
-        Dfn::nl(vec![Str, Str], Void),
-    );
-    module.add(Arc::new("repeat".into()), repeat, Dfn::nl(vec![], Void)); //Repeats the last spoken utterance (Dont matter the skill)
+    module.add_str("confirm", confirm, Dfn::nl(vec![Str, Str], Void));
+    module.add_str("repeat", repeat, Dfn::nl(vec![], Void)); //Repeats the last spoken utterance (Dont matter the skill)
 
-    module.add(
-        Arc::new("request_attention".into()),
-        req_attention,
-        Dfn::nl(vec![], Void),
-    ); //Call the user name without leaving the current skill
+    module.add_str("request_attention", req_attention, Dfn::nl(vec![], Void)); //Call the user name without leaving the current skill
 }
 
 dyon_fn! {fn say(text: String) {

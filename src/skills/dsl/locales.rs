@@ -5,31 +5,18 @@ use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
 use std::result::Result;
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("locale");
-    module.add(
-        Arc::new("get".into()),
-        locale,
-        Dfn::nl(vec![Str], Option(Box::from(Str))),
-    );
-    module.add(
-        Arc::new("get_fmt".into()),
+    module.add_str("get", locale, Dfn::nl(vec![Str], Option(Box::from(Str))));
+    module.add_str(
+        "get_fmt",
         locale_fmt,
         Dfn::nl(vec![Str, Object], Option(Box::from(Str))),
     );
-    module.add(
-        Arc::new("list".into()),
-        list_locales,
-        Dfn::nl(vec![Str], Any),
-    );
-    module.add(Arc::new("has".into()), has_locale, Dfn::nl(vec![Str], Bool));
-    module.add(
-        Arc::new("current".into()),
-        current_lang,
-        Dfn::nl(vec![], Str),
-    );
+    module.add_str("list", list_locales, Dfn::nl(vec![Str], Any));
+    module.add_str("has", has_locale, Dfn::nl(vec![Str], Bool));
+    module.add_str("current", current_lang, Dfn::nl(vec![], Str));
 }
 
 #[allow(non_snake_case)]

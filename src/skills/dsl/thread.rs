@@ -1,7 +1,7 @@
-use std::sync::Arc;
+use crate::skills::dsl::std::TINVOTS;
+use dyon::Type::{Any, F64, In, Option, Str, Void};
 use dyon::{Dfn, Error, Module, Runtime, Thread, Type, Variable};
-use dyon::Type::{Any, In, Option, Str, Void, F64};
-use crate::skills::dsl::std::{TINVOTS};
+use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("thread");

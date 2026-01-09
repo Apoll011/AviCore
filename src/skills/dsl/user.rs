@@ -4,30 +4,17 @@ use dyon::Type::*;
 use dyon::embed::PushVariable;
 use dyon::{Dfn, Module, Runtime, Variable};
 use std::result::Result;
-use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("user");
-    module.add(Arc::new("name".into()), name, Dfn::nl(vec![], Str));
-    module.add(Arc::new("nickname".into()), nickname, Dfn::nl(vec![], Str));
-    module.add(Arc::new("id".into()), id, Dfn::nl(vec![], Str));
-    module.add(
-        Arc::new("location".into()),
-        location,
-        Dfn::nl(vec![], Object),
-    );
-    module.add(
-        Arc::new("quiet_hours".into()),
-        quiet_hours,
-        Dfn::nl(vec![], Object),
-    );
-    module.add(Arc::new("birthday".into()), birthday, Dfn::nl(vec![], F64));
-    module.add(
-        Arc::new("voice_profile_id".into()),
-        voice_profile_id,
-        Dfn::nl(vec![], Str),
-    );
-    module.add(Arc::new("language".into()), language, Dfn::nl(vec![], Str));
+    module.add_str("name", name, Dfn::nl(vec![], Str));
+    module.add_str("nickname", nickname, Dfn::nl(vec![], Str));
+    module.add_str("id", id, Dfn::nl(vec![], Str));
+    module.add_str("location", location, Dfn::nl(vec![], Object));
+    module.add_str("quiet_hours", quiet_hours, Dfn::nl(vec![], Object));
+    module.add_str("birthday", birthday, Dfn::nl(vec![], F64));
+    module.add_str("voice_profile_id", voice_profile_id, Dfn::nl(vec![], Str));
+    module.add_str("language", language, Dfn::nl(vec![], Str));
 }
 
 dyon_obj! {Location { city, country }}

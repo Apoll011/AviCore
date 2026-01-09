@@ -1,12 +1,11 @@
-use std::sync::Arc;
-use dyon::{Dfn, Lt, Module, Runtime, Type, Variable, LAZY_NO};
-use dyon::Type::{Any, Void, F64};
 use crate::skills::dsl::dyon_helpers::deep_clone;
 use crate::skills::dsl::std::TINVOTS;
+use dyon::Type::{Any, F64, Void};
+use dyon::{Dfn, LAZY_NO, Lt, Module, Runtime, Type, Variable};
+use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {
     module.ns("array");
-
 
     module.add_unop_str("len", len, Dfn::nl(vec![Type::array()], F64));
     module.add_str(
