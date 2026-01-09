@@ -11,12 +11,12 @@ use rhai::Variant;
 ///
 /// It is responsible for loading skills from the filesystem and dispatching
 /// intents to the appropriate skill.
-pub struct SkillManager<'a> {
+pub struct SkillManager {
     /// A collection of loaded skills, keyed by their directory name.
-    skills: HashMap<String, Skill<'a>>,
+    skills: HashMap<String, Skill>,
 }
 
-impl SkillManager<'_> {
+impl SkillManager {
     /// Creates a new `SkillManager` and loads all available skills.
     pub fn new() -> Self {
         info!("Creating skills manager.");
@@ -31,7 +31,7 @@ impl SkillManager<'_> {
     ///
     /// A `HashMap` containing the successfully loaded skills.
     ///
-    pub fn load_skills() -> HashMap<String, Skill<'static>> {
+    pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
         if let Ok(c) = runtime()
@@ -83,7 +83,7 @@ impl SkillManager<'_> {
     /// # Errors
     ///
     /// Returns an error if the path is not a directory or if the skill initialization fails.
-    fn load_skill(path: PathBuf) -> Result<(String, Skill<'static>), Box<dyn std::error::Error>> {
+    fn load_skill(path: PathBuf) -> Result<(String, Skill), Box<dyn std::error::Error>> {
         if !path.is_dir() {
             return Err("Not a directory".into());
         }

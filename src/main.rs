@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate dyon;
-
 mod actions;
 mod api;
 mod config;

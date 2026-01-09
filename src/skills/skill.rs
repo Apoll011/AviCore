@@ -7,7 +7,7 @@ use crate::skills::avi_script::avi_engine::run_avi_script;
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
 /// A skill consists of a Dyon module, a runtime environment, and a configuration context.
-pub struct Skill<'a> {
+pub struct Skill {
     /// The filesystem path to the skill.
     #[allow(dead_code)]
     pathname: String,
@@ -17,12 +17,12 @@ pub struct Skill<'a> {
 
     ast: AST,
     /// The Dyon runtime used to execute the skill.
-    scope: Scope<'a>,
+    scope: Scope<'static>,
     /// The configuration and state of the skill.
     context: SkillContext,
 }
 
-impl Skill<'_> {
+impl Skill {
     /// Creates a new `Skill` instance by loading its configuration and logic from the specified name.
     ///
     /// # Arguments
@@ -55,7 +55,10 @@ impl Skill<'_> {
     }
 
     fn get_ast(path: &str, entry: &str) -> AST {
-        todo!()
+        if let Ok(c) = runtime() {
+            return c.engine.compile_file(format!("{}/{}", path, entry).into()).unwrap();
+        }
+        AST::default()
     }
 
     /// Initializes a Dyon runtime for the skill.

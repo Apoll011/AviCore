@@ -31,7 +31,7 @@ impl IntentAction {
     }
 
     pub async fn parse_as_reply(&self, text: &str) -> bool {
-        let skill_manager = Arc::clone(&self.skill_manager);
+        let skill_manager: Arc<Mutex<SkillManager>> = Arc::clone(&self.skill_manager);
 
         match IntentAction::process_reply_text(text).await {
             Ok(replay) => {
