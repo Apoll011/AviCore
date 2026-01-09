@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
+use rhai::CustomType;
+use rhai::TypeBuilder;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.
@@ -81,6 +83,15 @@ pub struct ConfigSystem {
     pub constants: Arc<RwLock<Vec<ConstantNamed>>>,
     /// Settings defined for the skill.
     pub settings: Arc<RwLock<Vec<SettingNamed>>>,
+}
+
+impl CustomType for ConfigSystem {
+    fn build(mut builder: TypeBuilder<Self>) {
+        builder.with_name("ConfigSystem");
+        builder.with_get_set("path", |obj: &mut Self| obj.path.clone(), |obj: &mut Self, val| obj.path = val);
+        builder.with_get_set("constants", |obj: &mut Self| obj.constants.read().clone(), |obj: &mut Self, val| *obj.constants.write() = val);
+        builder.with_get_set("settings", |obj: &mut Self| obj.settings.read().clone(), |obj: &mut Self, val| *obj.settings.write() = val);
+    }
 }
 
 impl ConfigSystem {

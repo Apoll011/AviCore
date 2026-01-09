@@ -6,7 +6,9 @@ use crate::user::UserManager;
 use avi_device::device::AviDevice;
 use log::{debug, error, info, trace};
 use std::sync::{Arc, OnceLock};
+use rhai::Engine;
 use tokio::runtime::Handle;
+use crate::skills::avi_script::engine::create_avi_script_engine;
 
 /// Holds the runtime configuration and shared resources for the AviCore application.
 pub struct RuntimeContext {
@@ -26,6 +28,8 @@ pub struct RuntimeContext {
     pub context: ContextManager,
 
     pub user: UserManager,
+
+    pub engine: Engine,
 }
 
 /// Global static storage for the `RuntimeContext`.
@@ -64,6 +68,7 @@ pub fn create_runtime(config_path: &str, device: Arc<AviDevice>) {
             configuration: ConfigSystem::new(&format!("{}/config", config_path)),
             context: ContextManager::new(format!("{}/context", config_path)),
             user: UserManager::new(),
+            engine: create_avi_script_engine().unwrap()
         }))
         .unwrap_or_else(|_| {
             error!("Failed to set Runtime Context: already initialized.");

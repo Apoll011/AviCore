@@ -1,3 +1,8 @@
+use rhai::CustomType;
+use rhai::Dynamic;
+use rhai::EvalAltResult;
+use rhai::Position;
+use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -10,7 +15,7 @@ pub struct JsonValue(pub serde_json::Value);
 pub struct YamlValue(pub serde_yaml::Value);
 
 /// Represents a recognized intent from a natural language input.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
 pub struct Intent {
     /// The original input text.
     pub input: String,
@@ -21,7 +26,7 @@ pub struct Intent {
 }
 
 /// Detailed information about a recognized intent.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
 pub struct IntentInfo {
     /// The name of the intent.
     #[serde(rename = "intentName")]
@@ -31,7 +36,7 @@ pub struct IntentInfo {
 }
 
 /// Represents an extracted entity (slot) from the input text.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
 pub struct Slot {
     /// The raw text value of the slot as it appeared in the input.
     #[serde(rename = "rawValue")]
@@ -48,7 +53,7 @@ pub struct Slot {
 }
 
 /// The processed value of a slot.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
 pub struct SlotValue {
     /// The kind of value (e.g., "Custom" or a built-in type like "Instant").
     pub kind: String,
@@ -63,7 +68,7 @@ pub struct SlotValue {
 }
 
 /// The range of characters in the original input string.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
 pub struct SlotRange {
     /// The starting character index (inclusive).
     pub start: usize,

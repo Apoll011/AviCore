@@ -8,24 +8,19 @@ reqwest = { version = "0.12.24", features = ["json", "default-tls"] }
 tokio = { version = "1.35", features = ["full"] }
 serde_json = "1.0.147"
 serde = { version = "1.0.228", features = ["derive"] }
-dyon = "0.51.0"
 serde_yaml = "0.9.34"
 strfmt = "0.2"
 rand = "0.9.2"
 parking_lot = "0.12"
-sha2 = "0.11.0-rc.3"
-hmac = "0.13.0-rc.3"
-hex = "0.4.3"
 chrono = "0.4.42"
-humantime = "2.3.0"
 avi_device = { package = "avi-device", git = "https://github.com/apoll011/avi-device" }
 uuid = { version = "1.19.0", features = ["v4", "fast-rng"] }
 notify-debouncer-mini = "0.7.0"
 log = { version = "0.4.29", features = ["std"] }
 colored = "3.0.0"
-titlecase = "3.6.0"
-lazy_static = "1.5.0"
-vecmath = "1.0.0"
+rhai = { version = "*", features = ["debugging", "decimal", "serde", "sync" ] }
+rhai-url = "*"
+dirs = "6.0.0"
 
 [dev-dependencies]
 async-trait = "0.1.89"

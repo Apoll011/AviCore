@@ -1,22 +1,22 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::skill::Skill;
-use dyon::embed::PushVariable;
 use log::{info, warn};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use rhai::Variant;
 
 /// Manages the lifecycle and execution of skills.
 ///
 /// It is responsible for loading skills from the filesystem and dispatching
 /// intents to the appropriate skill.
-pub struct SkillManager {
+pub struct SkillManager<'a> {
     /// A collection of loaded skills, keyed by their directory name.
-    skills: HashMap<String, Skill>,
+    skills: HashMap<String, Skill<'a>>,
 }
 
-impl SkillManager {
+impl SkillManager<'_> {
     /// Creates a new `SkillManager` and loads all available skills.
     pub fn new() -> Self {
         info!("Creating skills manager.");
@@ -31,7 +31,7 @@ impl SkillManager {
     ///
     /// A `HashMap` containing the successfully loaded skills.
     ///
-    pub fn load_skills() -> HashMap<String, Skill> {
+    pub fn load_skills() -> HashMap<String, Skill<'static>> {
         let mut skills = HashMap::new();
 
         if let Ok(c) = runtime()
@@ -83,7 +83,7 @@ impl SkillManager {
     /// # Errors
     ///
     /// Returns an error if the path is not a directory or if the skill initialization fails.
-    fn load_skill(path: PathBuf) -> Result<(String, Skill), Box<dyn std::error::Error>> {
+    fn load_skill(path: PathBuf) -> Result<(String, Skill<'static>), Box<dyn std::error::Error>> {
         if !path.is_dir() {
             return Err("Not a directory".into());
         }
@@ -137,7 +137,7 @@ impl SkillManager {
         }
     }
 
-    pub fn run_skill_function<T: PushVariable>(
+    pub fn run_skill_function<T: Variant + Clone>(
         &mut self,
         skill_name: &str,
         function_name: &str,

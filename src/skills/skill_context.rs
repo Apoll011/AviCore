@@ -1,7 +1,9 @@
+use rhai::TypeBuilder;
 use crate::config::ConfigSystem;
 use crate::dialogue::languages::LanguageSystem;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use rhai::CustomType;
 
 /// Helper function to provide a default value of `true` for serde.
 fn default_true() -> bool {
@@ -39,7 +41,7 @@ pub struct Manifest {
 }
 
 /// The complete context of a skill, including its manifest, constants, settings, and localized resources.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, CustomType)]
 pub struct SkillContext {
     /// The filesystem path to the skill directory.
     pub path: String,

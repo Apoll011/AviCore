@@ -1,3 +1,4 @@
+use rhai::TypeBuilder;
 use crate::config::setting_or;
 use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
@@ -6,6 +7,7 @@ use rand::prelude::IndexedRandom;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use rhai::CustomType;
 use strfmt::strfmt;
 
 /// Represents the structure of a language resource file.
@@ -35,7 +37,7 @@ pub struct Language {
     pub lang: Vec<IndividualLocale>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, CustomType)]
 pub struct LanguageSystem {
     pub languages: Vec<Language>,
 }
