@@ -147,7 +147,7 @@ macro_rules! set_ctx {
                 $crate::context::ContextScope::Global,
                 $key.to_string(),
                 serde_json::json!($value),
-                Some(Duration::from_secs_f64(ttl)),
+                Some(::std::time::Duration::from_secs_f64(ttl)),
                 $persistent,
             ),
             Err(e) => ::log::error!("Failed to set context: runtime not available: {}", e),
@@ -160,6 +160,18 @@ macro_rules! set_ctx {
                 $key.to_string(),
                 serde_json::json!($value),
                 None,
+                $persistent,
+            ),
+            Err(e) => ::log::error!("Failed to set context: runtime not available: {}", e),
+        }
+    };
+    (skill: $skill:expr, $key:expr, $value:expr, $ttl:expr, $persistent:expr) => {
+        match $crate::ctx::runtime() {
+            Ok(c) => c.context.set(
+                $crate::context::ContextScope::Skill($skill),
+                $key.to_string(),
+                serde_json::json!($value),
+                Some(::std::time::Duration::from_secs($ttl)),
                 $persistent,
             ),
             Err(e) => ::log::error!("Failed to set context: runtime not available: {}", e),

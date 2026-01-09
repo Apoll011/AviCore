@@ -1,4 +1,3 @@
-use crate::dialogue::intent::YamlValue;
 use crate::skills::skill_context::SkillContext;
 use rhai::{Dynamic, Map, NativeCallContext, Variant};
 use serde_json::Value;
@@ -85,11 +84,11 @@ pub fn dynamic_to_json(value: Dynamic) -> Result<Value, String> {
     }
 }
 
-pub fn yaml_to_dynamic(val: &YamlValue) -> Dynamic {
+pub fn yaml_to_dynamic(val: &serde_yaml::Value) -> Dynamic {
     match val {
-        YamlValue(serde_yaml::Value::Null) => Dynamic::UNIT,
-        YamlValue(serde_yaml::Value::Bool(b)) => Dynamic::from(*b),
-        YamlValue(serde_yaml::Value::Number(n)) => {
+        serde_yaml::Value::Null => Dynamic::UNIT,
+        serde_yaml::Value::Bool(b) => Dynamic::from(*b),
+        serde_yaml::Value::Number(n) => {
             if let Some(i) = n.as_i64() {
                 Dynamic::from(i)
             } else if let Some(f) = n.as_f64() {
@@ -98,17 +97,15 @@ pub fn yaml_to_dynamic(val: &YamlValue) -> Dynamic {
                 Dynamic::UNIT
             }
         }
-        YamlValue(serde_yaml::Value::String(s)) => Dynamic::from(s.clone()),
-        YamlValue(serde_yaml::Value::Sequence(seq)) => Dynamic::from_array(
-            seq.iter()
-                .map(|v| yaml_to_dynamic(&YamlValue(v.clone())))
-                .collect(),
-        ),
-        YamlValue(serde_yaml::Value::Mapping(map)) => {
-            let mut dmap = rhai::Map::new();
+        serde_yaml::Value::String(s) => Dynamic::from(s.clone()),
+        serde_yaml::Value::Sequence(seq) => {
+            Dynamic::from_array(seq.iter().map(|v| yaml_to_dynamic(&v.clone())).collect())
+        }
+        serde_yaml::Value::Mapping(map) => {
+            let mut dmap = Map::new();
             for (k, v) in map {
                 if let serde_yaml::Value::String(key) = k {
-                    dmap.insert(key.clone().into(), yaml_to_dynamic(&YamlValue(v.clone())));
+                    dmap.insert(key.clone().into(), yaml_to_dynamic(&v.clone()));
                 }
             }
             Dynamic::from(dmap)

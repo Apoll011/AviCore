@@ -6,14 +6,6 @@ use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-/// A wrapper around `serde_json::Value` to allow implementation of traits like `Eq`, `PartialEq`, and `Hash`.
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
-pub struct JsonValue(pub serde_json::Value);
-
-/// A wrapper around `serde_yaml::Value` to allow implementation of traits like `Eq`, `PartialEq`, and `Hash`.
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize, Default)]
-pub struct YamlValue(pub serde_yaml::Value);
-
 /// Represents a recognized intent from a natural language input.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
 pub struct Intent {
@@ -58,7 +50,7 @@ pub struct SlotValue {
     /// The kind of value (e.g., "Custom" or a built-in type like "Instant").
     pub kind: String,
     /// The actual resolved value of the slot.
-    pub value: JsonValue,
+    pub value: serde_json::Value,
     /// The grain of the value (optional, e.g., for time values).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grain: Option<String>,

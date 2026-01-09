@@ -2,6 +2,8 @@ use rhai::Engine;
 use rhai::module_resolvers::StaticModuleResolver;
 
 mod constant;
+mod context;
+mod dialogue;
 mod json;
 mod settings;
 

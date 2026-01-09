@@ -1,8 +1,10 @@
 use crate::ctx::runtime;
-use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace};
 use parking_lot::RwLock;
 use rhai::CustomType;
+use rhai::Dynamic;
+use rhai::EvalAltResult;
+use rhai::Position;
 use rhai::TypeBuilder;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -10,11 +12,11 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
 
-#[derive(Debug, Deserialize, Clone, Default, Serialize)]
+#[derive(Debug, Deserialize, Clone, Default, Serialize, CustomType)]
 /// Represents a specific configuration setting for a skill.
 pub struct Setting {
     /// The current value of the setting.
-    pub value: YamlValue,
+    pub value: serde_yaml::Value,
     /// The data type of the setting (e.g., "string", "int").
     #[serde(default)]
     pub vtype: Option<String>,
@@ -55,7 +57,7 @@ pub struct SettingsFile {
 #[derive(Deserialize)]
 pub struct ConstFile {
     /// A map of constant names to their values.
-    pub constants: HashMap<String, YamlValue>,
+    pub constants: HashMap<String, serde_yaml::Value>,
 }
 
 /// A named constant value.
@@ -64,7 +66,7 @@ pub struct ConstantNamed {
     /// The name of the constant.
     pub name: String,
     /// The value of the constant.
-    pub value: YamlValue,
+    pub value: serde_yaml::Value,
 }
 
 /// A named setting definition.
@@ -172,7 +174,7 @@ impl ConfigSystem {
     }
 
     /// Converts a map of constants to a vector of `ConstantNamed`.
-    fn const_to_named(constants: &HashMap<String, YamlValue>) -> Vec<ConstantNamed> {
+    fn const_to_named(constants: &HashMap<String, serde_yaml::Value>) -> Vec<ConstantNamed> {
         constants
             .iter()
             .map(|(k, v)| ConstantNamed {
@@ -202,14 +204,14 @@ impl ConfigSystem {
     }
 
     /// Retrieves a constant value by its name.
-    pub fn constant(&self, name: &str) -> Option<YamlValue> {
+    pub fn constant(&self, name: &str) -> Option<serde_yaml::Value> {
         self.get_constants()
             .iter()
             .find(|c| c.name == name)
             .map(|c| c.value.clone())
     }
 
-    pub fn list_constants(&self) -> HashMap<String, YamlValue> {
+    pub fn list_constants(&self) -> HashMap<String, serde_yaml::Value> {
         self.get_constants()
             .iter()
             .map(|c| (c.name.clone(), c.value.clone()))
@@ -255,9 +257,7 @@ pub fn setting<T: DeserializeOwned>(name: &str) -> Option<T> {
     let c = runtime().ok()?;
     let yaml_value = c.configuration.setting(name)?.value.clone();
 
-    match yaml_value {
-        YamlValue(v) => serde_yaml::from_value(v).ok(),
-    }
+    serde_yaml::from_value(yaml_value).ok()
 }
 
 pub fn setting_or<T: DeserializeOwned>(name: &str, default: T) -> T {

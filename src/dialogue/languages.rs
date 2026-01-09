@@ -1,6 +1,5 @@
 use crate::config::setting_or;
 use crate::ctx::runtime;
-use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace, warn};
 use rand::prelude::IndexedRandom;
 use rhai::CustomType;
@@ -16,7 +15,7 @@ pub struct LanguageFile {
     /// The language code (e.g., "en", "pt").
     pub code: String,
     /// A map of resource IDs to their localized values.
-    pub lang: HashMap<String, YamlValue>,
+    pub lang: HashMap<String, serde_yaml::Value>,
 }
 
 /// A localized resource entry.
@@ -25,7 +24,7 @@ pub struct IndividualLocale {
     /// The unique identifier for the localized resource.
     pub id: String,
     /// The localized value (can be a string or a list of strings for randomization).
-    pub value: YamlValue,
+    pub value: serde_yaml::Value,
 }
 
 /// Represents a collection of localized resources for a specific language.
@@ -112,16 +111,16 @@ impl LanguageSystem {
     ///
     /// * `code` - The language code.
     /// * `id` - The resource identifier.
-    pub fn locale(&self, code: &str, id: &str) -> Option<YamlValue> {
+    pub fn locale(&self, code: &str, id: &str) -> Option<serde_yaml::Value> {
         self.languages
             .iter()
             .find(|l| l.code == code)
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
-            .map(|i| match &i.value.0 {
+            .map(|i| match &i.value {
                 serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
                     let mut rng = rand::rng();
                     seq.choose(&mut rng)
-                        .map(|v| YamlValue(v.clone()))
+                        .map(|v| v.clone())
                         .unwrap_or_else(|| i.value.clone())
                 }
                 _ => i.value.clone(),
@@ -142,8 +141,8 @@ impl LanguageSystem {
         }
     }
 
-    fn value_to_string(&self, value: &YamlValue) -> Option<String> {
-        match &value.0 {
+    fn value_to_string(&self, value: &serde_yaml::Value) -> Option<String> {
+        match &value {
             serde_yaml::Value::String(s) => Some(s.clone()),
             _ => None,
         }
@@ -161,7 +160,7 @@ impl LanguageSystem {
             .iter()
             .find(|l| l.code == *lang())
             .and_then(|l| l.lang.iter().find(|i| i.id == id))
-            .map(|i| match &i.value.0 {
+            .map(|i| match &i.value {
                 serde_yaml::Value::Sequence(seq) if !seq.is_empty() => seq
                     .iter()
                     .filter_map(|v| {
@@ -178,9 +177,9 @@ impl LanguageSystem {
             .unwrap_or_else(Vec::new)
     }
 
-    pub fn list(&self, code: &str) -> Vec<(String, YamlValue)> {
+    pub fn list(&self, code: &str) -> Vec<(String, serde_yaml::Value)> {
         let Some(lang) = self.languages.iter().find(|l| l.code == code) else {
-            return Vec::<(String, YamlValue)>::new();
+            return Vec::<(String, serde_yaml::Value)>::new();
         };
 
         lang.lang
