@@ -1,8 +1,8 @@
-use rhai::Position;
-use rhai::TypeBuilder;
+use rhai::CustomType;
 use rhai::Dynamic;
 use rhai::EvalAltResult;
-use rhai::CustomType;
+use rhai::Position;
+use rhai::TypeBuilder;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, CustomType, Clone)]

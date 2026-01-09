@@ -1,9 +1,11 @@
 import "constant" as c;
+import "dialogue" as dialogue;
 
 on_start {
     print("hhh");
     print(c::get("HUE_BRIDGE_IP"));
     print(c::list());
+    print(on_reply(dialogue::bool_validator(true)));
 }
 
 on_intent "hi" {

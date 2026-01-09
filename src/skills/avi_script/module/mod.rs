@@ -13,6 +13,8 @@ pub fn add(engine: &mut Engine) {
     json::add(&mut resolver);
     constant::add(&mut resolver);
     settings::add(&mut resolver);
+    dialogue::add(&mut resolver);
+    context::add(&mut resolver);
 
     engine.set_module_resolver(resolver);
 }

@@ -20,7 +20,21 @@ fn register_types(engine: &mut Engine) {
         .build_type::<crate::dialogue::intent::SlotRange>()
         .build_type::<crate::dialogue::intent::SlotValue>()
         .build_type::<crate::config::Setting>()
-        .build_type::<crate::dialogue::lang_parse::ExtractNumbers>();
+        .build_type::<crate::dialogue::lang_parse::ExtractNumbers>()
+        .build_type::<crate::dialogue::lang_parse::ExtractNumber>()
+        .build_type::<crate::dialogue::lang_parse::ExtractDuration>()
+        .build_type::<crate::dialogue::lang_parse::ExtractDatetime>()
+        .build_type::<crate::dialogue::lang_parse::IsFractional>()
+        .build_type::<crate::dialogue::response::AnyValidator>()
+        .build_type::<crate::dialogue::response::ListOrNoneValidator>()
+        .build_type::<crate::dialogue::response::OptionalValidator>()
+        .build_type::<crate::dialogue::response::BoolValidator>()
+        .build_type::<crate::dialogue::response::MappedValidator<String>>()
+        .build_type::<crate::dialogue::response::MappedValidator<i32>>()
+        .build_type::<crate::dialogue::response::MappedValidator<i64>>()
+        .build_type::<crate::dialogue::response::MappedValidator<f32>>()
+        .build_type::<crate::dialogue::response::MappedValidator<f64>>()
+        .build_type::<crate::dialogue::response::MappedValidator<bool>>();
 }
 
 pub fn create_avi_script_engine() -> Result<Engine, Box<dyn std::error::Error>> {
