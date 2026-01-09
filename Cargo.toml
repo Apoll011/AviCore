@@ -18,7 +18,7 @@ uuid = { version = "1.19.0", features = ["v4", "fast-rng"] }
 notify-debouncer-mini = "0.7.0"
 log = { version = "0.4.29", features = ["std"] }
 colored = "3.0.0"
-rhai = { version = "*", features = ["debugging", "decimal", "serde", "sync" ] }
+rhai = { version = "*", features = ["debugging", "decimal", "serde", "sync"] }
 rhai-url = "*"
 dirs = "6.0.0"
 

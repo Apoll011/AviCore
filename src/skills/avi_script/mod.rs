@@ -4,3 +4,4 @@ mod functions;
 mod helpers;
 mod modules;
 mod syntax;
+mod module;
