@@ -39,7 +39,7 @@ pub struct Manifest {
 }
 
 /// The complete context of a skill, including its manifest, constants, settings, and localized resources.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone)]
 pub struct SkillContext {
     /// The filesystem path to the skill directory.
     pub path: String,
@@ -83,11 +83,5 @@ impl SkillContext {
             Ok(manifest) => Ok(manifest),
             Err(e) => Err(format!("Error parsing manifest file: {}", e)),
         }
-    }
-
-    /// Serializes the `SkillContext` into a JSON string.
-    #[allow(dead_code)]
-    pub fn into_json(self) -> serde_json::Result<String> {
-        serde_json::to_string(&self)
     }
 }

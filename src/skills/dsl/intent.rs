@@ -56,7 +56,7 @@ pub fn get(rt: &mut Runtime) -> Result<Variable, String> {
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
-        Ok(slot.value.value.push_var())
+        Ok(Some(slot.value.value.clone()).push_var())
     } else {
         Ok(Variable::Option(None))
     }
@@ -68,7 +68,7 @@ pub fn get_raw(rt: &mut Runtime) -> Result<Variable, String> {
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
-        Ok(Variable::Str(Arc::new(slot.raw_value.clone())))
+        Ok(Some(slot.raw_value.clone()).push_var())
     } else {
         Ok(Variable::Option(None))
     }
@@ -80,7 +80,7 @@ pub fn full(rt: &mut Runtime) -> Result<Variable, String> {
     let intent: Intent = rt.pop()?;
     let slot = intent.slots.iter().find(|s| s.slot_name == *name);
     if let Some(slot) = slot {
-        Ok(slot.push_var())
+        Ok(Some(slot.push_var()).push_var())
     } else {
         Ok(Variable::Option(None))
     }

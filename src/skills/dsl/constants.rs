@@ -23,7 +23,7 @@ pub fn get_constant(_rt: &mut Runtime) -> Result<Variable, String> {
     let skill_context = ctx(_rt)?;
 
     match skill_context.config.constant(&name) {
-        Some(v) => Ok(PushVariable::push_var(v)),
+        Some(v) => Ok(PushVariable::push_var(&v)),
         None => Ok(PushVariable::push_var(&YamlValue(Yaml::Null))),
     }
 }

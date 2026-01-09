@@ -19,12 +19,13 @@ use crate::actions::intent::IntentAction;
 use crate::actions::mesh::MeshAction;
 use crate::config::setting_or;
 use crate::context::context_cleanup_task;
-use crate::ctx::create_runtime;
+use crate::ctx::{create_runtime, runtime};
 use crate::log::AviCoreLogger;
-use ::log::info;
+use ::log::{error, info};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use std::sync::Arc;
+use std::time::Duration;
 
 /// Entry point for the AviCore application.
 ///
@@ -40,6 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting the System");
 
+    let config_path = "./config";
     let config = AviDeviceConfig {
         node_name: "avi-core".to_string(),
         device_type: AviDeviceType::CORE,
@@ -51,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     device.start_event_loop();
 
-    create_runtime("./config", device);
+    create_runtime(config_path, device);
 
     register_action!(IntentAction, {
         watch_skill_dir: setting_or::<bool>("watch_skill_dir", false),
@@ -63,6 +65,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     register_action!(MeshAction);
+
+    watch_dir!(&format!("{}/config", config_path), Duration::from_secs(1), async: |_event| {
+        match runtime() {
+            Ok(v) => {
+                info!("Change in config directory. Reloading Configuration.");
+                v.configuration.reload()
+            },
+            Err(e) => error!("Error reloading configuration: {}", e),
+        }
+    });
 
     context_cleanup_task();
 

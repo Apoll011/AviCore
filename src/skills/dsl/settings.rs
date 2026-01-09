@@ -22,7 +22,7 @@ pub fn get_setting(_rt: &mut Runtime) -> Result<Variable, String> {
     let skill_context = ctx(_rt)?;
 
     match skill_context.config.setting(&name) {
-        Some(v) => Ok(PushVariable::push_var(&v.value)),
+        Some(v) => Ok(PushVariable::push_var(&Some(v.value))),
         None => Ok(Variable::Option(None)),
     }
 }

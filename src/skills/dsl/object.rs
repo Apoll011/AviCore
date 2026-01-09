@@ -1,6 +1,6 @@
 use crate::skills::dsl::std::TINVOTS;
-use dyon::Type::{Any, F64, In, Option, Str, Void, Object, Bool, Array};
-use dyon::{Dfn, Error, Module, Runtime, Thread, Type, Variable};
+use dyon::Type::{Array, Bool, Object, Str};
+use dyon::{Dfn, Module, Runtime, Variable};
 use std::sync::Arc;
 
 pub fn add_functions(module: &mut Module) {

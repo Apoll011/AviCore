@@ -1,11 +1,11 @@
+use ::log::info;
 use ::std::ffi::OsStr;
 use ::std::sync::Arc;
-use ::log::info;
-use dyon::{error, load, Call, FnIndex, Module, Runtime};
 use dyon::embed::PushVariable;
+use dyon::{Call, FnIndex, Module, Runtime, error, load};
 
-pub mod avi_dsl;
 mod array;
+pub mod avi_dsl;
 mod color;
 mod constants;
 mod context;
@@ -16,9 +16,11 @@ mod fs;
 mod intent;
 mod json;
 mod linear;
+mod link;
 mod locales;
 mod log;
 mod math;
+mod object;
 mod settings;
 mod skill;
 mod std;
@@ -27,8 +29,6 @@ mod thread;
 mod time;
 mod user;
 mod utils;
-mod link;
-mod object;
 
 use avi_dsl::load_module;
 
@@ -42,9 +42,10 @@ use avi_dsl::load_module;
 /// # Errors
 ///
 /// Returns an error if any part of the module loading process fails.
-pub fn create(name: &str,
-              entry: &str,
-              skill_path: &str,
+pub fn create(
+    name: &str,
+    entry: &str,
+    skill_path: &str,
 ) -> Result<Arc<Module>, Box<dyn ::std::error::Error>> {
     let mut dyon_module = load_module();
 
@@ -70,10 +71,7 @@ pub fn create(name: &str,
         }
     }
 
-    if error(load(
-        &format!("{}/{}", skill_path, entry),
-        &mut dyon_module,
-    )) {
+    if error(load(&format!("{}/{}", skill_path, entry), &mut dyon_module)) {
         return Err(format!("Error loading skill {}", name).into());
     } else {
         info!("Skill {} loaded!", name)
@@ -93,7 +91,7 @@ pub fn create(name: &str,
 ///
 /// Returns an error if the intent name is missing or if the corresponding Dyon function cannot be found.
 pub fn run_function<T: PushVariable>(
-    mut runtime: &Runtime,
+    runtime: &mut Runtime,
     module: &Arc<Module>,
     function_name: &str,
     args: Vec<T>,
@@ -102,21 +100,22 @@ pub fn run_function<T: PushVariable>(
     for arg in args {
         call = call.arg(arg);
     }
-    let f_index = module
-        .find_function(&Arc::new(function_name.to_string()), 0);
+    let f_index = module.find_function(&Arc::new(function_name.to_string()), 0);
 
     match f_index {
-        FnIndex::Loaded(_f_index) => Ok(error(call.run(&mut runtime, module))),
+        FnIndex::Loaded(_f_index) => Ok(error(call.run(runtime, module))),
         _ => Err(format!("Could not find function `{}`", function_name).into()),
     }
 }
-
 
 /// Starts the skill by running its main module.
 ///
 /// # Errors
 ///
 /// Returns an error if the skill is disabled or if the runtime fails.
-pub fn start(mut runtime: &Runtime, module: &Arc<Module>) -> Result<bool, Box<dyn ::std::error::Error>> {
+pub fn start(
+    runtime: &mut Runtime,
+    module: &Arc<Module>,
+) -> Result<bool, Box<dyn ::std::error::Error>> {
     Ok(error(runtime.run(module)))
 }

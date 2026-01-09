@@ -1,10 +1,10 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
+use crate::skills::dsl;
 use crate::skills::skill_context::SkillContext;
 use dyon::embed::PushVariable;
 use dyon::{Module, Runtime};
 use std::sync::Arc;
-use crate::skills::dsl;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -37,10 +37,11 @@ impl Skill {
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
 
-        let module: Arc<Module> = match dsl::create(&name, &context.info.entry, &Self::skill_path(&name)?) {
-            Ok(v) => v,
-            Err(e) => return Err(format!("Could not load skill module ({})", e).into()),
-        };
+        let module: Arc<Module> =
+            match dsl::create(&name, &context.info.entry, &Self::skill_path(&name)?) {
+                Ok(v) => v,
+                Err(e) => return Err(format!("Could not load skill module ({})", e).into()),
+            };
 
         Ok(Self {
             pathname: Self::skill_path(&name)?,
@@ -76,7 +77,7 @@ impl Skill {
         if self.disabled() {
             return Err("Skill is disabled".into());
         }
-        dsl::start(&self.runtime, &self.module)
+        dsl::start(&mut self.runtime, &self.module)
     }
 
     /// Formats an intent name into a Dyon-compatible function name.
@@ -114,7 +115,7 @@ impl Skill {
         function_name: &str,
         args: Vec<T>,
     ) -> Result<bool, Box<dyn std::error::Error>> {
-        dsl::run_function::<T>(&self.runtime, &self.module, function_name, args)
+        dsl::run_function::<T>(&mut self.runtime, &self.module, function_name, args)
     }
 
     /// Checks if the skill is currently disabled.

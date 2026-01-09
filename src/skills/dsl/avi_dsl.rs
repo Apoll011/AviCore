@@ -7,6 +7,7 @@ use crate::skills::dsl::dyon_helpers::{dyon_variable_to_json, variable_to_json};
 use crate::skills::skill_context::{Manifest, SkillContext};
 use dyon::embed::{PopVariable, PushVariable};
 use dyon::{Runtime, Variable};
+use parking_lot::RwLock;
 use serde_json::json;
 use serde_yaml::{Mapping, Sequence, Value as Yaml};
 use std::collections::HashMap;
@@ -70,9 +71,39 @@ dyon_obj! {IndividualLocale { id, value }}
 dyon_obj! {Language { code, lang }}
 dyon_obj! {Manifest { id, name, description, disabled, entry, capabilities, can_repeat_last_response, can_go_again, permissions, author, version }}
 dyon_obj! {LanguageSystem { languages }}
-dyon_obj! {ConfigSystem { settings, constants }}
 dyon_obj! {SkillContext { path, info, config, languages }}
 dyon_obj! {Setting {value, vtype, description, ui, required, min, max, enum_, advanced, group}}
+
+impl PopVariable for ConfigSystem {
+    fn pop_var(rt: &Runtime, var: &Variable) -> Result<Self, String> {
+        use dyon::embed::obj_field;
+        let var = rt.get(var);
+        if let &Variable::Object(ref obj) = var {
+            Ok(ConfigSystem {
+                path: obj_field(rt, obj, "path")?,
+                settings: Arc::new(RwLock::new(obj_field(rt, obj, "settings")?)),
+                constants: Arc::new(RwLock::new(obj_field(rt, obj, "constants")?)),
+            })
+        } else {
+            Err(rt.expected(var, "ConfigSystem"))
+        }
+    }
+}
+impl PushVariable for ConfigSystem {
+    fn push_var(&self) -> Variable {
+        use std::collections::HashMap;
+        use std::sync::Arc;
+
+        let mut obj: HashMap<_, Variable> = HashMap::new();
+        obj.insert(Arc::new("path".into()), self.path.push_var());
+        obj.insert(Arc::new("settings".into()), self.get_settings().push_var());
+        obj.insert(
+            Arc::new("constants".into()),
+            self.get_constants().push_var(),
+        );
+        Variable::Object(Arc::new(obj))
+    }
+}
 
 impl PopVariable for JsonValue {
     /// Pops a `JsonValue` from the Dyon runtime.

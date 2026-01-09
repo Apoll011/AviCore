@@ -4,11 +4,10 @@ use crate::skills::dsl::dyon_helpers::deep_clone;
 use dyon::Type::{Any, Bool, F64, Link, Secret, Str};
 use dyon::{
     Dfn, Error, LAZY_AND, LAZY_NO, LAZY_OR, LAZY_UNWRAP_OR, Lt, Module, Runtime, Type, Variable,
-    load_str,
 };
 use lazy_static::lazy_static;
 use std::result::Result;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 lazy_static! {
     pub(crate) static ref LESS: Arc<String> = Arc::new("less".into());
@@ -602,7 +601,6 @@ pub fn add_functions(module: &mut Module) {
     module.add_str("some", some, Dfn::nl(vec![Any], Type::option()));
     module.add_str("ok", ok, Dfn::nl(vec![Any], Type::result()));
     module.add_str("err", err, Dfn::nl(vec![Any], Type::result()));
-
 }
 
 pub fn add_mat_operations(module: &mut Module) {

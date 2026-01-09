@@ -61,7 +61,7 @@ pub fn create_runtime(config_path: &str, device: Arc<AviDevice>) {
                 max_retries: Some(3),
             })),
             language_system: LanguageSystem::new(&format!("{}/lang", config_path)),
-            configuration: ConfigSystem::new(config_path),
+            configuration: ConfigSystem::new(&format!("{}/config", config_path)),
             context: ContextManager::new(format!("{}/context", config_path)),
             user: UserManager::new(),
         }))

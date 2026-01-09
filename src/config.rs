@@ -1,10 +1,12 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace};
+use parking_lot::RwLock;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.
@@ -72,23 +74,35 @@ pub struct SettingNamed {
     pub setting: Setting,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ConfigSystem {
+    pub path: String,
     /// Constants defined for the skill.
-    pub constants: Vec<ConstantNamed>,
+    pub constants: Arc<RwLock<Vec<ConstantNamed>>>,
     /// Settings defined for the skill.
-    pub settings: Vec<SettingNamed>,
+    pub settings: Arc<RwLock<Vec<SettingNamed>>>,
 }
 
 impl ConfigSystem {
     pub fn new(path: &str) -> Self {
         trace!("Attempting to create config system from path: {}", path);
+        let consts = Self::load_const(path);
+        let settings = Self::load_settings(path);
+        info!("Created config system from: {}", path);
+        Self {
+            path: path.to_string(),
+            constants: Arc::new(RwLock::new(consts)),
+            settings: Arc::new(RwLock::new(settings)),
+        }
+    }
+
+    fn load_const(path: &str) -> Vec<ConstantNamed> {
         let const_path = format!("{}/const.config", path);
         let content = match fs::read_to_string(&const_path) {
             Ok(v) => v,
             Err(e) => {
                 debug!("No const.config found at {}: {}", const_path, e);
-                return ConfigSystem::default();
+                return vec![];
             }
         };
 
@@ -96,16 +110,20 @@ impl ConfigSystem {
             Ok(v) => v,
             Err(e) => {
                 error!("Failed to parse const.config at {}: {}", const_path, e);
-                return ConfigSystem::default();
+                return vec![];
             }
         };
 
+        Self::const_to_named(&parsed_const.constants)
+    }
+
+    fn load_settings(path: &str) -> Vec<SettingNamed> {
         let settings_path = format!("{}/settings.config", path);
         let content_settings = match fs::read_to_string(&settings_path) {
             Ok(v) => v,
             Err(e) => {
                 debug!("No settings.config found at {}: {}", settings_path, e);
-                return ConfigSystem::default();
+                return vec![];
             }
         };
 
@@ -116,16 +134,18 @@ impl ConfigSystem {
                     "Failed to parse settings.config at {}: {}",
                     settings_path, e
                 );
-                return ConfigSystem::default();
+                return vec![];
             }
         };
 
-        info!("Created config system from: {}", path);
+        Self::settings_to_named(&parsed_settings.settings)
+    }
 
-        Self {
-            constants: Self::const_to_named(&parsed_const.constants),
-            settings: Self::settings_to_named(&parsed_settings.settings),
-        }
+    pub fn reload(&self) {
+        let path = self.path.as_str();
+
+        *self.constants.write() = Self::load_const(path);
+        *self.settings.write() = Self::load_settings(path);
     }
 
     /// Converts a map of constants to a vector of `ConstantNamed`.
@@ -151,45 +171,45 @@ impl ConfigSystem {
     }
 
     /// Retrieves a setting by its name.
-    pub fn setting(&self, name: &str) -> Option<&Setting> {
-        self.settings
+    pub fn setting(&self, name: &str) -> Option<Setting> {
+        self.get_settings()
             .iter()
             .find(|s| s.name == name)
-            .map(|s| &s.setting)
+            .map(|s| s.setting.clone())
     }
 
     /// Retrieves a constant value by its name.
-    pub fn constant(&self, name: &str) -> Option<&YamlValue> {
-        self.constants
+    pub fn constant(&self, name: &str) -> Option<YamlValue> {
+        self.get_constants()
             .iter()
             .find(|c| c.name == name)
-            .map(|c| &c.value)
+            .map(|c| c.value.clone())
     }
 
     pub fn list_constants(&self) -> Vec<(String, YamlValue)> {
-        self.constants
+        self.get_constants()
             .iter()
             .map(|c| (c.name.clone(), c.value.clone()))
             .collect()
     }
 
     pub fn has_constant(&self, name: &str) -> bool {
-        self.constants.iter().any(|c| c.name == name)
+        self.get_constants().iter().any(|c| c.name == name)
     }
 
     pub fn list_settings(&self) -> Vec<(String, YamlValue)> {
-        self.settings
+        self.get_settings()
             .iter()
             .map(|s| (s.name.clone(), s.setting.value.clone()))
             .collect()
     }
 
     pub fn has_setting(&self, name: &str) -> bool {
-        self.settings.iter().any(|s| s.name == name)
+        self.get_settings().iter().any(|s| s.name == name)
     }
 
     pub fn get_setting_full(&self, name: &str) -> SettingNamed {
-        self.settings
+        self.get_settings()
             .iter()
             .find(|s| s.name == name)
             .cloned()
@@ -197,6 +217,14 @@ impl ConfigSystem {
                 name: name.to_string(),
                 setting: Setting::default(),
             })
+    }
+
+    pub fn get_settings(&self) -> Vec<SettingNamed> {
+        self.settings.read().clone()
+    }
+
+    pub fn get_constants(&self) -> Vec<ConstantNamed> {
+        self.constants.read().clone()
     }
 }
 

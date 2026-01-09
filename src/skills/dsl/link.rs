@@ -1,5 +1,5 @@
 use crate::skills::dsl::std::TINVOTS;
-use dyon::Type::{Any, Option, Link, Bool};
+use dyon::Type::{Any, Bool, Link, Option};
 use dyon::{Dfn, Module, Runtime, Variable};
 
 pub fn add_functions(module: &mut Module) {
