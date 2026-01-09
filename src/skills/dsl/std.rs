@@ -441,46 +441,6 @@ pub(crate) fn explain_where(rt: &mut Runtime) -> Result<Variable, String> {
     Ok(Variable::F64(val, Some(wh)))
 }
 
-pub(crate) fn head(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::Option(match rt.get(&v) {
-        &Variable::Link(ref link) => link.head(),
-        x => return Err(rt.expected_arg(0, x, "link")),
-    }))
-}
-
-pub(crate) fn tip(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::Option(match rt.get(&v) {
-        &Variable::Link(ref link) => link.tip(),
-        x => return Err(rt.expected_arg(0, x, "link")),
-    }))
-}
-
-pub(crate) fn tail(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::Link(Box::new(match rt.get(&v) {
-        &Variable::Link(ref link) => link.tail(),
-        x => return Err(rt.expected_arg(0, x, "link")),
-    })))
-}
-
-pub(crate) fn neck(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::Link(Box::new(match rt.get(&v) {
-        &Variable::Link(ref link) => link.neck(),
-        x => return Err(rt.expected_arg(0, x, "link")),
-    })))
-}
-
-pub(crate) fn is_empty(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::bool(match rt.get(&v) {
-        &Variable::Link(ref link) => link.is_empty(),
-        x => return Err(rt.expected_arg(0, x, "link")),
-    }))
-}
-
 pub(crate) fn _typeof(rt: &mut Runtime) -> Result<Variable, String> {
     use dyon::Variable::*;
 
@@ -504,98 +464,6 @@ pub(crate) fn _typeof(rt: &mut Runtime) -> Result<Variable, String> {
         Closure(_, _) => CLOSURE_TYPE.clone(),
         In(_) => IN_TYPE.clone(),
     }))
-}
-
-pub(crate) fn load__source_imports(rt: &mut Runtime) -> Result<Variable, String> {
-    use dyon::load;
-
-    let modules = rt.stack.pop().expect(TINVOTS);
-    let source = rt.stack.pop().expect(TINVOTS);
-    let mut new_module = Module::empty();
-    new_module.import_ext_prelude(&rt.module);
-    new_module.import_tr_prelude(&rt.module);
-    let x = rt.get(&modules);
-    match x {
-        &Variable::Array(ref array) => {
-            for it in &**array {
-                match rt.get(it) {
-                    &Variable::RustObject(ref obj) => {
-                        match obj.lock().unwrap().downcast_ref::<Arc<Module>>() {
-                            Some(m) => new_module.import(m),
-                            None => return Err(rt.expected_arg(1, x, "[Module]")),
-                        }
-                    }
-                    x => return Err(rt.expected_arg(1, x, "[Module]")),
-                }
-            }
-        }
-        x => return Err(rt.expected_arg(1, x, "[Module]")),
-    }
-    Ok(match rt.get(&source) {
-        &Variable::Str(ref text) => {
-            if let Err(err) = load(text, &mut new_module) {
-                Variable::Result(Err(Box::new(Error {
-                    message: Variable::Str(Arc::new(format!(
-                        "When attempting to load module:\n{}",
-                        err
-                    ))),
-                    trace: vec![],
-                })))
-            } else {
-                Variable::Result(Ok(Box::new(Variable::RustObject(Arc::new(Mutex::new(
-                    Arc::new(new_module),
-                ))))))
-            }
-        }
-        x => return Err(rt.expected_arg(0, x, "str")),
-    })
-}
-
-pub(crate) fn module__in_string_imports(rt: &mut Runtime) -> Result<Variable, String> {
-    let modules = rt.stack.pop().expect(TINVOTS);
-    let source = rt.stack.pop().expect(TINVOTS);
-    let source = match rt.get(&source) {
-        &Variable::Str(ref t) => t.clone(),
-        x => return Err(rt.expected_arg(1, x, "str")),
-    };
-    let name = rt.stack.pop().expect(TINVOTS);
-    let name = match rt.get(&name) {
-        &Variable::Str(ref t) => t.clone(),
-        x => return Err(rt.expected_arg(0, x, "str")),
-    };
-    let mut new_module = Module::empty();
-    new_module.import_ext_prelude(&rt.module);
-    new_module.import_tr_prelude(&rt.module);
-    let x = rt.get(&modules);
-    match x {
-        &Variable::Array(ref array) => {
-            for it in &**array {
-                match rt.get(it) {
-                    &Variable::RustObject(ref obj) => {
-                        match obj.lock().unwrap().downcast_ref::<Arc<Module>>() {
-                            Some(m) => new_module.import(m),
-                            None => return Err(rt.expected_arg(2, x, "[Module]")),
-                        }
-                    }
-                    x => return Err(rt.expected_arg(2, x, "[Module]")),
-                }
-            }
-        }
-        x => return Err(rt.expected_arg(2, x, "[Module]")),
-    }
-    Ok(if let Err(err) = load_str(&name, source, &mut new_module) {
-        Variable::Result(Err(Box::new(Error {
-            message: Variable::Str(Arc::new(format!(
-                "When attempting to load module:\n{}",
-                err
-            ))),
-            trace: vec![],
-        })))
-    } else {
-        Variable::Result(Ok(Box::new(Variable::RustObject(Arc::new(Mutex::new(
-            Arc::new(new_module),
-        ))))))
-    })
 }
 
 dyon_fn! {fn none() -> Variable {Variable::Option(None)}}
@@ -682,27 +550,6 @@ pub(crate) fn unwrap_err(rt: &mut Runtime) -> Result<Variable, String> {
     })
 }
 
-pub(crate) fn has(rt: &mut Runtime) -> Result<Variable, String> {
-    let key = rt.stack.pop().expect(TINVOTS);
-    let key = match rt.get(&key) {
-        &Variable::Str(ref t) => t.clone(),
-        x => return Err(rt.expected_arg(1, x, "str")),
-    };
-    let obj = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::bool(match rt.get(&obj) {
-        &Variable::Object(ref obj) => obj.contains_key(&key),
-        x => return Err(rt.expected_arg(0, x, "object")),
-    }))
-}
-
-pub(crate) fn keys(rt: &mut Runtime) -> Result<Variable, String> {
-    let obj = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::Array(Arc::new(match rt.get(&obj) {
-        &Variable::Object(ref obj) => obj.keys().map(|k| Variable::Str(k.clone())).collect(),
-        x => return Err(rt.expected_arg(0, x, "object")),
-    })))
-}
-
 pub fn add_functions(module: &mut Module) {
     use dyon::Type::*;
 
@@ -714,17 +561,6 @@ pub fn add_functions(module: &mut Module) {
     module.add_str("clone", clone, Dfn::nl(vec![Any], Any));
 
     module.add_str("typeof", _typeof, Dfn::nl(vec![Any], Str));
-
-    module.add_str(
-        "load__source_imports",
-        load__source_imports,
-        Dfn::nl(vec![Str, Type::array()], Type::result()),
-    );
-    module.add_str(
-        "module__in_string_imports",
-        module__in_string_imports,
-        Dfn::nl(vec![Str, Str, Type::array()], Type::result()),
-    );
 
     module.add_str(
         "why",
@@ -747,12 +583,6 @@ pub fn add_functions(module: &mut Module) {
         Dfn::nl(vec![F64, Any], Secret(Box::new(F64))),
     );
 
-    module.add_str("head", head, Dfn::nl(vec![Link], Any));
-    module.add_str("tip", tip, Dfn::nl(vec![Link], Option(Box::new(Any))));
-    module.add_str("tail", tail, Dfn::nl(vec![Link], Link));
-    module.add_str("neck", neck, Dfn::nl(vec![Link], Link));
-    module.add_str("is_empty", is_empty, Dfn::nl(vec![Link], Bool));
-
     module.add_str(
         "unwrap_or",
         unwrap_or,
@@ -773,8 +603,6 @@ pub fn add_functions(module: &mut Module) {
     module.add_str("ok", ok, Dfn::nl(vec![Any], Type::result()));
     module.add_str("err", err, Dfn::nl(vec![Any], Type::result()));
 
-    module.add_str("has", has, Dfn::nl(vec![Object, Str], Bool));
-    module.add_str("keys", keys, Dfn::nl(vec![Object], Array(Box::new(Str))));
 }
 
 pub fn add_mat_operations(module: &mut Module) {
