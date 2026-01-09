@@ -1,6 +1,6 @@
 use crate::api::response::Response;
 use log::{debug, error, trace};
-use reqwest::Client;
+use reqwest::{Client, Method, RequestBuilder};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -20,9 +20,27 @@ pub async fn send_dict_to_server(
     url: &str,
     args: HashMap<String, String>,
 ) -> Result<Response, Box<dyn std::error::Error>> {
+    send(client, url, args, Method::GET).await
+}
+
+fn get_builder(client: &Client, url: &str, t: Method) -> RequestBuilder {
+    match t {
+        Method::GET => client.get(url),
+        Method::POST => client.post(url),
+        Method::PUT => client.put(url),
+        Method::PATCH => client.patch(url),
+        Method::DELETE => client.delete(url),
+        Method::HEAD => client.head(url),
+        _ => {
+            error!("Method {} Not supported!", t);
+            client.post(url)
+        },
+    }
+}
+pub async fn send(client: &Client, url: &str, args: HashMap<String, String>, method: Method) -> Result<Response, Box<dyn std::error::Error>>  {
     trace!("Sending request to server: {} with args: {:?}", url, args);
 
-    let resp = match client.get(url).query(&args).send().await {
+    let resp = match get_builder(client, url, method).query(&args).send().await {
         Ok(r) => r,
         Err(e) => {
             error!("Failed to send request to {}: {}", url, e);
