@@ -18,7 +18,7 @@ fn on_intent_syntax_handler(
     let block = &inputs[1];
 
     let i_name = context.scope().get_value::<ImmutableString>("INTENT_NAME");
-    
+
     if i_name.is_some() && i_name.unwrap().eq_ignore_ascii_case(&intent_name) {
         let scope = context.scope_mut();
         scope.push_constant("name", intent_name);

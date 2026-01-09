@@ -2,13 +2,13 @@ use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace};
 use parking_lot::RwLock;
+use rhai::CustomType;
+use rhai::TypeBuilder;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
-use rhai::CustomType;
-use rhai::TypeBuilder;
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize)]
 /// Represents a specific configuration setting for a skill.
@@ -68,7 +68,7 @@ pub struct ConstantNamed {
 }
 
 /// A named setting definition.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct SettingNamed {
     /// The name of the setting.
     pub name: String,
@@ -88,9 +88,21 @@ pub struct ConfigSystem {
 impl CustomType for ConfigSystem {
     fn build(mut builder: TypeBuilder<Self>) {
         builder.with_name("ConfigSystem");
-        builder.with_get_set("path", |obj: &mut Self| obj.path.clone(), |obj: &mut Self, val| obj.path = val);
-        builder.with_get_set("constants", |obj: &mut Self| obj.constants.read().clone(), |obj: &mut Self, val| *obj.constants.write() = val);
-        builder.with_get_set("settings", |obj: &mut Self| obj.settings.read().clone(), |obj: &mut Self, val| *obj.settings.write() = val);
+        builder.with_get_set(
+            "path",
+            |obj: &mut Self| obj.path.clone(),
+            |obj: &mut Self, val| obj.path = val,
+        );
+        builder.with_get_set(
+            "constants",
+            |obj: &mut Self| obj.constants.read().clone(),
+            |obj: &mut Self, val| *obj.constants.write() = val,
+        );
+        builder.with_get_set(
+            "settings",
+            |obj: &mut Self| obj.settings.read().clone(),
+            |obj: &mut Self, val| *obj.settings.write() = val,
+        );
     }
 }
 
@@ -197,7 +209,7 @@ impl ConfigSystem {
             .map(|c| c.value.clone())
     }
 
-    pub fn list_constants(&self) -> Vec<(String, YamlValue)> {
+    pub fn list_constants(&self) -> HashMap<String, YamlValue> {
         self.get_constants()
             .iter()
             .map(|c| (c.name.clone(), c.value.clone()))
@@ -208,10 +220,10 @@ impl ConfigSystem {
         self.get_constants().iter().any(|c| c.name == name)
     }
 
-    pub fn list_settings(&self) -> Vec<(String, YamlValue)> {
+    pub fn list_settings(&self) -> HashMap<String, Setting> {
         self.get_settings()
             .iter()
-            .map(|s| (s.name.clone(), s.setting.value.clone()))
+            .map(|s| (s.name.clone(), s.setting.clone()))
             .collect()
     }
 

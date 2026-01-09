@@ -1,9 +1,9 @@
-use rhai::{Dynamic, Engine};
 use rhai::packages::Package;
+use rhai::{Engine};
 use rhai_url::UrlPackage;
 
-const MAX_MEMORY: usize = 10 * 1024 * 1024;   // 10MB
-const MAX_STACK: isize = 1024 * 1024;    // 1MB
+const MAX_MEMORY: usize = 10 * 1024 * 1024; // 10MB
+const MAX_STACK: isize = 1024 * 1024; // 1MB
 
 fn constraint_engine(engine: &mut Engine) {
     engine.set_max_array_size(256);

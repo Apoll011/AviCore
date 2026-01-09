@@ -2,10 +2,10 @@ use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::skill::Skill;
 use log::{info, warn};
+use rhai::Variant;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use rhai::Variant;
 
 /// Manages the lifecycle and execution of skills.
 ///

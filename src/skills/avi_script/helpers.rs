@@ -1,6 +1,21 @@
-use rhai::{Dynamic, Map};
+use crate::dialogue::intent::YamlValue;
+use crate::skills::skill_context::SkillContext;
+use rhai::{Dynamic, Map, NativeCallContext, Variant};
 use serde_json::Value;
 use std::result::Result;
+
+#[macro_export]
+macro_rules! register_skill_func {
+    ($module:expr, $name:expr, ($($param:ident : $type:ty),*), $default:expr, |$skill_ctx:ident| $body:expr) => {
+        rhai::FuncRegistration::new($name)
+            .set_into_module($module, |ctx: rhai::NativeCallContext, $($param : $type),*| {
+                $crate::skills::avi_script::helpers::skill_context(ctx, $default, |$skill_ctx| $body)
+            });
+    };
+    ($module:expr, $name:expr, ($($param:ident : $type:ty),*), |$skill_ctx:ident| $body:expr) => {
+        register_skill_func!($module, $name, ($($param : $type),*), ::std::default::Default::default(), |$skill_ctx| $body);
+    };
+}
 
 pub fn json_to_dynamic(value: Value) -> Dynamic {
     match value {
@@ -68,4 +83,53 @@ pub fn dynamic_to_json(value: Dynamic) -> Result<Value, String> {
         }
         other => Err(format!("Cannot convert {} to JSON", other)),
     }
+}
+
+pub fn yaml_to_dynamic(val: &YamlValue) -> Dynamic {
+    match val {
+        YamlValue(serde_yaml::Value::Null) => Dynamic::UNIT,
+        YamlValue(serde_yaml::Value::Bool(b)) => Dynamic::from(*b),
+        YamlValue(serde_yaml::Value::Number(n)) => {
+            if let Some(i) = n.as_i64() {
+                Dynamic::from(i)
+            } else if let Some(f) = n.as_f64() {
+                Dynamic::from(f)
+            } else {
+                Dynamic::UNIT
+            }
+        }
+        YamlValue(serde_yaml::Value::String(s)) => Dynamic::from(s.clone()),
+        YamlValue(serde_yaml::Value::Sequence(seq)) => Dynamic::from_array(
+            seq.iter()
+                .map(|v| yaml_to_dynamic(&YamlValue(v.clone())))
+                .collect(),
+        ),
+        YamlValue(serde_yaml::Value::Mapping(map)) => {
+            let mut dmap = rhai::Map::new();
+            for (k, v) in map {
+                if let serde_yaml::Value::String(key) = k {
+                    dmap.insert(key.clone().into(), yaml_to_dynamic(&YamlValue(v.clone())));
+                }
+            }
+            Dynamic::from(dmap)
+        }
+        _ => Dynamic::UNIT,
+    }
+}
+
+pub fn skill_context<T: Variant + Clone, F>(ctx: NativeCallContext, default: T, func: F) -> T
+where
+    F: Fn(SkillContext) -> T,
+{
+    let tag = match ctx.tag() {
+        Some(t) => t,
+        None => return default,
+    };
+
+    let skill_context = match tag.clone().try_cast::<SkillContext>() {
+        Some(c) => c,
+        None => return default,
+    };
+
+    func(skill_context)
 }

@@ -1,5 +1,9 @@
+import "constant" as c;
+
 on_start {
     print("hhh");
+    print(c::get("HUE_BRIDGE_IP"));
+    print(c::list());
 }
 
 on_intent "hi" {

@@ -1,9 +1,9 @@
-use rhai::TypeBuilder;
 use crate::config::ConfigSystem;
 use crate::dialogue::languages::LanguageSystem;
+use rhai::CustomType;
+use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use rhai::CustomType;
 
 /// Helper function to provide a default value of `true` for serde.
 fn default_true() -> bool {

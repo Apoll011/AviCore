@@ -1,13 +1,13 @@
-use rhai::TypeBuilder;
 use crate::config::setting_or;
 use crate::ctx::runtime;
 use crate::dialogue::intent::YamlValue;
 use log::{debug, error, info, trace, warn};
 use rand::prelude::IndexedRandom;
+use rhai::CustomType;
+use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use rhai::CustomType;
 use strfmt::strfmt;
 
 /// Represents the structure of a language resource file.

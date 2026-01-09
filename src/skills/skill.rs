@@ -1,7 +1,8 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
+use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::skills::skill_context::SkillContext;
-use rhai::{FuncArgs, Scope, AST, Variant, ImmutableString};
+use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -13,6 +14,7 @@ pub struct Skill {
     /// The name of the skill.
     #[allow(dead_code)]
     name: String,
+    engine: Engine,
 
     ast: AST,
     /// The Dyon runtime used to execute the skill.
@@ -33,14 +35,16 @@ impl Skill {
     /// Returns an error if the skill context or module fails to load.
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
-
+        let mut engine = create_avi_script_engine()?;
+        engine.set_default_tag(Dynamic::from(context.clone()));
 
         Ok(Self {
             pathname: Self::skill_path(&name)?,
             name: name.clone(),
-            ast: Self::get_ast(&context.path, &context.info.entry)?,
-            scope: Self::create_scope(context.clone()),
+            ast: Self::get_ast(&engine, &context.path, &context.info.entry)?,
+            scope: Self::create_scope(),
             context,
+            engine,
         })
     }
 
@@ -53,18 +57,17 @@ impl Skill {
         }
     }
 
-    fn get_ast(path: &str, entry: &str) -> Result<AST, Box<dyn std::error::Error>> {
-        if let Ok(c) = runtime() {
-            return Ok(c.engine.compile_file(format!("{}/{}", path, entry).into())?);
-        }
-        Ok(AST::default())
+    fn get_ast(
+        engine: &Engine,
+        path: &str,
+        entry: &str,
+    ) -> Result<AST, Box<dyn std::error::Error>> {
+        Ok(engine.compile_file(format!("{}/{}", path, entry).into())?)
     }
 
     /// Initializes a Dyon runtime for the skill.
-    fn create_scope(context: SkillContext) -> Scope<'static> {
-        let mut scope = Scope::new();
-        scope.push_constant("SKILL_CONTEXT", context);
-        scope
+    fn create_scope() -> Scope<'static> {
+        Scope::new()
     }
 
     /// Starts the skill by running its main module.
@@ -81,10 +84,7 @@ impl Skill {
     }
 
     fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if let Ok(c) = runtime() {
-            c.engine.run_ast_with_scope(&mut self.scope, &self.ast)?;
-        }
-        Ok(())
+        Ok(self.engine.run_ast_with_scope(&mut self.scope, &self.ast)?)
     }
 
     pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -111,7 +111,10 @@ impl Skill {
             Some(v) => {
                 if let Some(intent_name) = v.intent_name {
                     println!("{}", intent_name);
-                    self.scope.push_constant("INTENT_NAME", ImmutableString::from(&Self::format_intent_name(intent_name)));
+                    self.scope.push_constant(
+                        "INTENT_NAME",
+                        ImmutableString::from(&Self::format_intent_name(intent_name)),
+                    );
                     self.scope.push_constant("INTENT", intent.clone());
                 } else {
                     return Err("Intent name is not defined".into());
@@ -131,14 +134,12 @@ impl Skill {
         function_name: &str,
         args: impl FuncArgs,
     ) -> Result<T, Box<dyn std::error::Error>> {
-        match runtime() {
-            Ok(c) => {
-                match c.engine.call_fn::<T>(&mut self.scope, &self.ast, function_name, args) {
-                    Ok(v) => Ok(v),
-                    Err(e) => Err(e),
-                }
-            },
-            Err(e) => Err(Box::from(e))
+        match self
+            .engine
+            .call_fn::<T>(&mut self.scope, &self.ast, function_name, args)
+        {
+            Ok(v) => Ok(v),
+            Err(e) => Err(e),
         }
     }
 
