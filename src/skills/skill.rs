@@ -1,13 +1,10 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
-use crate::skills::dsl::avi_dsl::load_module;
 use crate::skills::skill_context::SkillContext;
 use dyon::embed::PushVariable;
-use dyon::{Call, FnIndex, Module, Runtime, error, load};
-use log::info;
-use std::ffi::OsStr;
-use std::fs;
+use dyon::{Module, Runtime};
 use std::sync::Arc;
+use crate::skills::dsl;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -40,7 +37,7 @@ impl Skill {
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
 
-        let module: Arc<Module> = match Self::create_module(&name, &context) {
+        let module: Arc<Module> = match dsl::create(&name, &context.info.entry, &Self::skill_path(&name)?) {
             Ok(v) => v,
             Err(e) => return Err(format!("Could not load skill module ({})", e).into()),
         };
@@ -63,58 +60,6 @@ impl Skill {
         }
     }
 
-    /// Creates and loads a Dyon module for the skill, including its dependencies.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The skill name.
-    /// * `ctx` - The skill's configuration context.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if any part of the module loading process fails.
-    fn create_module(
-        name: &str,
-        ctx: &SkillContext,
-    ) -> Result<Arc<Module>, Box<dyn std::error::Error>> {
-        let mut dyon_module = load_module();
-
-        let entry = ctx.info.entry.clone();
-
-        for item in fs::read_dir(Self::skill_path(name)?)? {
-            let item = item?;
-            let path = item.path();
-
-            let file_name = match path.file_name() {
-                Some(v) => v,
-                None => continue,
-            };
-
-            if path.extension().and_then(|e| e.to_str()) == Some("avi")
-                && file_name != OsStr::new(&entry)
-            {
-                let mut m = load_module();
-                m.import_ext_prelude(&dyon_module);
-                if error(load(path.to_str().unwrap(), &mut m)) {
-                    return Err(format!("Error loading skill {}", name).into());
-                } else {
-                    dyon_module.import(&m)
-                }
-            }
-        }
-
-        if error(load(
-            &format!("{}/{}", Self::skill_path(name)?, ctx.info.entry),
-            &mut dyon_module,
-        )) {
-            return Err(format!("Error loading skill {}", name).into());
-        } else {
-            info!("Skill {} loaded!", name)
-        }
-
-        Ok(Arc::new(dyon_module))
-    }
-
     /// Initializes a Dyon runtime for the skill.
     fn create_runtime(context: SkillContext) -> Runtime {
         let mut runtime = Runtime::new();
@@ -131,7 +76,7 @@ impl Skill {
         if self.disabled() {
             return Err("Skill is disabled".into());
         }
-        Ok(error(self.runtime.run(&self.module)))
+        dsl::start(&self.runtime, &self.module)
     }
 
     /// Formats an intent name into a Dyon-compatible function name.
@@ -169,18 +114,7 @@ impl Skill {
         function_name: &str,
         args: Vec<T>,
     ) -> Result<bool, Box<dyn std::error::Error>> {
-        let mut call = Call::new(function_name);
-        for arg in args {
-            call = call.arg(arg);
-        }
-        let f_index = self
-            .module
-            .find_function(&Arc::new(function_name.to_string()), 0);
-
-        match f_index {
-            FnIndex::Loaded(_f_index) => Ok(error(call.run(&mut self.runtime, &self.module))),
-            _ => Err(format!("Could not find function `{}`", function_name).into()),
-        }
+        dsl::run_function::<T>(&self.runtime, &self.module, function_name, args)
     }
 
     /// Checks if the skill is currently disabled.
