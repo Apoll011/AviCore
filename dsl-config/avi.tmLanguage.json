@@ -45,7 +45,7 @@
     {
       "comment": "Control keyword",
       "name": "keyword.control.dyon",
-      "match": "\\b(break|continue|else|if|for|loop|return|in)\\b"
+      "match": "\\b(break|continue|else|if|for|loop|return|in|on_start|on_end|on_intent)\\b"
     },
     {
       "comment": "Keyword",

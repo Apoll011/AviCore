@@ -1,3 +1,7 @@
 on_start {
     print("hhh");
 }
+
+on_intent "hi" {
+    print("Hi tiago");
+}

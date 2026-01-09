@@ -1,8 +1,7 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::skill_context::SkillContext;
-use rhai::{FuncArgs, Scope, Variant, AST};
-use crate::skills::avi_script::avi_engine::run_avi_script;
+use rhai::{FuncArgs, Scope, AST, Variant, ImmutableString};
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -39,7 +38,7 @@ impl Skill {
         Ok(Self {
             pathname: Self::skill_path(&name)?,
             name: name.clone(),
-            ast: Self::get_ast(&context.path, &context.info.entry),
+            ast: Self::get_ast(&context.path, &context.info.entry)?,
             scope: Self::create_scope(context.clone()),
             context,
         })
@@ -54,17 +53,17 @@ impl Skill {
         }
     }
 
-    fn get_ast(path: &str, entry: &str) -> AST {
+    fn get_ast(path: &str, entry: &str) -> Result<AST, Box<dyn std::error::Error>> {
         if let Ok(c) = runtime() {
-            return c.engine.compile_file(format!("{}/{}", path, entry).into()).unwrap();
+            return Ok(c.engine.compile_file(format!("{}/{}", path, entry).into())?);
         }
-        AST::default()
+        Ok(AST::default())
     }
 
     /// Initializes a Dyon runtime for the skill.
     fn create_scope(context: SkillContext) -> Scope<'static> {
         let mut scope = Scope::new();
-        scope.set_value("SKILL_CONTEXT", context);
+        scope.push_constant("SKILL_CONTEXT", context);
         scope
     }
 
@@ -77,18 +76,20 @@ impl Skill {
         if self.disabled() {
             return Err("Skill is disabled".into());
         }
+
+        self.run()
+    }
+
+    fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if let Ok(c) = runtime() {
-            run_avi_script(&c.engine, &self.context.info.entry, (&self.context.path).into(), &mut self.scope)?
+            c.engine.run_ast_with_scope(&mut self.scope, &self.ast)?;
         }
         Ok(())
     }
 
     pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.scope.push_constant("END", true);
-        if let Ok(c) = runtime() {
-            run_avi_script(&c.engine, &self.context.info.entry, (&self.context.path).into(), &mut self.scope)?
-        }
-        Ok(())
+        self.run()
     }
 
     /// Formats an intent name into a Dyon-compatible function name.
@@ -106,11 +107,12 @@ impl Skill {
     ///
     /// Returns an error if the intent name is missing or if the corresponding Dyon function cannot be found.
     pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
-        let name;
         match intent.intent.clone() {
             Some(v) => {
                 if let Some(intent_name) = v.intent_name {
-                    name = format!("intent_{}", Self::format_intent_name(intent_name)).to_string();
+                    println!("{}", intent_name);
+                    self.scope.push_constant("INTENT_NAME", ImmutableString::from(&Self::format_intent_name(intent_name)));
+                    self.scope.push_constant("INTENT", intent.clone());
                 } else {
                     return Err("Intent name is not defined".into());
                 }
@@ -118,7 +120,10 @@ impl Skill {
             None => return Err("Intent is not defined".into()),
         }
 
-        self.run_function::<bool>(&name, vec![intent])
+        self.run()?;
+        let _ = self.scope.remove::<ImmutableString>("INTENT");
+        let _ = self.scope.remove::<Intent>("INTENT_NAME");
+        Ok(true)
     }
 
     pub fn run_function<T: Variant + Clone>(
