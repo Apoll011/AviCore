@@ -8,6 +8,7 @@ use std::collections::HashMap;
 ///
 /// # Arguments
 ///
+/// * `client` - The reqwest Client.
 /// * `url` - The full target URL for the API request.
 /// * `args` - A map of query parameters to be included in the request.
 ///
@@ -15,11 +16,11 @@ use std::collections::HashMap;
 ///
 /// Returns an error if the network request fails or if the response body cannot be parsed as JSON.
 pub async fn send_dict_to_server(
+    client: &Client,
     url: &str,
-    args: HashMap<&str, &str>,
+    args: HashMap<String, String>,
 ) -> Result<Response, Box<dyn std::error::Error>> {
     trace!("Sending request to server: {} with args: {:?}", url, args);
-    let client = Client::new();
 
     let resp = match client.get(url).query(&args).send().await {
         Ok(r) => r,
