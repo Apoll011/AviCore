@@ -1,14 +1,14 @@
 #![allow(non_snake_case)]
 
-use dyon::Type::{Any, Array, Bool, F64, Link, Secret, Str, Void};
+use dyon::Type::{Any, Bool, F64, Link, Secret, Str};
 use dyon::{
-    Dfn, Error, LAZY_AND, LAZY_NO, LAZY_OR, LAZY_UNWRAP_OR, Lt, Mat4, Module, Runtime, Thread,
-    Type, Variable, Vec4, load_str,
+    Dfn, Error, LAZY_AND, LAZY_NO, LAZY_OR, LAZY_UNWRAP_OR, Lt, Module, Runtime,
+    Type, Variable, load_str,
 };
 use lazy_static::lazy_static;
-use std::f64::consts::PI;
 use std::result::Result;
 use std::sync::{Arc, Mutex};
+use crate::skills::dsl::dyon_helpers::deep_clone;
 
 lazy_static! {
     pub(crate) static ref LESS: Arc<String> = Arc::new("less".into());
@@ -347,43 +347,6 @@ pub(crate) fn dot(a: &Variable, b: &Variable) -> Result<Variable, String> {
     }))
 }
 
-fn deep_clone(var: &Variable, stack: &[Variable]) -> Variable {
-    use Variable::*;
-
-    match *var {
-        F64(_, _) => var.clone(),
-        Vec4(_) => var.clone(),
-        Mat4(_) => var.clone(),
-        Return => var.clone(),
-        Bool(_, _) => var.clone(),
-        Str(_) => var.clone(),
-        Object(ref obj) => {
-            let mut res = obj.clone();
-            for val in Arc::make_mut(&mut res).values_mut() {
-                *val = deep_clone(val, stack);
-            }
-            Object(res)
-        }
-        Array(ref arr) => {
-            let mut res = arr.clone();
-            for it in Arc::make_mut(&mut res) {
-                *it = deep_clone(it, stack);
-            }
-            Array(res)
-        }
-        Link(_) => var.clone(),
-        Ref(ind) => deep_clone(&stack[ind], stack),
-        UnsafeRef(_) => panic!("Unsafe reference can not be cloned"),
-        RustObject(_) => var.clone(),
-        Option(None) => Option(None),
-        Option(Some(ref v)) => Option(Some(v.clone())),
-        Result(Ok(ref ok)) => Result(Ok(ok.clone())),
-        Result(Err(ref err)) => Result(Err(err.clone())),
-        Thread(_) => var.clone(),
-        Closure(_, _) => var.clone(),
-        In(_) => var.clone(),
-    }
-}
 pub(crate) fn clone(rt: &mut Runtime) -> Result<Variable, String> {
     let v = rt.stack.pop().expect(TINVOTS);
     Ok(deep_clone(rt.get(&v), &rt.stack))
@@ -478,31 +441,6 @@ pub(crate) fn explain_where(rt: &mut Runtime) -> Result<Variable, String> {
     Ok(Variable::F64(val, Some(wh)))
 }
 
-dyon_fn! {fn sqrt(a: f64) -> f64 {a.sqrt()}}
-dyon_fn! {fn sin(a: f64) -> f64 {a.sin()}}
-dyon_fn! {fn asin(a: f64) -> f64 {a.asin()}}
-dyon_fn! {fn cos(a: f64) -> f64 {a.cos()}}
-dyon_fn! {fn acos(a: f64) -> f64 {a.acos()}}
-dyon_fn! {fn tan(a: f64) -> f64 {a.tan()}}
-dyon_fn! {fn atan(a: f64) -> f64 {a.atan()}}
-dyon_fn! {fn atan2(y: f64, x: f64) -> f64 {y.atan2(x)}}
-dyon_fn! {fn exp(a: f64) -> f64 {a.exp()}}
-dyon_fn! {fn ln(a: f64) -> f64 {a.ln()}}
-dyon_fn! {fn log2(a: f64) -> f64 {a.log2()}}
-dyon_fn! {fn log10(a: f64) -> f64 {a.log10()}}
-dyon_fn! {fn round(a: f64) -> f64 {a.round()}}
-dyon_fn! {fn abs(a: f64) -> f64 {a.abs()}}
-dyon_fn! {fn floor(a: f64) -> f64 {a.floor()}}
-dyon_fn! {fn ceil(a: f64) -> f64 {a.ceil()}}
-dyon_fn! {fn sleep(v: f64) {
-    use std::thread::sleep;
-    use std::time::Duration;
-
-    let secs = v as u64;
-    let nanos = (v.fract() * 1.0e9) as u32;
-    sleep(Duration::new(secs, nanos));
-}}
-
 pub(crate) fn head(rt: &mut Runtime) -> Result<Variable, String> {
     let v = rt.stack.pop().expect(TINVOTS);
     Ok(Variable::Option(match rt.get(&v) {
@@ -541,293 +479,6 @@ pub(crate) fn is_empty(rt: &mut Runtime) -> Result<Variable, String> {
         &Variable::Link(ref link) => link.is_empty(),
         x => return Err(rt.expected_arg(0, x, "link")),
     }))
-}
-
-pub(crate) fn random(_rt: &mut Runtime) -> Result<Variable, String> {
-    Ok(Variable::f64(rand::random()))
-}
-
-dyon_fn! {fn tau() -> f64 {6.283_185_307_179_586}}
-
-pub(crate) fn len(a: &Variable) -> Result<Variable, String> {
-    match a {
-        Variable::Array(arr) => Ok(Variable::f64(arr.len() as f64)),
-        _ => Err("Expected array".into()),
-    }
-}
-
-pub(crate) fn push_ref(rt: &mut Runtime) -> Result<(), String> {
-    let item = rt.stack.pop().expect(TINVOTS);
-    let v = rt.stack.pop().expect(TINVOTS);
-
-    if let Variable::Ref(ind) = v {
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            Arc::make_mut(arr).push(item);
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    Ok(())
-}
-
-pub(crate) fn insert_ref(rt: &mut Runtime) -> Result<(), String> {
-    let item = rt.stack.pop().expect(TINVOTS);
-    let index = rt.stack.pop().expect(TINVOTS);
-    let index = match rt.get(&index) {
-        &Variable::F64(index, _) => index,
-        x => return Err(rt.expected_arg(1, x, "number")),
-    };
-    let v = rt.stack.pop().expect(TINVOTS);
-
-    if let Variable::Ref(ind) = v {
-        if let Variable::Array(ref arr) = rt.stack[ind] {
-            let index = index as usize;
-            if index > arr.len() {
-                return Err("Index out of bounds".into());
-            }
-        }
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            Arc::make_mut(arr).insert(index as usize, item);
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    Ok(())
-}
-
-pub(crate) fn push(rt: &mut Runtime) -> Result<(), String> {
-    let item = rt.stack.pop().expect(TINVOTS);
-    let item = deep_clone(rt.get(&item), &rt.stack);
-    let v = rt.stack.pop().expect(TINVOTS);
-
-    if let Variable::Ref(ind) = v {
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            Arc::make_mut(arr).push(item);
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    Ok(())
-}
-
-pub(crate) fn insert(rt: &mut Runtime) -> Result<(), String> {
-    let item = rt.stack.pop().expect(TINVOTS);
-    let item = deep_clone(rt.get(&item), &rt.stack);
-    let index = rt.stack.pop().expect(TINVOTS);
-    let index = match rt.get(&index) {
-        &Variable::F64(index, _) => index,
-        x => return Err(rt.expected_arg(1, x, "number")),
-    };
-    let v = rt.stack.pop().expect(TINVOTS);
-
-    if let Variable::Ref(ind) = v {
-        if let Variable::Array(ref arr) = rt.stack[ind] {
-            let index = index as usize;
-            if index > arr.len() {
-                return Err("Index out of bounds".into());
-            }
-        }
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            Arc::make_mut(arr).insert(index as usize, item);
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    Ok(())
-}
-
-pub(crate) fn pop(rt: &mut Runtime) -> Result<Variable, String> {
-    let arr = rt.stack.pop().expect(TINVOTS);
-    let mut v: Option<Variable> = None;
-    if let Variable::Ref(ind) = arr {
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            v = Arc::make_mut(arr).pop();
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    let v = match v {
-        None => {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected non-empty array".into()
-            });
-        }
-        Some(val) => val,
-    };
-    Ok(v)
-}
-
-pub(crate) fn remove(rt: &mut Runtime) -> Result<Variable, String> {
-    let index = rt.stack.pop().expect(TINVOTS);
-    let index = match rt.get(&index) {
-        &Variable::F64(index, _) => index,
-        x => return Err(rt.expected_arg(1, x, "number")),
-    };
-    let arr = rt.stack.pop().expect(TINVOTS);
-    if let Variable::Ref(ind) = arr {
-        if let Variable::Array(ref arr) = rt.stack[ind] {
-            let index = index as usize;
-            if index >= arr.len() {
-                return Err("Index out of bounds".into());
-            }
-        }
-        if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            let v = Arc::make_mut(arr).remove(index as usize);
-            return Ok(v);
-        };
-        Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        })
-    } else {
-        Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        })
-    }
-}
-
-pub(crate) fn reverse(rt: &mut Runtime) -> Result<(), String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    if let Variable::Ref(ind) = v {
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            Arc::make_mut(arr).reverse();
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    Ok(())
-}
-
-pub(crate) fn clear(rt: &mut Runtime) -> Result<(), String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    if let Variable::Ref(ind) = v {
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            Arc::make_mut(arr).clear();
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    Ok(())
-}
-
-pub(crate) fn swap(rt: &mut Runtime) -> Result<(), String> {
-    let j = rt.stack.pop().expect(TINVOTS);
-    let i = rt.stack.pop().expect(TINVOTS);
-    let j = match rt.get(&j) {
-        &Variable::F64(val, _) => val,
-        x => return Err(rt.expected_arg(2, x, "number")),
-    };
-    let i = match rt.get(&i) {
-        &Variable::F64(val, _) => val,
-        x => return Err(rt.expected_arg(1, x, "number")),
-    };
-    let v = rt.stack.pop().expect(TINVOTS);
-    if let Variable::Ref(ind) = v {
-        let ok = if let Variable::Array(ref mut arr) = rt.stack[ind] {
-            Arc::make_mut(arr).swap(i as usize, j as usize);
-            true
-        } else {
-            false
-        };
-        if !ok {
-            return Err({
-                rt.arg_err_index.set(Some(0));
-                "Expected reference to array".into()
-            });
-        }
-    } else {
-        return Err({
-            rt.arg_err_index.set(Some(0));
-            "Expected reference to array".into()
-        });
-    }
-    Ok(())
 }
 
 pub(crate) fn _typeof(rt: &mut Runtime) -> Result<Variable, String> {
@@ -989,42 +640,6 @@ pub(crate) fn is_ok(rt: &mut Runtime) -> Result<Variable, String> {
     })
 }
 
-pub(crate) fn min(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::f64(match rt.get(&v) {
-        &Variable::Array(ref arr) => {
-            let mut min: f64 = ::std::f64::NAN;
-            for v in &**arr {
-                if let Variable::F64(val, _) = *rt.get(v) {
-                    if val < min || min.is_nan() {
-                        min = val
-                    }
-                }
-            }
-            min
-        }
-        x => return Err(rt.expected_arg(0, x, "array")),
-    }))
-}
-
-pub(crate) fn max(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(Variable::f64(match rt.get(&v) {
-        &Variable::Array(ref arr) => {
-            let mut max: f64 = ::std::f64::NAN;
-            for v in &**arr {
-                if let Variable::F64(val, _) = *rt.get(v) {
-                    if val > max || max.is_nan() {
-                        max = val
-                    }
-                }
-            }
-            max
-        }
-        x => return Err(rt.expected_arg(0, x, "array")),
-    }))
-}
-
 pub(crate) fn unwrap(rt: &mut Runtime) -> Result<Variable, String> {
     let v = rt.stack.pop().expect(TINVOTS);
     Ok(match rt.get(&v) {
@@ -1067,31 +682,6 @@ pub(crate) fn unwrap_err(rt: &mut Runtime) -> Result<Variable, String> {
     })
 }
 
-pub(crate) fn join__thread(rt: &mut Runtime) -> Result<Variable, String> {
-    let thread = rt.stack.pop().expect(TINVOTS);
-    let handle_res = Thread::invalidate_handle(rt, thread);
-    Ok(Variable::Result({
-        match handle_res {
-            Ok(handle) => match join!(rt.tokio_runtime, handle) {
-                Ok(res) => match res {
-                    Ok(res) => Ok(Box::new(res)),
-                    Err(err) => Err(Box::new(Error {
-                        message: Variable::Str(Arc::new(err)),
-                        trace: vec![],
-                    })),
-                },
-                Err(_err) => Err(Box::new(Error {
-                    message: Variable::Str(Arc::new("Thread did not exit successfully".into())),
-                    trace: vec![],
-                })),
-            },
-            Err(err) => Err(Box::new(Error {
-                message: Variable::Str(Arc::new(err)),
-                trace: vec![],
-            })),
-        }
-    }))
-}
 
 pub(crate) fn has(rt: &mut Runtime) -> Result<Variable, String> {
     let key = rt.stack.pop().expect(TINVOTS);
@@ -1114,67 +704,6 @@ pub(crate) fn keys(rt: &mut Runtime) -> Result<Variable, String> {
     })))
 }
 
-pub(crate) fn chars(rt: &mut Runtime) -> Result<Variable, String> {
-    let t = rt.stack.pop().expect(TINVOTS);
-    let t = match rt.get(&t) {
-        &Variable::Str(ref t) => t.clone(),
-        x => return Err(rt.expected_arg(0, x, "str")),
-    };
-    Ok(Variable::Array(Arc::new(
-        t.chars()
-            .map(|ch| {
-                let mut s = String::new();
-                s.push(ch);
-                Variable::Str(Arc::new(s))
-            })
-            .collect::<Vec<_>>(),
-    )))
-}
-
-dyon_fn! {fn now() -> f64 {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    match SystemTime::now().duration_since(UNIX_EPOCH) {
-        Ok(val) => val.as_secs() as f64 +
-                   f64::from(val.subsec_nanos()) / 1.0e9,
-        Err(err) => -{
-            let val = err.duration();
-            val.as_secs() as f64 +
-            f64::from(val.subsec_nanos()) / 1.0e9
-        }
-    }
-}}
-
-dyon_fn! {fn is_nan(v: f64) -> bool {v.is_nan()}}
-
-pub(crate) fn wait_next(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(match rt.get(&v) {
-        &Variable::In(ref mutex) => match mutex.lock() {
-            Ok(x) => match x.recv() {
-                Ok(x) => Variable::Option(Some(Box::new(x))),
-                Err(_) => Variable::Option(None),
-            },
-            Err(err) => return Err(format!("Can not lock In mutex:\n{}", err.to_string())),
-        },
-        x => return Err(rt.expected_arg(0, x, "in")),
-    })
-}
-
-pub(crate) fn next(rt: &mut Runtime) -> Result<Variable, String> {
-    let v = rt.stack.pop().expect(TINVOTS);
-    Ok(match rt.get(&v) {
-        &Variable::In(ref mutex) => match mutex.lock() {
-            Ok(x) => match x.try_recv() {
-                Ok(x) => Variable::Option(Some(Box::new(x))),
-                Err(_) => Variable::Option(None),
-            },
-            Err(err) => return Err(format!("Can not lock In mutex:\n{}", err.to_string())),
-        },
-        x => return Err(rt.expected_arg(0, x, "in")),
-    })
-}
-
 pub fn add_functions(module: &mut Module) {
     use dyon::Type::*;
 
@@ -1183,23 +712,10 @@ pub fn add_functions(module: &mut Module) {
     add_boolean_operations(module);
     add_mat_operations(module);
 
-    add_math_functions(module);
-
     module.add_str("clone", clone, Dfn::nl(vec![Any], Any));
 
     module.add_str("typeof", _typeof, Dfn::nl(vec![Any], Str));
-    module.add_str("none", none, Dfn::nl(vec![], Type::option()));
-    module.add_str("some", some, Dfn::nl(vec![Any], Type::option()));
-    module.add_str("ok", ok, Dfn::nl(vec![Any], Type::result()));
-    module.add_str("err", err, Dfn::nl(vec![Any], Type::result()));
 
-    module.add_str(
-        "join__thread",
-        join__thread,
-        Dfn::nl(vec![Type::thread()], Result(Box::new(Any))),
-    );
-
-    module.add_str("now", now, Dfn::nl(vec![], F64));
     module.add_str(
         "load__source_imports",
         load__source_imports,
@@ -1210,10 +726,8 @@ pub fn add_functions(module: &mut Module) {
         module__in_string_imports,
         Dfn::nl(vec![Str, Str, Type::array()], Type::result()),
     );
-    module.add_str("is_err", is_err, Dfn::nl(vec![Type::result()], Bool));
-    module.add_str("is_ok", is_ok, Dfn::nl(vec![Type::result()], Bool));
 
-    module.add_str("unwrap", unwrap, Dfn::nl(vec![Any], Any));
+
     module.add_str(
         "why",
         why,
@@ -1234,75 +748,16 @@ pub fn add_functions(module: &mut Module) {
         explain_where,
         Dfn::nl(vec![F64, Any], Secret(Box::new(F64))),
     );
+
+
+
     module.add_str("head", head, Dfn::nl(vec![Link], Any));
     module.add_str("tip", tip, Dfn::nl(vec![Link], Option(Box::new(Any))));
     module.add_str("tail", tail, Dfn::nl(vec![Link], Link));
     module.add_str("neck", neck, Dfn::nl(vec![Link], Link));
     module.add_str("is_empty", is_empty, Dfn::nl(vec![Link], Bool));
-    module.add_unop_str("len", len, Dfn::nl(vec![Type::array()], F64));
-    module.add_str(
-        "push_ref(mut,_)",
-        push_ref,
-        Dfn {
-            lts: vec![Lt::Default, Lt::Arg(0)],
-            tys: vec![Type::array(), Any],
-            ret: Void,
-            ext: vec![],
-            lazy: LAZY_NO,
-        },
-    );
-    module.add_str(
-        "insert_ref(mut,_,_)",
-        insert_ref,
-        Dfn {
-            lts: vec![Lt::Default, Lt::Default, Lt::Arg(0)],
-            tys: vec![Type::array(), F64, Any],
-            ret: Void,
-            ext: vec![],
-            lazy: LAZY_NO,
-        },
-    );
-    module.add_str("push(mut,_)", push, Dfn::nl(vec![Type::array(), Any], Void));
-    module.add_str(
-        "insert(mut,_,_)",
-        insert,
-        Dfn {
-            lts: vec![Lt::Default; 3],
-            tys: vec![Type::array(), F64, Any],
-            ret: Void,
-            ext: vec![],
-            lazy: LAZY_NO,
-        },
-    );
-    module.add_str(
-        "pop(mut)",
-        pop,
-        Dfn {
-            lts: vec![Lt::Return],
-            tys: vec![Type::array()],
-            ret: Any,
-            ext: vec![],
-            lazy: LAZY_NO,
-        },
-    );
-    module.add_str(
-        "remove(mut,_)",
-        remove,
-        Dfn {
-            lts: vec![Lt::Return, Lt::Default],
-            tys: vec![Type::array(), F64],
-            ret: Any,
-            ext: vec![],
-            lazy: LAZY_NO,
-        },
-    );
-    module.add_str("reverse(mut)", reverse, Dfn::nl(vec![Type::array()], Void));
-    module.add_str("clear(mut)", clear, Dfn::nl(vec![Type::array()], Void));
-    module.add_str(
-        "swap(mut,_,_)",
-        swap,
-        Dfn::nl(vec![Type::array(), F64, F64], Void),
-    );
+
+
     module.add_str(
         "unwrap_or",
         unwrap_or,
@@ -1315,20 +770,16 @@ pub fn add_functions(module: &mut Module) {
         },
     );
     module.add_str("unwrap_err", unwrap_err, Dfn::nl(vec![Any], Any));
+    module.add_str("is_err", is_err, Dfn::nl(vec![Type::result()], Bool));
+    module.add_str("is_ok", is_ok, Dfn::nl(vec![Type::result()], Bool));
+    module.add_str("unwrap", unwrap, Dfn::nl(vec![Any], Any));
+    module.add_str("none", none, Dfn::nl(vec![], Type::option()));
+    module.add_str("some", some, Dfn::nl(vec![Any], Type::option()));
+    module.add_str("ok", ok, Dfn::nl(vec![Any], Type::result()));
+    module.add_str("err", err, Dfn::nl(vec![Any], Type::result()));
+
     module.add_str("has", has, Dfn::nl(vec![Object, Str], Bool));
     module.add_str("keys", keys, Dfn::nl(vec![Object], Array(Box::new(Str))));
-    module.add_str("chars", chars, Dfn::nl(vec![Str], Array(Box::new(Str))));
-
-    module.add_str(
-        "wait_next",
-        wait_next,
-        Dfn::nl(vec![In(Box::new(Any))], Option(Box::new(Str))),
-    );
-    module.add_str(
-        "next",
-        next,
-        Dfn::nl(vec![In(Box::new(Any))], Option(Box::new(Str))),
-    );
 }
 
 pub fn add_mat_operations(module: &mut Module) {
@@ -1666,30 +1117,4 @@ pub fn add_boolean_operations(module: &mut Module) {
             lazy: LAZY_NO,
         },
     );
-}
-
-pub fn add_math_functions(module: &mut Module) {
-    module.add_str("sqrt", sqrt, Dfn::nl(vec![F64], F64));
-    module.add_str("sin", sin, Dfn::nl(vec![F64], F64));
-    module.add_str("asin", asin, Dfn::nl(vec![F64], F64));
-    module.add_str("cos", cos, Dfn::nl(vec![F64], F64));
-    module.add_str("acos", acos, Dfn::nl(vec![F64], F64));
-    module.add_str("tan", tan, Dfn::nl(vec![F64], F64));
-    module.add_str("atan", atan, Dfn::nl(vec![F64], F64));
-    module.add_str("atan2", atan2, Dfn::nl(vec![F64; 2], F64));
-    module.add_str("exp", exp, Dfn::nl(vec![F64], F64));
-    module.add_str("ln", ln, Dfn::nl(vec![F64], F64));
-    module.add_str("log2", log2, Dfn::nl(vec![F64], F64));
-    module.add_str("log10", log10, Dfn::nl(vec![F64], F64));
-    module.add_str("round", round, Dfn::nl(vec![F64], F64));
-    module.add_str("abs", abs, Dfn::nl(vec![F64], F64));
-    module.add_str("floor", floor, Dfn::nl(vec![F64], F64));
-    module.add_str("ceil", ceil, Dfn::nl(vec![F64], F64));
-    module.add_str("sleep", sleep, Dfn::nl(vec![F64], Void));
-    #[cfg(not(target_family = "wasm"))]
-    module.add_str("random", random, Dfn::nl(vec![], F64));
-    module.add_str("tau", tau, Dfn::nl(vec![], F64));
-    module.add_str("is_nan", is_nan, Dfn::nl(vec![F64], Bool));
-    module.add_str("min", min, Dfn::nl(vec![Array(Box::new(F64))], F64));
-    module.add_str("max", max, Dfn::nl(vec![Array(Box::new(F64))], F64));
 }

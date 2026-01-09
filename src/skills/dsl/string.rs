@@ -67,6 +67,7 @@ pub fn add_functions(module: &mut Module) {
     module.add_str("trim_right", trim_right, Dfn::nl(vec![Str], Str));
     module.add_str("str", _str, Dfn::nl(vec![Any], Str));
     module.add_str("str__color", str__color, Dfn::nl(vec![Vec4], Str));
+    module.add_str("chars", chars, Dfn::nl(vec![Str], Array(Box::new(Str))));
 }
 
 dyon_fn! { fn upper(text: String) -> String {
@@ -161,3 +162,20 @@ dyon_fn! {fn str__color(v: dyon::Vec4) -> Arc<String> {
     }
     Arc::new(String::from_utf8(buf).unwrap())
 }}
+
+pub(crate) fn chars(rt: &mut Runtime) -> Result<Variable, String> {
+    let t = rt.stack.pop().expect(TINVOTS);
+    let t = match rt.get(&t) {
+        &Variable::Str(ref t) => t.clone(),
+        x => return Err(rt.expected_arg(0, x, "str")),
+    };
+    Ok(Variable::Array(Arc::new(
+        t.chars()
+            .map(|ch| {
+                let mut s = String::new();
+                s.push(ch);
+                Variable::Str(Arc::new(s))
+            })
+            .collect::<Vec<_>>(),
+    )))
+}

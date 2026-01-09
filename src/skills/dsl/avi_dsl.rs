@@ -36,6 +36,9 @@ pub fn load_module() -> dyon::Module {
     super::fs::add_functions(&mut module);
     super::linear::add_functions(&mut module);
     super::color::add_functions(&mut module);
+    super::math::add_functions(&mut module);
+    super::thread::add_functions(&mut module);
+    super::array::add_functions(&mut module);
     module.no_ns();
 
     module

@@ -136,3 +136,41 @@ pub fn dyon_variable_to_json(value: &Value) -> Variable {
         _ => Option(None),
     }
 }
+
+pub fn deep_clone(var: &Variable, stack: &[Variable]) -> Variable {
+    use Variable::*;
+
+    match *var {
+        F64(_, _) => var.clone(),
+        Vec4(_) => var.clone(),
+        Mat4(_) => var.clone(),
+        Return => var.clone(),
+        Bool(_, _) => var.clone(),
+        Str(_) => var.clone(),
+        Object(ref obj) => {
+            let mut res = obj.clone();
+            for val in Arc::make_mut(&mut res).values_mut() {
+                *val = deep_clone(val, stack);
+            }
+            Object(res)
+        }
+        Array(ref arr) => {
+            let mut res = arr.clone();
+            for it in Arc::make_mut(&mut res) {
+                *it = deep_clone(it, stack);
+            }
+            Array(res)
+        }
+        Link(_) => var.clone(),
+        Ref(ind) => deep_clone(&stack[ind], stack),
+        UnsafeRef(_) => panic!("Unsafe reference can not be cloned"),
+        RustObject(_) => var.clone(),
+        Option(None) => Option(None),
+        Option(Some(ref v)) => Option(Some(v.clone())),
+        Result(Ok(ref ok)) => Result(Ok(ok.clone())),
+        Result(Err(ref err)) => Result(Err(err.clone())),
+        Thread(_) => var.clone(),
+        Closure(_, _) => var.clone(),
+        In(_) => var.clone(),
+    }
+}
