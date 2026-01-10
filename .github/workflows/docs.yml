@@ -15,11 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
@@ -32,14 +30,25 @@ jobs:
           rm -rf site/docs
           cp -r docs site/docs
 
-      - name: Patch Docusaurus config (docs-only, no broken links)
+      - name: Replace Docusaurus config (docs-only, safe defaults)
         run: |
-          cat >> site/docusaurus.config.js <<'EOF'
+          cat > site/docusaurus.config.js <<'EOF'
+          // @ts-check
 
-          module.exports = {
-            ...module.exports,
+          const config = {
+            title: 'API Docs',
+            url: 'https://apoll011.github.io',
+            baseUrl: '/AviCore/',
+            favicon: 'img/favicon.ico',
+
             onBrokenLinks: 'warn',
-            onBrokenMarkdownLinks: 'warn',
+
+            markdown: {
+              hooks: {
+                onBrokenMarkdownLinks: 'warn',
+              },
+            },
+
             presets: [
               [
                 'classic',
@@ -53,13 +62,17 @@ jobs:
                 },
               ],
             ],
+
             themeConfig: {
               navbar: {
                 title: 'API Docs',
                 items: [],
               },
+              footer: undefined,
             },
           };
+
+          module.exports = config;
           EOF
 
       - name: Install dependencies
