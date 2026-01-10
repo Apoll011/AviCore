@@ -4,7 +4,6 @@ use rhai::plugin::*;
 def_package! {
     /// AviScript package - Custom scripting functionality for AviCore
     pub AviScriptPackage(module) {
-        // Combine all your modules into the package
         combine_with_exported_module!(module, "log", crate::skills::avi_script::module::log::log_module);
         combine_with_exported_module!(module, "dialogue", crate::skills::avi_script::module::dialogue::dialogue_module);
         combine_with_exported_module!(module, "skill", crate::skills::avi_script::module::skill::skill_module);
