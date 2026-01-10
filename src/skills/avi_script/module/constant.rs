@@ -1,60 +1,50 @@
-use crate::register_skill_func;
-use crate::skills::avi_script::helpers::yaml_to_dynamic;
-use rhai::Module;
-use rhai::module_resolvers::StaticModuleResolver;
+use crate::skills::avi_script::helpers::{get_skill_context, yaml_to_dynamic};
+use rhai::plugin::*;
+use rhai::{Dynamic, EvalAltResult, NativeCallContext, Position};
 
-pub fn add(resolver: &mut StaticModuleResolver) {
-    let mut module = Module::new();
+#[export_module]
+pub mod constant_module {
+    /// Gets a constant value defined for the current skill
+    ///
+    /// # Arguments
+    /// * `name` - The name of the constant
+    ///
+    /// # Returns
+    /// The constant value, or UNIT if not found
+    #[rhai_fn(global, return_raw)]
+    pub fn get(ctx: NativeCallContext, name: String) -> Result<Dynamic, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(yaml_to_dynamic(
+            &skill_context
+                .config
+                .constant(&name)
+                .unwrap_or(serde_yaml::Value::Null),
+        ))
+    }
 
-    register_skill_func!(
-        &mut module,
-        "get",
-        (name: String),
-        &[
-            "/// Gets a constant value defined for the current skill",
-            "/// ",
-            "/// # Arguments",
-            "/// * `name` - The name of the constant",
-            "/// ",
-            "/// # Returns",
-            "/// The constant value, or UNIT if not found"
-        ],
-        &["name: String"],
-        |skill_context| {
-            yaml_to_dynamic(&skill_context.config.constant(&name).unwrap_or(serde_yaml::Value::Null))
-        }
-    );
-    register_skill_func!(
-        &mut module,
-        "list",
-        (),
-        &[
-            "/// Lists all constants available for the current skill",
-            "/// ",
-            "/// # Returns",
-            "/// A list of constant names"
-        ],
-        &[] as &[&str],
-        |skill_context| { skill_context.config.list_constants() }
-    );
-    register_skill_func!(
-        &mut module,
-        "has",
-        (name: String),
-        &[
-            "/// Checks if a constant exists for the current skill",
-            "/// ",
-            "/// # Arguments",
-            "/// * `name` - The name of the constant",
-            "/// ",
-            "/// # Returns",
-            "/// True if the constant exists, false otherwise"
-        ],
-        &["name: String"],
-        |skill_context| {
-            skill_context.config.has_constant(&name)
-        }
-    );
+    /// Lists all constants available for the current skill
+    ///
+    /// # Returns
+    /// A list of constant names
+    #[rhai_fn(global, return_raw)]
+    pub fn list(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(Dynamic::from(skill_context.config.list_constants()))
+    }
 
-    resolver.insert("constant", module);
+    /// Checks if a constant exists for the current skill
+    ///
+    /// # Arguments
+    /// * `name` - The name of the constant
+    ///
+    /// # Returns
+    /// True if the constant exists, false otherwise
+    #[rhai_fn(global, return_raw)]
+    pub fn has(ctx: NativeCallContext, name: String) -> Result<bool, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(skill_context.config.has_constant(&name))
+    }
 }

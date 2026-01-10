@@ -1,86 +1,76 @@
-use crate::skills::avi_script::helpers::json_to_dynamic;
-use crate::{get_ctx, has_ctx, register_skill_func, remove_ctx, set_ctx};
-use rhai::module_resolvers::StaticModuleResolver;
-use rhai::{Dynamic, Module};
+use crate::skills::avi_script::helpers::{get_skill_context, json_to_dynamic};
+use crate::{get_ctx, has_ctx, remove_ctx, set_ctx};
+use rhai::plugin::*;
+use rhai::{Dynamic, EvalAltResult, NativeCallContext, Position};
 
-pub fn add(resolver: &mut StaticModuleResolver) {
-    let mut module = Module::new();
+#[export_module]
+pub mod context_module {
+    /// Gets a value from the skill's persistent context
+    ///
+    /// # Arguments
+    /// * `key` - The key of the value to retrieve
+    ///
+    /// # Returns
+    /// The value associated with the key, or UNIT if not found
+    #[rhai_fn(global, return_raw)]
+    pub fn get(ctx: NativeCallContext, key: String) -> Result<Dynamic, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(get_ctx!(skill: skill_context.info.name, &key)
+            .map(|v| json_to_dynamic(v))
+            .unwrap_or(Dynamic::UNIT))
+    }
 
-    register_skill_func!(
-        &mut module,
-        "get",
-        (key: String),
-        &[
-            "/// Gets a value from the skill's persistent context",
-            "/// ",
-            "/// # Arguments",
-            "/// * `key` - The key of the value to retrieve",
-            "/// ",
-            "/// # Returns",
-            "/// The value associated with the key, or UNIT if not found"
-        ],
-        &["key: String"],
-        |skill_context| {
-            get_ctx!(skill: skill_context.info.name, &key).map(|v| json_to_dynamic(v))
-        }
-    );
-    register_skill_func!(
-        &mut module,
-        "has",
-        (key: String),
-        &[
-            "/// Checks if a key exists in the skill's persistent context",
-            "/// ",
-            "/// # Arguments",
-            "/// * `key` - The key to check",
-            "/// ",
-            "/// # Returns",
-            "/// True if the key exists, false otherwise"
-        ],
-        &["key: String"],
-        |skill_context| {
-            has_ctx!(skill: skill_context.info.name, &key)
-        }
-    );
-    register_skill_func!(
-        &mut module,
-        "remove",
-        (key: String),
-        &[
-            "/// Removes a value from the skill's persistent context",
-            "/// ",
-            "/// # Arguments",
-            "/// * `key` - The key of the value to remove",
-            "/// ",
-            "/// # Returns",
-            "/// Nothing"
-        ],
-        &["key: String"],
-        |skill_context| {
-            let _ = remove_ctx!(skill: skill_context.info.name, &key);
-        }
-    );
-    register_skill_func!(
-        &mut module,
-        "set",
-        (key: String, value: Dynamic, ttl: u64, persist: bool),
-        &[
-            "/// Sets a value in the skill's persistent context",
-            "/// ",
-            "/// # Arguments",
-            "/// * `key` - The key to set",
-            "/// * `value` - The value to store",
-            "/// * `ttl` - Time to live in seconds (0 for no TTL)",
-            "/// * `persist` - Whether to persist the value across sessions",
-            "/// ",
-            "/// # Returns",
-            "/// Nothing"
-        ],
-        &["key: String", "value: Dynamic", "ttl: u64", "persist: bool"],
-        |skill_context| {
-            set_ctx!(skill: skill_context.info.name, key, value, ttl, persist);
-        }
-    );
+    /// Checks if a key exists in the skill's persistent context
+    ///
+    /// # Arguments
+    /// * `key` - The key to check
+    ///
+    /// # Returns
+    /// True if the key exists, false otherwise
+    #[rhai_fn(global, return_raw)]
+    pub fn has(ctx: NativeCallContext, key: String) -> Result<bool, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(has_ctx!(skill: skill_context.info.name, &key))
+    }
 
-    resolver.insert("context", module);
+    /// Removes a value from the skill's persistent context
+    ///
+    /// # Arguments
+    /// * `key` - The key of the value to remove
+    ///
+    /// # Returns
+    /// Nothing
+    #[rhai_fn(global, return_raw)]
+    pub fn remove(ctx: NativeCallContext, key: String) -> Result<(), Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        let _ = remove_ctx!(skill: skill_context.info.name, &key);
+        Ok(())
+    }
+
+    /// Sets a value in the skill's persistent context
+    ///
+    /// # Arguments
+    /// * `key` - The key to set
+    /// * `value` - The value to store
+    /// * `ttl` - Time to live in seconds (0 for no TTL)
+    /// * `persist` - Whether to persist the value across sessions
+    ///
+    /// # Returns
+    /// Nothing
+    #[rhai_fn(global, return_raw)]
+    pub fn set(
+        ctx: NativeCallContext,
+        key: String,
+        value: Dynamic,
+        ttl: u64,
+        persist: bool,
+    ) -> Result<(), Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        set_ctx!(skill: skill_context.info.name, key, value, ttl, persist);
+        Ok(())
+    }
 }

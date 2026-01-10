@@ -1,77 +1,61 @@
-use crate::register_skill_func;
-use rhai::Module;
-use rhai::module_resolvers::StaticModuleResolver;
+use crate::skills::avi_script::helpers::get_skill_context;
+use rhai::plugin::*;
+use rhai::{Dynamic, EvalAltResult, NativeCallContext, Position};
 
-pub fn add(resolver: &mut StaticModuleResolver) {
-    let mut module = Module::new();
+#[export_module]
+pub mod settings_module {
+    /// Gets a setting value for the current skill
+    ///
+    /// # Arguments
+    /// * `name` - The name of the setting
+    ///
+    /// # Returns
+    /// The setting value, or default if not set
+    #[rhai_fn(global, return_raw)]
+    pub fn get(ctx: NativeCallContext, name: String) -> Result<Dynamic, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(Dynamic::from(
+            skill_context.config.setting(&name).unwrap_or_default(),
+        ))
+    }
 
-    register_skill_func!(
-        &mut module,
-        "get",
-        (name: String),
-        &[
-            "/// Gets a setting value for the current skill",
-            "/// ",
-            "/// # Arguments",
-            "/// * `name` - The name of the setting",
-            "/// ",
-            "/// # Returns",
-            "/// The setting value, or default if not set"
-        ],
-        &["name: String"],
-        |skill_context| {
-            skill_context.config.setting(&name).unwrap_or_default()
-        }
-    );
-    register_skill_func!(
-        &mut module,
-        "list",
-        (),
-        &[
-            "/// Lists all settings available for the current skill",
-            "/// ",
-            "/// # Returns",
-            "/// A list of setting names"
-        ],
-        &[] as &[&str],
-        |skill_context| { skill_context.config.list_settings() }
-    );
-    register_skill_func!(
-        &mut module,
-        "has",
-        (name: String),
-        &[
-            "/// Checks if a setting exists for the current skill",
-            "/// ",
-            "/// # Arguments",
-            "/// * `name` - The name of the setting",
-            "/// ",
-            "/// # Returns",
-            "/// True if the setting exists, false otherwise"
-        ],
-        &["name: String"],
-        |skill_context| {
-            skill_context.config.has_setting(&name)
-        }
-    );
-    register_skill_func!(
-        &mut module,
-        "full",
-        (name: String),
-        &[
-            "/// Gets the full setting object including metadata",
-            "/// ",
-            "/// # Arguments",
-            "/// * `name` - The name of the setting",
-            "/// ",
-            "/// # Returns",
-            "/// The full setting object, or UNIT if not found"
-        ],
-        &["name: String"],
-        |skill_context| {
-            skill_context.config.get_setting_full(&name)
-        }
-    );
+    /// Lists all settings available for the current skill
+    ///
+    /// # Returns
+    /// A list of setting names
+    #[rhai_fn(global, return_raw)]
+    pub fn list(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(Dynamic::from(skill_context.config.list_settings()))
+    }
 
-    resolver.insert("constant", module);
+    /// Checks if a setting exists for the current skill
+    ///
+    /// # Arguments
+    /// * `name` - The name of the setting
+    ///
+    /// # Returns
+    /// True if the setting exists, false otherwise
+    #[rhai_fn(global, return_raw)]
+    pub fn has(ctx: NativeCallContext, name: String) -> Result<bool, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(skill_context.config.has_setting(&name))
+    }
+
+    /// Gets the full setting object including metadata
+    ///
+    /// # Arguments
+    /// * `name` - The name of the setting
+    ///
+    /// # Returns
+    /// The full setting object, or UNIT if not found
+    #[rhai_fn(global, return_raw)]
+    pub fn full(ctx: NativeCallContext, name: String) -> Result<Dynamic, Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx)
+            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+        Ok(Dynamic::from(skill_context.config.get_setting_full(&name)))
+    }
 }

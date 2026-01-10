@@ -1,5 +1,7 @@
 use crate::ctx::runtime;
 use log::warn;
+use crate::skills::avi_script::engine::create_avi_script_engine;
+use crate::skills::avi_script::package::AviScriptPackage;
 
 pub async fn core_id() -> Option<String> {
     match runtime() {
@@ -18,23 +20,13 @@ pub async fn core_id() -> Option<String> {
 pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
     use rhai_autodocs::*;
 
-    let engine = crate::skills::avi_script::engine::create_avi_script_engine()?;
+    let engine = create_avi_script_engine(&AviScriptPackage::new())?;
 
     let docs = export::options()
         .include_standard_packages(true)
         .order_items_with(export::ItemsOrder::ByIndex)
         .format_sections_with(export::SectionFormat::Tabs)
         .export(&engine)?;
-
-    println!("\n=== Engine Registration Debug ===");
-    let signatures = engine.gen_fn_signatures(false);
-    println!("Total registered functions: {}", signatures.len());
-
-    // Show first 20 functions
-    println!("\nFirst 20 functions:");
-    for (i, sig) in signatures.iter().take(20).enumerate() {
-        println!("  {}: {}", i + 1, sig);
-    }
 
     let path = "./docs";
     std::fs::create_dir_all(path)?;
@@ -61,7 +53,7 @@ pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(not(feature = "docs"))]
 pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
-    error!(
+    ::log::error!(
         "Documentation generation requires the 'docs' feature. Build with: cargo run --features docs -- --generate-docs"
     );
     return Err("docs feature not enabled".into());

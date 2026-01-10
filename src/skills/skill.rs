@@ -3,6 +3,7 @@ use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::skills::skill_context::SkillContext;
 use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
+use crate::skills::avi_script::package::AviScriptPackage;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -33,9 +34,9 @@ impl Skill {
     /// # Errors
     ///
     /// Returns an error if the skill context or module fails to load.
-    pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(name: String, avi_script_package: &AviScriptPackage) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
-        let mut engine = create_avi_script_engine()?;
+        let mut engine = create_avi_script_engine(avi_script_package)?;
         engine.set_default_tag(Dynamic::from(context.clone()));
 
         Ok(Self {
