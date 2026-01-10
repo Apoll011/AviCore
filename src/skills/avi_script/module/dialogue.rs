@@ -2,21 +2,18 @@ use crate::ctx::runtime;
 use crate::dialogue::reply::{RequestReply, ValidatorErasure};
 use crate::dialogue::response::{
     AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator,
-    ResponseValidator,
 };
 use crate::dialogue::utils::speak;
 use crate::skills::avi_script::helpers::get_skill_context;
 use crate::user::user_name;
 use crate::{get_ctx, rt_spawn, speak};
-use core::fmt;
 use log::error;
 use rhai::plugin::*;
-use rhai::{Dynamic, EvalAltResult, Position};
+use rhai::{Dynamic};
 use std::collections::HashMap;
 
 #[export_module]
 pub mod dialogue_module {
-    use crate::remove_ctx;
     use crate::skills::avi_script::helpers::skill_context_def;
     use rhai::EvalAltResult;
 

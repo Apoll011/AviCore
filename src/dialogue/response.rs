@@ -191,6 +191,7 @@ impl MappedValidator {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_default(mut self, default: Dynamic) -> Self {
         self.default = Some(default);
         self

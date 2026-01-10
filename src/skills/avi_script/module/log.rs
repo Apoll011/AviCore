@@ -1,7 +1,7 @@
 use crate::skills::avi_script::helpers::get_skill_name;
 use log::{debug, error, info, trace, warn};
 use rhai::plugin::*;
-use rhai::{EvalAltResult, NativeCallContext};
+use rhai::{NativeCallContext};
 
 #[export_module]
 pub mod log_module {

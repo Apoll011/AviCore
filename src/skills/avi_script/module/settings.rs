@@ -1,6 +1,6 @@
 use crate::config::{Setting, SettingNamed};
 use crate::skills::avi_script::helpers::{
-    json_to_dynamic, skill_context, skill_context_def, yaml_to_dynamic,
+    skill_context, skill_context_def, yaml_to_dynamic,
 };
 use rhai::plugin::*;
 use rhai::{Dynamic, NativeCallContext};

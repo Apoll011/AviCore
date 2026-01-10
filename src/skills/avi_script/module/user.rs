@@ -1,13 +1,10 @@
 use crate::ctx::runtime;
 use rhai::plugin::*;
-use rhai::{Dynamic, EvalAltResult, Map, Position};
 
 #[export_module]
 pub mod user_module {
     use crate::dialogue::languages::lang;
     use crate::user::{Location, QuietHours, user_name};
-    use chrono::Duration;
-    use std::time::Instant;
 
     /// Gets the user's name
     ///
@@ -57,7 +54,7 @@ pub mod user_module {
     pub fn quiet_hours() -> Option<QuietHours> {
         match runtime() {
             Ok(c) => c.user.get_quiet_hours(),
-            Err(e) => None,
+            Err(_) => None,
         }
     }
 
@@ -79,7 +76,7 @@ pub mod user_module {
     pub fn voice_profile_id() -> Option<String> {
         match runtime() {
             Ok(c) => c.user.get_voice_profile_id(),
-            Err(e) => None,
+            Err(_) => None,
         }
     }
 

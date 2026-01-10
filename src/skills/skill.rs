@@ -126,6 +126,7 @@ impl Skill {
         )?)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.scope.push_constant("END", true);
         self.run()

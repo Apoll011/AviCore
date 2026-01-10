@@ -1,8 +1,5 @@
 use rhai::Engine;
 
-const MAX_MEMORY: usize = 10 * 1024 * 1024; // 10MB
-const MAX_STACK: isize = 1024 * 1024; // 1MB
-
 fn constraint_engine(engine: &mut Engine) {
     engine.set_max_array_size(256);
     engine.set_max_map_size(256);
