@@ -1,7 +1,6 @@
 use crate::ctx::runtime;
-use crate::user::{Location, QuietHours};
 use rhai::plugin::*;
-use rhai::{Dynamic, EvalAltResult, Map, NativeCallContext, Position};
+use rhai::{Dynamic, EvalAltResult, Map, Position};
 
 #[export_module]
 pub mod user_module {
@@ -10,7 +9,7 @@ pub mod user_module {
     /// # Returns
     /// The user's name, or an empty string if not available
     #[rhai_fn(return_raw)]
-    pub fn name(ctx: NativeCallContext) -> Result<String, Box<EvalAltResult>> {
+    pub fn name() -> Result<String, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => Ok(c.user.get_name()),
             Err(e) => Err(Box::new(EvalAltResult::ErrorRuntime(
@@ -25,7 +24,7 @@ pub mod user_module {
     /// # Returns
     /// The user's nickname, or () if not set
     #[rhai_fn(return_raw)]
-    pub fn nickname(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
+    pub fn nickname() -> Result<Dynamic, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => match c.user.get_nickname() {
                 Some(nick) => Ok(Dynamic::from(nick)),
@@ -43,7 +42,7 @@ pub mod user_module {
     /// # Returns
     /// The user's ID, or an empty string if not available
     #[rhai_fn(return_raw)]
-    pub fn id(ctx: NativeCallContext) -> Result<String, Box<EvalAltResult>> {
+    pub fn id() -> Result<String, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => Ok(c.user.get_id()),
             Err(e) => Err(Box::new(EvalAltResult::ErrorRuntime(
@@ -58,7 +57,7 @@ pub mod user_module {
     /// # Returns
     /// A map with 'city' and 'country' fields, or () if not set
     #[rhai_fn(return_raw)]
-    pub fn location(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
+    pub fn location() -> Result<Dynamic, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => match c.user.get_location() {
                 Some(loc) => {
@@ -81,7 +80,7 @@ pub mod user_module {
     /// # Returns
     /// A map with 'start' and 'end' fields, or () if not set
     #[rhai_fn(return_raw)]
-    pub fn quiet_hours(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
+    pub fn quiet_hours() -> Result<Dynamic, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => match c.user.get_quiet_hours() {
                 Some(qh) => {
@@ -104,7 +103,7 @@ pub mod user_module {
     /// # Returns
     /// The birthday timestamp as f64, or 0.0 if not set
     #[rhai_fn(return_raw)]
-    pub fn birthday(ctx: NativeCallContext) -> Result<f64, Box<EvalAltResult>> {
+    pub fn birthday() -> Result<f64, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => match c.user.get_birthday() {
                 Some(timestamp) => Ok(timestamp as f64),
@@ -122,7 +121,7 @@ pub mod user_module {
     /// # Returns
     /// The voice profile ID, or () if not set
     #[rhai_fn(return_raw)]
-    pub fn voice_profile_id(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
+    pub fn voice_profile_id() -> Result<Dynamic, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => match c.user.get_voice_profile_id() {
                 Some(id) => Ok(Dynamic::from(id)),
@@ -140,7 +139,7 @@ pub mod user_module {
     /// # Returns
     /// The language code (e.g., "en"), defaults to "en" if not set
     #[rhai_fn(return_raw)]
-    pub fn language(ctx: NativeCallContext) -> Result<String, Box<EvalAltResult>> {
+    pub fn language() -> Result<String, Box<EvalAltResult>> {
         match runtime() {
             Ok(c) => Ok(c.user.get_language()),
             Err(e) => Err(Box::new(EvalAltResult::ErrorRuntime(

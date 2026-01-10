@@ -3,10 +3,6 @@ name = "AviCore"
 version = "1.0.0-dyon"
 edition = "2024"
 
-
-[features]
-docs = ["rhai-autodocs"]
-
 [dependencies]
 reqwest = { version = "0.12.24", features = ["json", "default-tls"] }
 tokio = { version = "1.35", features = ["full"] }
@@ -24,7 +20,7 @@ log = { version = "0.4.29", features = ["std"] }
 colored = "3.0.0"
 dirs = "6.0.0"
 rhai = { version = "1.23.6", features = ["debugging", "decimal", "serde", "sync", "metadata"] }
-rhai-autodocs = { version = "0.10.0", optional = true }
+rhai-autodocs = { version = "0.10.0"}
 clap = { version = "4.5.54", features = ["derive"] }
 regex = "1.12.2"
 

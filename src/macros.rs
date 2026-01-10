@@ -309,8 +309,24 @@ macro_rules! register_action {
         }
     }};
 
+    ($action_type:ty, if: $condition:expr, { $($field:ident: $value:expr),* $(,)? }) => {{
+        if $condition {
+            register_action!($action_type, { $($field: $value),* });
+        } else {
+            ::log::info!("Ignoring action: {}", stringify!($action_type));
+        }
+    }};
+
     ($action_type:ty) => {{
         register_action!($action_type, {})
+    }};
+
+    ($action_type:ty, if: $condition:expr) => {{
+        if $condition {
+            register_action!($action_type, {});
+        } else {
+            ::log::info!("Ignoring action: {}", stringify!($action_type));
+        }
     }};
 }
 
