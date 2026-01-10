@@ -119,7 +119,7 @@ impl Action for IntentAction {
 
         let _ = subscribe!("skills/reload", captures: [skill_manager], async: |_from, _topic, _data| {
             let mut lock = skill_manager.lock().await;
-            lock.reload();
+            let _ = lock.reload();
         });
 
         if self.config.watch_skill_dir {

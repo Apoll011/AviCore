@@ -73,9 +73,12 @@ impl SkillManager {
         }
     }
 
-    pub fn reload(&mut self) {
+    pub fn reload(&mut self)  -> Result<(), Box<dyn std::error::Error>> {
         info!("Reloading skills.");
-        self.skills = Self::load_skills(&self.package);
+        for (name, skill) in &mut self.skills {
+            skill.reload()?;
+        };
+        Ok(())
     }
 
     /// Loads an individual skill from a directory path.

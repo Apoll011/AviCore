@@ -3,6 +3,7 @@ use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::skills::skill_context::SkillContext;
 use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
+use std::sync::{Arc, RwLock};
 use crate::skills::avi_script::package::AviScriptPackage;
 
 /// Represents a standalone skill that can be executed by the Avi system.
@@ -17,7 +18,7 @@ pub struct Skill {
     name: String,
     engine: Engine,
 
-    ast: AST,
+    ast: Arc<RwLock<AST>>,
     /// The Dyon runtime used to execute the skill.
     scope: Scope<'static>,
     /// The configuration and state of the skill.
@@ -42,7 +43,7 @@ impl Skill {
         Ok(Self {
             pathname: Self::skill_path(&name)?,
             name: name.clone(),
-            ast: Self::get_ast(&engine, &context.path, &context.info.entry)?,
+            ast: Arc::new(RwLock::new(Self::get_ast(&engine, &context.path, &context.info.entry)?)),
             scope: Self::create_scope(),
             context,
             engine,
@@ -85,7 +86,7 @@ impl Skill {
     }
 
     fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self.engine.run_ast_with_scope(&mut self.scope, &self.ast)?)
+        Ok(self.engine.run_ast_with_scope(&mut self.scope, &*self.ast.read().map_err(|e| e.to_string())?)?)
     }
 
     pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -135,10 +136,12 @@ impl Skill {
         function_name: &str,
         args: impl FuncArgs,
     ) -> Result<T, Box<dyn std::error::Error>> {
-        match self
-            .engine
-            .call_fn::<T>(&mut self.scope, &self.ast, function_name, args)
-        {
+        match self.engine.call_fn::<T>(
+            &mut self.scope,
+            &*self.ast.read().map_err(|e| e.to_string())?,
+            function_name,
+            args,
+        ) {
             Ok(v) => Ok(v),
             Err(e) => Err(e),
         }
@@ -151,5 +154,12 @@ impl Skill {
 
     pub fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn reload(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.context = SkillContext::new(&self.pathname)?;
+        let new_ast = Self::get_ast(&self.engine, &self.context.path, &self.context.info.entry)?;
+        *self.ast.write().map_err(|e| e.to_string())? = new_ast;
+        Ok(())
     }
 }
