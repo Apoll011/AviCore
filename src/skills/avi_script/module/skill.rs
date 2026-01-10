@@ -1,6 +1,6 @@
-use rhai::{Dynamic, EvalAltResult, FuncRegistration, Module, NativeCallContext, Position};
-use rhai::module_resolvers::StaticModuleResolver;
 use crate::skills::avi_script::helpers::get_skill_context;
+use rhai::module_resolvers::StaticModuleResolver;
+use rhai::{Dynamic, EvalAltResult, FuncRegistration, Module, NativeCallContext};
 
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
@@ -11,7 +11,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Gets the root directory of the current skill",
             "/// ",
             "/// # Returns",
-            "/// The path to the skill's root directory"
+            "/// The path to the skill's root directory",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, dir);
@@ -22,7 +22,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Gets the version of the current skill",
             "/// ",
             "/// # Returns",
-            "/// The version string of the skill"
+            "/// The version string of the skill",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, version);
@@ -33,7 +33,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Gets the manifest information of the current skill",
             "/// ",
             "/// # Returns",
-            "/// A map containing the skill's manifest"
+            "/// A map containing the skill's manifest",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, get_manifest);
@@ -44,7 +44,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Gets the permissions required by the current skill",
             "/// ",
             "/// # Returns",
-            "/// A list of permissions"
+            "/// A list of permissions",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, get_permissions);
@@ -55,7 +55,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Checks if the current skill is disabled",
             "/// ",
             "/// # Returns",
-            "/// True if the skill is disabled, false otherwise"
+            "/// True if the skill is disabled, false otherwise",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, is_disabled);

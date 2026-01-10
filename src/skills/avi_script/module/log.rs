@@ -1,8 +1,7 @@
-use rhai::{EvalAltResult, FuncRegistration, Module, NativeCallContext};
-use rhai::module_resolvers::StaticModuleResolver;
-use log::{debug, error, info, trace, warn};
 use crate::skills::avi_script::helpers::get_skill_name;
-use crate::skills::skill_context::SkillContext;
+use log::{debug, error, info, trace, warn};
+use rhai::module_resolvers::StaticModuleResolver;
+use rhai::{EvalAltResult, FuncRegistration, Module, NativeCallContext};
 
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
@@ -16,7 +15,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `message` - The message to log",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_info);
@@ -30,7 +29,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `message` - The message to log",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_trace);
@@ -44,7 +43,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `message` - The message to log",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_debug);
@@ -58,7 +57,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `message` - The message to log",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_warn);
@@ -72,7 +71,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `message` - The message to log",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_error);

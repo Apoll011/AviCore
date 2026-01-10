@@ -1,10 +1,10 @@
-use rhai::{Dynamic, EvalAltResult, FuncRegistration, Module, Position};
+use log::warn;
 use rhai::module_resolvers::StaticModuleResolver;
+use rhai::{Dynamic, EvalAltResult, FuncRegistration, Module, Position};
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
-use log::warn;
 
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
@@ -18,7 +18,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `path` - The path to the file to read",
             "/// ",
             "/// # Returns",
-            "/// The file contents as a string, or UNIT if the file could not be read"
+            "/// The file contents as a string, or UNIT if the file could not be read",
         ])
         .with_params_info(&["path: &str"])
         .set_into_module(&mut module, read);
@@ -33,7 +33,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `content` - The string to write to the file",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["path: &str", "content: &str"])
         .set_into_module(&mut module, write);
@@ -48,7 +48,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `content` - The string to append to the file",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["path: &str", "content: &str"])
         .set_into_module(&mut module, append);
@@ -62,7 +62,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `path` - The path to check",
             "/// ",
             "/// # Returns",
-            "/// True if the path exists, false otherwise"
+            "/// True if the path exists, false otherwise",
         ])
         .with_params_info(&["path: &str"])
         .set_into_module(&mut module, exists);
@@ -76,7 +76,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `path` - The path to delete",
             "/// ",
             "/// # Returns",
-            "/// True if the deletion was successful, false otherwise"
+            "/// True if the deletion was successful, false otherwise",
         ])
         .with_params_info(&["path: &str"])
         .set_into_module(&mut module, delete);
@@ -91,7 +91,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `dest` - The destination path",
             "/// ",
             "/// # Returns",
-            "/// True if the copy was successful, false otherwise"
+            "/// True if the copy was successful, false otherwise",
         ])
         .with_params_info(&["src: &str", "dest: &str"])
         .set_into_module(&mut module, copy);
@@ -106,7 +106,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `dest` - The destination path",
             "/// ",
             "/// # Returns",
-            "/// True if the move was successful, false otherwise"
+            "/// True if the move was successful, false otherwise",
         ])
         .with_params_info(&["src: &str", "dest: &str"])
         .set_into_module(&mut module, move_file);
@@ -120,7 +120,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `path` - The path to list",
             "/// ",
             "/// # Returns",
-            "/// A list of file and directory names"
+            "/// A list of file and directory names",
         ])
         .with_params_info(&["path: &str"])
         .set_into_module(&mut module, list_files);
@@ -134,7 +134,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `path` - The path of the directory to create",
             "/// ",
             "/// # Returns",
-            "/// True if the directory was created successfully, false otherwise"
+            "/// True if the directory was created successfully, false otherwise",
         ])
         .with_params_info(&["path: &str"])
         .set_into_module(&mut module, mkdir);
@@ -148,7 +148,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `path` - The path to process",
             "/// ",
             "/// # Returns",
-            "/// The last component of the path"
+            "/// The last component of the path",
         ])
         .with_params_info(&["path: &str"])
         .set_into_module(&mut module, basename);
@@ -162,7 +162,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `path` - The path to process",
             "/// ",
             "/// # Returns",
-            "/// The parent directory of the path"
+            "/// The parent directory of the path",
         ])
         .with_params_info(&["path: &str"])
         .set_into_module(&mut module, dirname);

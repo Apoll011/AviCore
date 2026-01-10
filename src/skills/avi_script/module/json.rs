@@ -15,7 +15,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `json_str` - The JSON string to parse",
             "/// ",
             "/// # Returns",
-            "/// A Rhai object representing the JSON data"
+            "/// A Rhai object representing the JSON data",
         ])
         .with_params_info(&["json_str: &str"])
         .set_into_module(&mut module, parse_json);
@@ -29,7 +29,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `value` - The Rhai object to convert",
             "/// ",
             "/// # Returns",
-            "/// A JSON string"
+            "/// A JSON string",
         ])
         .with_params_info(&["value: Dynamic"])
         .set_into_module(&mut module, to_json);

@@ -34,9 +34,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// A list of setting names"
         ],
         &[] as &[&str],
-        |skill_context| {
-            skill_context.config.list_settings()
-        }
+        |skill_context| { skill_context.config.list_settings() }
     );
     register_skill_func!(
         &mut module,

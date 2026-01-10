@@ -35,9 +35,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// A list of constant names"
         ],
         &[] as &[&str],
-        |skill_context| {
-            skill_context.config.list_constants()
-        }
+        |skill_context| { skill_context.config.list_constants() }
     );
     register_skill_func!(
         &mut module,

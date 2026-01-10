@@ -1,7 +1,7 @@
 use crate::dialogue::intent::Intent;
-use rhai::{Dynamic, EvalAltResult, FuncRegistration, Module, Position, Map};
+use crate::skills::avi_script::helpers::{dynamic_to_json, json_to_dynamic};
 use rhai::module_resolvers::StaticModuleResolver;
-use crate::skills::avi_script::helpers::{json_to_dynamic, dynamic_to_json};
+use rhai::{Dynamic, EvalAltResult, FuncRegistration, Map, Module, Position};
 
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
@@ -16,7 +16,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `name` - The name of the slot",
             "/// ",
             "/// # Returns",
-            "/// Nothing or throws an error if the slot is missing"
+            "/// Nothing or throws an error if the slot is missing",
         ])
         .with_params_info(&["intent: Intent", "name: &str"])
         .set_into_module(&mut module, require);
@@ -31,7 +31,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `name` - The name of the slot",
             "/// ",
             "/// # Returns",
-            "/// True if the slot exists, false otherwise"
+            "/// True if the slot exists, false otherwise",
         ])
         .with_params_info(&["intent: Intent", "name: &str"])
         .set_into_module(&mut module, exists);
@@ -46,7 +46,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `name` - The name of the slot",
             "/// ",
             "/// # Returns",
-            "/// The value of the slot as a Rhai object, or UNIT if the slot is missing"
+            "/// The value of the slot as a Rhai object, or UNIT if the slot is missing",
         ])
         .with_params_info(&["intent: Intent", "name: &str"])
         .set_into_module(&mut module, get);
@@ -61,7 +61,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `name` - The name of the slot",
             "/// ",
             "/// # Returns",
-            "/// The raw text value of the slot, or UNIT if the slot is missing"
+            "/// The raw text value of the slot, or UNIT if the slot is missing",
         ])
         .with_params_info(&["intent: Intent", "name: &str"])
         .set_into_module(&mut module, get_raw);
@@ -76,7 +76,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `name` - The name of the slot",
             "/// ",
             "/// # Returns",
-            "/// The full slot object, or UNIT if the slot is missing"
+            "/// The full slot object, or UNIT if the slot is missing",
         ])
         .with_params_info(&["intent: Intent", "name: &str"])
         .set_into_module(&mut module, full);
@@ -92,7 +92,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `val` - The value to compare against",
             "/// ",
             "/// # Returns",
-            "/// True if the slot value is equal, false otherwise"
+            "/// True if the slot value is equal, false otherwise",
         ])
         .with_params_info(&["intent: Intent", "name: &str", "val: Dynamic"])
         .set_into_module(&mut module, assert_equal);
@@ -108,7 +108,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `list` - The list of values or a single value to check against",
             "/// ",
             "/// # Returns",
-            "/// True if the slot value is in the list or matches the value, false otherwise"
+            "/// True if the slot value is in the list or matches the value, false otherwise",
         ])
         .with_params_info(&["intent: Intent", "name: &str", "list: Dynamic"])
         .set_into_module(&mut module, assert_in);
@@ -124,7 +124,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `dict` - The map to check for the key",
             "/// ",
             "/// # Returns",
-            "/// True if the slot's string value is a key in the map, false otherwise"
+            "/// True if the slot's string value is a key in the map, false otherwise",
         ])
         .with_params_info(&["intent: Intent", "name: &str", "dict: Dynamic"])
         .set_into_module(&mut module, assert_in_dict);
@@ -208,7 +208,7 @@ fn assert_in_dict(intent: Intent, name: &str, dict: Dynamic) -> bool {
 
         if let Some(s) = slot_val.try_cast::<String>() {
             if let Some(obj) = dict.try_cast::<Map>() {
-                obj.keys().any(|k| {k.contains(&s)})
+                obj.keys().any(|k| k.contains(&s))
             } else {
                 false
             }

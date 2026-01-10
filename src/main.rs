@@ -18,13 +18,13 @@ use crate::config::setting_or;
 use crate::context::context_cleanup_task;
 use crate::ctx::{create_runtime, runtime};
 use crate::log::AviCoreLogger;
+use crate::utils::generate_documentation;
 use ::log::{error, info};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use clap::Parser;
 use std::sync::Arc;
 use std::time::Duration;
-use crate::utils::generate_documentation;
 
 #[derive(Parser, Debug)]
 #[command(name = "AviCore")]
@@ -34,7 +34,6 @@ struct Args {
     #[arg(long = "generate-docs")]
     generate_docs: bool,
 }
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

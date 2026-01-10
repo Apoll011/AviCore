@@ -4,13 +4,13 @@ use rhai::module_resolvers::StaticModuleResolver;
 mod constant;
 mod context;
 mod dialogue;
-mod json;
-mod settings;
 mod fs;
-mod slots;
-mod log;
+mod json;
 mod locale;
+mod log;
+mod settings;
 mod skill;
+mod slots;
 
 pub fn add(engine: &mut Engine) {
     let mut resolver = StaticModuleResolver::new();
@@ -25,6 +25,6 @@ pub fn add(engine: &mut Engine) {
     log::add(&mut resolver);
     locale::add(&mut resolver);
     skill::add(&mut resolver);
-    
+
     engine.set_module_resolver(resolver);
 }

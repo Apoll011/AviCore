@@ -1,8 +1,7 @@
-use rhai::{Dynamic, EvalAltResult, FuncRegistration, Module, NativeCallContext, Map, Position};
-use rhai::module_resolvers::StaticModuleResolver;
 use crate::dialogue::languages::lang;
 use crate::skills::avi_script::helpers::get_skill_context;
-use crate::skills::skill_context::SkillContext;
+use rhai::module_resolvers::StaticModuleResolver;
+use rhai::{Dynamic, EvalAltResult, FuncRegistration, Map, Module, NativeCallContext};
 
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
@@ -16,7 +15,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `id` - The ID of the translation to retrieve",
             "/// ",
             "/// # Returns",
-            "/// The translation string if found, or UNIT if not found"
+            "/// The translation string if found, or UNIT if not found",
         ])
         .with_params_info(&["id: &str"])
         .set_into_module(&mut module, locale_get);
@@ -31,7 +30,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `params` - A map of parameters to interpolate into the translation",
             "/// ",
             "/// # Returns",
-            "/// The formatted translation string if found, or UNIT if not found"
+            "/// The formatted translation string if found, or UNIT if not found",
         ])
         .with_params_info(&["id: &str", "params: Map"])
         .set_into_module(&mut module, locale_get_fmt);
@@ -45,7 +44,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `code` - The locale code (e.g., 'en-US')",
             "/// ",
             "/// # Returns",
-            "/// A map of translations"
+            "/// A map of translations",
         ])
         .with_params_info(&["code: &str"])
         .set_into_module(&mut module, list_locales);
@@ -59,7 +58,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `id` - The ID of the translation to check",
             "/// ",
             "/// # Returns",
-            "/// True if the translation exists, false otherwise"
+            "/// True if the translation exists, false otherwise",
         ])
         .with_params_info(&["id: &str"])
         .set_into_module(&mut module, has_locale);
@@ -70,7 +69,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Gets the current language code",
             "/// ",
             "/// # Returns",
-            "/// The current language code (e.g., 'en-US')"
+            "/// The current language code (e.g., 'en-US')",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, current_lang);
@@ -98,7 +97,10 @@ fn locale_get_fmt(
     // Convert Map to HashMap<String, String>
     let string_params = map_to_string_hashmap(params)?;
 
-    match skill_context.languages.locale_fmt(&current_lang, id, &string_params) {
+    match skill_context
+        .languages
+        .locale_fmt(&current_lang, id, &string_params)
+    {
         Some(formatted) => Ok(Dynamic::from(formatted)),
         None => Ok(Dynamic::UNIT),
     }
@@ -118,7 +120,9 @@ fn has_locale(ctx: NativeCallContext, id: &str) -> Result<bool, Box<EvalAltResul
     Ok(skill_context.languages.has(id))
 }
 
-fn map_to_string_hashmap(map: Map) -> Result<std::collections::HashMap<String, String>, Box<EvalAltResult>> {
+fn map_to_string_hashmap(
+    map: Map,
+) -> Result<std::collections::HashMap<String, String>, Box<EvalAltResult>> {
     let mut result = std::collections::HashMap::new();
 
     for (key, value) in map {

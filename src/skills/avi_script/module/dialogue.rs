@@ -1,12 +1,14 @@
-use log::error;
 use crate::ctx::runtime;
 use crate::dialogue::reply::{RequestReply, ValidatorErasure};
+use crate::dialogue::response::{
+    AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator,
+};
 use crate::dialogue::utils::speak;
 use crate::user::user_name;
 use crate::{get_ctx, register_skill_func, rt_spawn, speak};
+use log::error;
 use rhai::module_resolvers::StaticModuleResolver;
 use rhai::{Dynamic, FuncRegistration, Module};
-use crate::dialogue::response::{AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator};
 
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
@@ -17,7 +19,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Creates a validator that accepts any input",
             "/// ",
             "/// # Returns",
-            "/// An AnyValidator object"
+            "/// An AnyValidator object",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, AnyValidator::new);
@@ -28,7 +30,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Creates a validator that accepts a list of items or nothing",
             "/// ",
             "/// # Returns",
-            "/// A ListOrNoneValidator object"
+            "/// A ListOrNoneValidator object",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, ListOrNoneValidator::new);
@@ -42,7 +44,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `validator` - The validator to make optional",
             "/// ",
             "/// # Returns",
-            "/// An OptionalValidator object"
+            "/// An OptionalValidator object",
         ])
         .with_params_info(&["validator: Dynamic"])
         .set_into_module(&mut module, OptionalValidator::new);
@@ -56,7 +58,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `fuzzy` - Whether to use fuzzy matching",
             "/// ",
             "/// # Returns",
-            "/// A BoolValidator object"
+            "/// A BoolValidator object",
         ])
         .with_params_info(&["fuzzy: bool"])
         .set_into_module(&mut module, BoolValidator::new);
@@ -70,7 +72,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `map` - A map of possible inputs to their string values",
             "/// ",
             "/// # Returns",
-            "/// A MappedValidator object"
+            "/// A MappedValidator object",
         ])
         .with_params_info(&["map: Map"])
         .set_into_module(&mut module, MappedValidator::<String>::new);
@@ -84,7 +86,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `map` - A map of possible inputs to their i32 values",
             "/// ",
             "/// # Returns",
-            "/// A MappedValidator object"
+            "/// A MappedValidator object",
         ])
         .with_params_info(&["map: Map"])
         .set_into_module(&mut module, MappedValidator::<i32>::new);
@@ -98,7 +100,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `map` - A map of possible inputs to their i64 values",
             "/// ",
             "/// # Returns",
-            "/// A MappedValidator object"
+            "/// A MappedValidator object",
         ])
         .with_params_info(&["map: Map"])
         .set_into_module(&mut module, MappedValidator::<i64>::new);
@@ -112,7 +114,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `map` - A map of possible inputs to their f32 values",
             "/// ",
             "/// # Returns",
-            "/// A MappedValidator object"
+            "/// A MappedValidator object",
         ])
         .with_params_info(&["map: Map"])
         .set_into_module(&mut module, MappedValidator::<f32>::new);
@@ -126,7 +128,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `map` - A map of possible inputs to their f64 values",
             "/// ",
             "/// # Returns",
-            "/// A MappedValidator object"
+            "/// A MappedValidator object",
         ])
         .with_params_info(&["map: Map"])
         .set_into_module(&mut module, MappedValidator::<f64>::new);
@@ -140,7 +142,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `map` - A map of possible inputs to their boolean values",
             "/// ",
             "/// # Returns",
-            "/// A MappedValidator object"
+            "/// A MappedValidator object",
         ])
         .with_params_info(&["map: Map"])
         .set_into_module(&mut module, MappedValidator::<bool>::new);
@@ -154,7 +156,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `text` - The text to speak",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["text: String"])
         .set_into_module(&mut module, say);
@@ -168,7 +170,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// * `text` - The text to speak",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&["text: String"])
         .set_into_module(&mut module, say_once);
@@ -179,7 +181,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Makes the device start listening for voice input",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, listen);
@@ -190,7 +192,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Repeats the last thing spoken or heard",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, repeat);
@@ -201,7 +203,7 @@ pub fn add(resolver: &mut StaticModuleResolver) {
             "/// Requests the user's attention and starts listening",
             "/// ",
             "/// # Returns",
-            "/// Nothing"
+            "/// Nothing",
         ])
         .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, req_attention);

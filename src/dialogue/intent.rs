@@ -1,3 +1,4 @@
+use crate::skills::avi_script::helpers::json_to_dynamic;
 use rhai::CustomType;
 use rhai::Dynamic;
 use rhai::EvalAltResult;
@@ -5,7 +6,6 @@ use rhai::Position;
 use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use crate::skills::avi_script::helpers::json_to_dynamic;
 
 /// Represents a recognized intent from a natural language input.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]

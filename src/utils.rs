@@ -1,5 +1,5 @@
 use crate::ctx::runtime;
-use log::{error, warn};
+use log::warn;
 
 pub async fn core_id() -> Option<String> {
     match runtime() {
@@ -36,7 +36,6 @@ pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
         println!("  {}: {}", i + 1, sig);
     }
 
-
     let path = "./docs";
     std::fs::create_dir_all(path)?;
 
@@ -49,10 +48,7 @@ pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
         glossary,
     )?;
 
-    for (name, doc) in generate::docusaurus()
-        .with_slug("/api")
-        .generate(&docs)?
-    {
+    for (name, doc) in generate::docusaurus().with_slug("/api").generate(&docs)? {
         println!("Generating doc file: {}.mdx", name);
         std::fs::write(
             std::path::PathBuf::from_iter([path, &format!("{}.mdx", &name)]),
@@ -65,6 +61,8 @@ pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(not(feature = "docs"))]
 pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
-    error!("Documentation generation requires the 'docs' feature. Build with: cargo run --features docs -- --generate-docs");
+    error!(
+        "Documentation generation requires the 'docs' feature. Build with: cargo run --features docs -- --generate-docs"
+    );
     return Err("docs feature not enabled".into());
 }
