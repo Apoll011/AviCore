@@ -16,12 +16,14 @@ pub mod fs_module {
     /// # Returns
     /// The file contents as a string, or UNIT if the file could not be read
     #[rhai_fn(return_raw)]
-    pub fn read(path: &str) -> Result<Dynamic, Box<EvalAltResult>> {
+    pub fn read(path: &str) -> Result<String, Box<EvalAltResult>> {
         match fs::read_to_string(path) {
-            Ok(content) => Ok(Dynamic::from(content)),
+            Ok(content) => Ok(content),
             Err(e) => {
-                warn!("Skill: Error reading the file content: {}", e);
-                Ok(Dynamic::UNIT) // Return () instead of Some/None
+                Err(Box::new(EvalAltResult::ErrorRuntime(
+                    format!("Could not read directory: {}", e).into(),
+                    Position::NONE,
+                )))
             }
         }
     }
@@ -152,7 +154,7 @@ pub mod fs_module {
     /// # Returns
     /// A list of file and directory names
     #[rhai_fn(return_raw)]
-    pub fn list_files(path: &str) -> Result<Vec<Dynamic>, Box<EvalAltResult>> {
+    pub fn list_files(path: &str) -> Result<Vec<String>, Box<EvalAltResult>> {
         let mut files = Vec::new();
 
         match fs::read_dir(path) {
@@ -160,7 +162,7 @@ pub mod fs_module {
                 for entry in entries {
                     if let Ok(entry) = entry {
                         if let Ok(name) = entry.file_name().into_string() {
-                            files.push(Dynamic::from(name));
+                            files.push(name);
                         }
                     }
                 }

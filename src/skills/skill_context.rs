@@ -11,7 +11,7 @@ fn default_true() -> bool {
 }
 
 /// The manifest file containing metadata and configuration for a skill.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Default, Deserialize, Clone, CustomType)]
 pub struct Manifest {
     /// Unique identifier for the skill.
     pub id: String,
@@ -43,13 +43,17 @@ pub struct Manifest {
 /// The complete context of a skill, including its manifest, constants, settings, and localized resources.
 #[derive(Debug, Clone, CustomType)]
 pub struct SkillContext {
+    #[rhai_type(readonly)]
     /// The filesystem path to the skill directory.
     pub path: String,
+    #[rhai_type(readonly)]
     /// Metadata about the skill.
     pub info: Manifest,
 
+    #[rhai_type(skip)]
     pub config: ConfigSystem,
 
+    #[rhai_type(skip)]
     /// Localized resources for the skill.
     pub languages: LanguageSystem,
 }

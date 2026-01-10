@@ -175,50 +175,15 @@ impl ResponseValidator for BoolValidator {
     }
 }
 
-#[derive(Clone)]
-pub struct MappedValidator<T: Clone> {
-    pub mappings: HashMap<String, T>,
-    pub default: Option<T>,
+#[derive(Clone, CustomType)]
+pub struct MappedValidator {
+    pub mappings: HashMap<String, Dynamic>,
+    pub default: Option<Dynamic>,
     pub hard_search: bool,
 }
 
-impl<T: Clone + Clone + 'static + Send + Sync> CustomType for MappedValidator<T> {
-    fn build(mut builder: TypeBuilder<Self>) {
-        builder.with_name("MappedValidator");
-        builder.with_get_set(
-            "mappings",
-            |obj: &mut Self| obj.mappings.clone(),
-            |obj: &mut Self, val| obj.mappings = val,
-        );
-        builder.with_get_set(
-            "default",
-            |obj: &mut Self| obj.default.clone().map_or(Dynamic::UNIT, Dynamic::from),
-            |obj: &mut Self, val: Dynamic| {
-                if val.is_unit() {
-                    obj.default = None;
-                    Ok(())
-                } else if let Some(x) = val.read_lock::<T>() {
-                    obj.default = Some(x.clone());
-                    Ok(())
-                } else {
-                    Err(Box::new(EvalAltResult::ErrorMismatchDataType(
-                        "T".to_string(),
-                        val.type_name().to_string(),
-                        Position::NONE,
-                    )))
-                }
-            },
-        );
-        builder.with_get_set(
-            "hard_search",
-            |obj: &mut Self| obj.hard_search.clone(),
-            |obj: &mut Self, val| obj.hard_search = val,
-        );
-    }
-}
-
-impl<T: Clone> MappedValidator<T> {
-    pub fn new(mappings: HashMap<String, T>) -> Self {
+impl MappedValidator {
+    pub fn new(mappings: HashMap<String, Dynamic>) -> Self {
         Self {
             mappings,
             default: None,
@@ -226,7 +191,7 @@ impl<T: Clone> MappedValidator<T> {
         }
     }
 
-    pub fn with_default(mut self, default: T) -> Self {
+    pub fn with_default(mut self, default: Dynamic) -> Self {
         self.default = Some(default);
         self
     }
@@ -238,8 +203,8 @@ impl<T: Clone> MappedValidator<T> {
     }
 }
 
-impl<T: Clone> ResponseValidator for MappedValidator<T> {
-    type Output = T;
+impl ResponseValidator for MappedValidator {
+    type Output = Dynamic;
 
     fn validate_and_parse(&self, text: &str) -> Result<Self::Output, ValidationError> {
         let cleaned = self.clear_text(text).to_lowercase();
@@ -258,7 +223,7 @@ impl<T: Clone> ResponseValidator for MappedValidator<T> {
         };
 
         match result {
-            Some(value) => Ok(value.clone()),
+            Some(value) => Ok(value),
             None => self.default.clone().ok_or(ValidationError::NotAccepted),
         }
     }
@@ -415,62 +380,101 @@ mod tests {
     #[test]
     fn test_mapped_validator_basic() {
         let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
-        mappings.insert("green".to_string(), 3);
+        mappings.insert("red".to_string(), Dynamic::from(1i32));
+        mappings.insert("blue".to_string(), Dynamic::from(2i32));
+        mappings.insert("green".to_string(), Dynamic::from(3i32));
 
         let validator = MappedValidator::new(mappings);
 
-        assert_eq!(validator.validate_and_parse("red").unwrap(), 1);
-        assert_eq!(validator.validate_and_parse("blue").unwrap(), 2);
-        assert_eq!(validator.validate_and_parse("green").unwrap(), 3);
+        assert_eq!(
+            validator.validate_and_parse("red").unwrap().cast::<i32>(),
+            1
+        );
+        assert_eq!(
+            validator.validate_and_parse("blue").unwrap().cast::<i32>(),
+            2
+        );
+        assert_eq!(
+            validator.validate_and_parse("green").unwrap().cast::<i32>(),
+            3
+        );
     }
 
     #[test]
     fn test_mapped_validator_with_default() {
         let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
+        mappings.insert("red".to_string(), Dynamic::from(1i32));
+        mappings.insert("blue".to_string(), Dynamic::from(2i32));
 
-        let validator = MappedValidator::new(mappings).with_default(0);
+        let validator = MappedValidator::new(mappings).with_default(Dynamic::from(0i32));
 
-        assert_eq!(validator.validate_and_parse("red").unwrap(), 1);
-        assert_eq!(validator.validate_and_parse("unknown").unwrap(), 0);
-        assert_eq!(validator.validate_and_parse("xyz").unwrap(), 0);
+        assert_eq!(
+            validator.validate_and_parse("red").unwrap().cast::<i32>(),
+            1
+        );
+        assert_eq!(
+            validator
+                .validate_and_parse("unknown")
+                .unwrap()
+                .cast::<i32>(),
+            0
+        );
+        assert_eq!(
+            validator.validate_and_parse("xyz").unwrap().cast::<i32>(),
+            0
+        );
     }
 
     #[test]
     fn test_mapped_validator_without_default() {
         let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
+        mappings.insert("red".to_string(), Dynamic::from(1i32));
 
         let validator = MappedValidator::new(mappings);
 
-        assert_eq!(validator.validate_and_parse("red").unwrap(), 1);
+        assert_eq!(
+            validator.validate_and_parse("red").unwrap().cast::<i32>(),
+            1
+        );
         assert!(validator.validate_and_parse("unknown").is_err());
     }
 
     #[test]
     fn test_mapped_validator_partial_match() {
         let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
+        mappings.insert("red".to_string(), Dynamic::from(1i32));
+        mappings.insert("blue".to_string(), Dynamic::from(2i32));
 
         let validator = MappedValidator::new(mappings);
 
-        assert_eq!(validator.validate_and_parse("I like red").unwrap(), 1);
-        assert_eq!(validator.validate_and_parse("dark blue color").unwrap(), 2);
+        assert_eq!(
+            validator
+                .validate_and_parse("I like red")
+                .unwrap()
+                .cast::<i32>(),
+            1
+        );
+        assert_eq!(
+            validator
+                .validate_and_parse("dark blue color")
+                .unwrap()
+                .cast::<i32>(),
+            2
+        );
     }
 
     #[test]
     fn test_mapped_validator_hard_search() {
         let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
-        mappings.insert("blue".to_string(), 2);
+        mappings.insert("red".to_string(), Dynamic::from(1i32));
+        mappings.insert("blue".to_string(), Dynamic::from(2i32));
 
         let validator = MappedValidator::new(mappings).hard_search(true);
 
-        assert_eq!(validator.validate_and_parse("red").unwrap(), 1);
+        assert_eq!(
+            validator.validate_and_parse("red").unwrap().cast::<i32>(),
+            1
+        );
         assert!(validator.validate_and_parse("I like red").is_err());
         assert!(validator.validate_and_parse("dark blue").is_err());
     }
@@ -478,26 +482,50 @@ mod tests {
     #[test]
     fn test_mapped_validator_case_insensitive() {
         let mut mappings = HashMap::new();
-        mappings.insert("red".to_string(), 1);
+        mappings.insert("red".to_string(), Dynamic::from(1i32));
 
         let validator = MappedValidator::new(mappings);
 
-        assert_eq!(validator.validate_and_parse("RED").unwrap(), 1);
-        assert_eq!(validator.validate_and_parse("Red").unwrap(), 1);
+        assert_eq!(
+            validator.validate_and_parse("RED").unwrap().cast::<i32>(),
+            1
+        );
+        assert_eq!(
+            validator.validate_and_parse("Red").unwrap().cast::<i32>(),
+            1
+        );
     }
 
     #[test]
     fn test_mapped_validator_with_strings() {
         let mut mappings = HashMap::new();
-        mappings.insert("small".to_string(), "S".to_string());
-        mappings.insert("medium".to_string(), "M".to_string());
-        mappings.insert("large".to_string(), "L".to_string());
+        mappings.insert("small".to_string(), Dynamic::from("S".to_string()));
+        mappings.insert("medium".to_string(), Dynamic::from("M".to_string()));
+        mappings.insert("large".to_string(), Dynamic::from("L".to_string()));
 
-        let validator = MappedValidator::new(mappings).with_default("?".to_string());
+        let validator = MappedValidator::new(mappings).with_default(Dynamic::from("?".to_string()));
 
-        assert_eq!(validator.validate_and_parse("small").unwrap(), "S");
-        assert_eq!(validator.validate_and_parse("medium").unwrap(), "M");
-        assert_eq!(validator.validate_and_parse("unknown").unwrap(), "?");
+        assert_eq!(
+            validator
+                .validate_and_parse("small")
+                .unwrap()
+                .cast::<String>(),
+            "S"
+        );
+        assert_eq!(
+            validator
+                .validate_and_parse("medium")
+                .unwrap()
+                .cast::<String>(),
+            "M"
+        );
+        assert_eq!(
+            validator
+                .validate_and_parse("unknown")
+                .unwrap()
+                .cast::<String>(),
+            "?"
+        );
     }
 
     #[test]

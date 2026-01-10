@@ -1,10 +1,14 @@
 use crate::ctx::runtime;
 use crate::{get_ctx, remove_ctx, set_ctx};
 use log::{debug, info, trace};
+use rhai::Dynamic;
+use rhai::EvalAltResult;
+use rhai::Position;
+use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct User {
     pub id: String,
     pub profile: UserProfile,
@@ -13,7 +17,7 @@ pub struct User {
     pub metadata: Metadata,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct UserProfile {
     pub name: String,
     pub nickname: Option<String>,
@@ -23,13 +27,13 @@ pub struct UserProfile {
     pub birthday: Option<i64>, // Unix timestamp
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct Location {
     pub city: Option<String>,
     pub country: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct UserPreferences {
     pub communication_style: CommunicationStyle,
     pub response_length: ResponseLength,
@@ -37,7 +41,7 @@ pub struct UserPreferences {
     pub notification_preferences: NotificationPreferences,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum CommunicationStyle {
     Formal,
     Casual,
@@ -45,31 +49,31 @@ pub enum CommunicationStyle {
     Professional,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum ResponseLength {
     Concise,
     Balanced,
     Detailed,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct NotificationPreferences {
     pub quiet_hours: Option<QuietHours>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct QuietHours {
     pub start: String,
     pub end: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct VoiceData {
     pub voice_profile_id: Option<String>,
     pub preferred_voice_speed: f32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct Metadata {
     pub created_at: i64,       // Unix timestamp
     pub last_updated: i64,     // Unix timestamp
@@ -77,6 +81,7 @@ pub struct Metadata {
 }
 
 use parking_lot::RwLock;
+use rhai::CustomType;
 use std::sync::Arc;
 
 #[derive(Clone)]

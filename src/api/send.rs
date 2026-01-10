@@ -34,10 +34,15 @@ fn get_builder(client: &Client, url: &str, t: Method) -> RequestBuilder {
         _ => {
             error!("Method {} Not supported!", t);
             client.post(url)
-        },
+        }
     }
 }
-pub async fn send(client: &Client, url: &str, args: HashMap<String, String>, method: Method) -> Result<Response, Box<dyn std::error::Error>>  {
+pub async fn send(
+    client: &Client,
+    url: &str,
+    args: HashMap<String, String>,
+    method: Method,
+) -> Result<Response, Box<dyn std::error::Error>> {
     trace!("Sending request to server: {} with args: {:?}", url, args);
 
     let resp = match get_builder(client, url, method).query(&args).send().await {

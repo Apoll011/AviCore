@@ -27,12 +27,17 @@ fn register_types(engine: &mut Engine) {
         .build_type::<crate::dialogue::response::ListOrNoneValidator>()
         .build_type::<crate::dialogue::response::OptionalValidator>()
         .build_type::<crate::dialogue::response::BoolValidator>()
-        .build_type::<crate::dialogue::response::MappedValidator<String>>()
-        .build_type::<crate::dialogue::response::MappedValidator<i32>>()
-        .build_type::<crate::dialogue::response::MappedValidator<i64>>()
-        .build_type::<crate::dialogue::response::MappedValidator<f32>>()
-        .build_type::<crate::dialogue::response::MappedValidator<f64>>()
-        .build_type::<crate::dialogue::response::MappedValidator<bool>>();
+        .build_type::<crate::dialogue::response::MappedValidator>()
+        .build_type::<crate::user::User>()
+        .build_type::<crate::user::UserProfile>()
+        .build_type::<crate::user::Location>()
+        .build_type::<crate::user::UserPreferences>()
+        .build_type::<crate::user::NotificationPreferences>()
+        .build_type::<crate::user::QuietHours>()
+        .build_type::<crate::user::VoiceData>()
+        .build_type::<crate::user::Metadata>()
+        .build_type::<crate::skills::skill_context::Manifest>()
+        .build_type::<crate::skills::skill_context::SkillContext>();
 }
 
 pub fn create_avi_script_engine(static_m: bool) -> Result<Engine, Box<dyn std::error::Error>> {

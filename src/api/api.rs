@@ -53,7 +53,8 @@ impl Api {
     #[allow(dead_code)]
     pub async fn alive(&self) -> Result<Alive, Box<dyn std::error::Error>> {
         trace!("Checking server alive status");
-        let r = send_dict_to_server(&self.client, &self.get_url("/avi/alive")?, HashMap::new()).await?;
+        let r =
+            send_dict_to_server(&self.client, &self.get_url("/avi/alive")?, HashMap::new()).await?;
         let response = r.response;
         match response {
             Some(v) => {
@@ -234,12 +235,8 @@ impl Api {
         query.insert("text".to_string(), text.to_string());
         query.insert("lang".to_string(), lang.to_string());
         query.insert("remove_articles".to_string(), remove_articles.to_string());
-        let r = send_dict_to_server(
-            &self.client,
-            &self.get_url("/lang/parse/normalize")?,
-            query,
-        )
-        .await?;
+        let r = send_dict_to_server(&self.client, &self.get_url("/lang/parse/normalize")?, query)
+            .await?;
         Ok(serde_json::from_value(
             r.response.ok_or("No response from server")?,
         )?)
@@ -304,8 +301,12 @@ impl Api {
         query.insert("speech".to_string(), speech.to_string());
         query.insert("use_24hour".to_string(), use_24hour.to_string());
         query.insert("use_ampm".to_string(), use_ampm.to_string());
-        let r =
-            send_dict_to_server(&self.client, &self.get_url("/lang/format/nice_time")?, query).await?;
+        let r = send_dict_to_server(
+            &self.client,
+            &self.get_url("/lang/format/nice_time")?,
+            query,
+        )
+        .await?;
         Ok(serde_json::from_value(
             r.response.ok_or("No response from server")?,
         )?)

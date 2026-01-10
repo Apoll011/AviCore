@@ -1,24 +1,31 @@
 use crate::actions::action::Action;
-use std::sync::Arc;
-use std::time::Duration;
-use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
-use avi_device::DeviceCapabilities;
-use log::{error, info};
-use crate::ctx::{create_runtime, runtime};
-use crate::{register_action, watch_dir};
 use crate::actions::dialogue::{DialogueAction, DialogueCapability};
 use crate::actions::intent::IntentAction;
 use crate::actions::mesh::MeshAction;
 use crate::config::setting_or;
 use crate::context::context_cleanup_task;
+use crate::ctx::{create_runtime, runtime};
+use crate::{register_action, watch_dir};
+use avi_device::DeviceCapabilities;
+use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
+use log::{error, info};
+use std::sync::Arc;
+use std::time::Duration;
 
-pub async fn start_avi(is_core: bool, can_gate_away: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn start_avi(
+    is_core: bool,
+    can_gate_away: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting the System");
 
     let config_path = "./config";
     let config = AviDeviceConfig {
         node_name: "avi-core".to_string(),
-        device_type: if is_core { AviDeviceType::CORE } else { AviDeviceType::NODE },
+        device_type: if is_core {
+            AviDeviceType::CORE
+        } else {
+            AviDeviceType::NODE
+        },
         can_gateway_embedded: can_gate_away,
         capabilities: DeviceCapabilities::default(),
     };
@@ -29,11 +36,9 @@ pub async fn start_avi(is_core: bool, can_gate_away: bool) -> Result<(), Box<dyn
 
     create_runtime(config_path, device);
 
-
     register_action!(DialogueAction, {
         capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "both".to_string())),
     });
-
 
     register_action!(IntentAction, if: is_core, {
         watch_skill_dir: setting_or::<bool>("watch_skill_dir", false),

@@ -2,18 +2,24 @@ use crate::ctx::runtime;
 use crate::dialogue::reply::{RequestReply, ValidatorErasure};
 use crate::dialogue::response::{
     AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator,
+    ResponseValidator,
 };
 use crate::dialogue::utils::speak;
 use crate::skills::avi_script::helpers::get_skill_context;
 use crate::user::user_name;
 use crate::{get_ctx, rt_spawn, speak};
+use core::fmt;
 use log::error;
 use rhai::plugin::*;
-use rhai::{Dynamic, Position};
+use rhai::{Dynamic, EvalAltResult, Position};
 use std::collections::HashMap;
 
 #[export_module]
 pub mod dialogue_module {
+    use crate::remove_ctx;
+    use crate::skills::avi_script::helpers::skill_context_def;
+    use rhai::EvalAltResult;
+
     /// Creates a validator that accepts any input
     ///
     /// # Returns
@@ -63,159 +69,12 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A MappedValidator object
-    #[rhai_fn(return_raw)]
-    pub fn mapped_validator_string(
-        map: rhai::Map,
-    ) -> Result<MappedValidator<String>, Box<rhai::EvalAltResult>> {
+    pub fn mapped_validator(map: rhai::Map) -> MappedValidator {
         let mut mappings = HashMap::new();
         for (k, v) in map {
-            mappings.insert(
-                k.to_string(),
-                v.clone().try_cast::<String>().ok_or_else(|| {
-                    Box::new(rhai::EvalAltResult::ErrorMismatchDataType(
-                        "String".to_string(),
-                        v.type_name().to_string(),
-                        Position::NONE,
-                    ))
-                })?,
-            );
+            mappings.insert(k.to_string(), v);
         }
-        Ok(MappedValidator::<String>::new(mappings))
-    }
-
-    /// Creates a validator that maps string input to i32 values
-    ///
-    /// # Arguments
-    /// * `map` - A map of possible inputs to their i32 values
-    ///
-    /// # Returns
-    /// A MappedValidator object
-    #[rhai_fn(return_raw)]
-    pub fn mapped_validator_i32(
-        map: rhai::Map,
-    ) -> Result<MappedValidator<i32>, Box<rhai::EvalAltResult>> {
-        let mut mappings = HashMap::new();
-        for (k, v) in map {
-            mappings.insert(
-                k.to_string(),
-                v.as_int().map_err(|_e| {
-                    Box::new(rhai::EvalAltResult::ErrorMismatchDataType(
-                        "int".to_string(),
-                        v.type_name().to_string(),
-                        Position::NONE,
-                    ))
-                })? as i32,
-            );
-        }
-        Ok(MappedValidator::<i32>::new(mappings))
-    }
-
-    /// Creates a validator that maps string input to i64 values
-    ///
-    /// # Arguments
-    /// * `map` - A map of possible inputs to their i64 values
-    ///
-    /// # Returns
-    /// A MappedValidator object
-    #[rhai_fn(return_raw)]
-    pub fn mapped_validator_i64(
-        map: rhai::Map,
-    ) -> Result<MappedValidator<i64>, Box<rhai::EvalAltResult>> {
-        let mut mappings = HashMap::new();
-        for (k, v) in map {
-            mappings.insert(
-                k.to_string(),
-                v.as_int().map_err(|_e| {
-                    Box::new(rhai::EvalAltResult::ErrorMismatchDataType(
-                        "int".to_string(),
-                        v.type_name().to_string(),
-                        Position::NONE,
-                    ))
-                })?,
-            );
-        }
-        Ok(MappedValidator::<i64>::new(mappings))
-    }
-
-    /// Creates a validator that maps string input to f32 values
-    ///
-    /// # Arguments
-    /// * `map` - A map of possible inputs to their f32 values
-    ///
-    /// # Returns
-    /// A MappedValidator object
-    #[rhai_fn(return_raw)]
-    pub fn mapped_validator_f32(
-        map: rhai::Map,
-    ) -> Result<MappedValidator<f32>, Box<rhai::EvalAltResult>> {
-        let mut mappings = HashMap::new();
-        for (k, v) in map {
-            mappings.insert(
-                k.to_string(),
-                v.as_float().map_err(|_e| {
-                    Box::new(rhai::EvalAltResult::ErrorMismatchDataType(
-                        "float".to_string(),
-                        v.type_name().to_string(),
-                        Position::NONE,
-                    ))
-                })? as f32,
-            );
-        }
-        Ok(MappedValidator::<f32>::new(mappings))
-    }
-
-    /// Creates a validator that maps string input to f64 values
-    ///
-    /// # Arguments
-    /// * `map` - A map of possible inputs to their f64 values
-    ///
-    /// # Returns
-    /// A MappedValidator object
-    #[rhai_fn(return_raw)]
-    pub fn mapped_validator_f64(
-        map: rhai::Map,
-    ) -> Result<MappedValidator<f64>, Box<rhai::EvalAltResult>> {
-        let mut mappings = HashMap::new();
-        for (k, v) in map {
-            mappings.insert(
-                k.to_string(),
-                v.as_float().map_err(|_e| {
-                    Box::new(rhai::EvalAltResult::ErrorMismatchDataType(
-                        "float".to_string(),
-                        v.type_name().to_string(),
-                        Position::NONE,
-                    ))
-                })?,
-            );
-        }
-        Ok(MappedValidator::<f64>::new(mappings))
-    }
-
-    /// Creates a validator that maps string input to boolean values
-    ///
-    /// # Arguments
-    /// * `map` - A map of possible inputs to their boolean values
-    ///
-    /// # Returns
-    /// A MappedValidator object
-    #[rhai_fn(return_raw)]
-    pub fn mapped_validator_bool(
-        map: rhai::Map,
-    ) -> Result<MappedValidator<bool>, Box<rhai::EvalAltResult>> {
-        let mut mappings = HashMap::new();
-        for (k, v) in map {
-            mappings.insert(
-                k.to_string(),
-                v.as_bool().map_err(|_e| {
-                    Box::new(rhai::EvalAltResult::ErrorMismatchDataType(
-                        "bool".to_string(),
-                        v.type_name().to_string(),
-                        Position::NONE,
-                    ))
-                })?,
-            );
-        }
-        Ok(MappedValidator::<bool>::new(mappings))
+        MappedValidator::new(mappings)
     }
 
     /// Speaks a given text
@@ -280,14 +139,14 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(return_raw)]
-    pub fn confirm(
-        ctx: NativeCallContext,
-        question_locale_id: String,
-        handler: String,
-    ) -> Result<(), Box<rhai::EvalAltResult>> {
-        let skill_context = get_skill_context(&ctx)
-            .map_err(|e| Box::new(rhai::EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
+    pub fn confirm(ctx: NativeCallContext, question_locale_id: String, handler: String) {
+        let skill_context = match get_skill_context(&ctx) {
+            Ok(c) => c,
+            Err(e) => {
+                error!("confirm: {}", e);
+                return;
+            }
+        };
         speak!(
             &skill_context
                 .languages
@@ -295,9 +154,14 @@ pub mod dialogue_module {
                 .unwrap()
         );
 
-        let validator = Dynamic::from(BoolValidator::new(false));
-        handle_on_reply(handler, validator, skill_context.info.name);
-        Ok(())
+        let handler_cloned = handler.clone();
+        skill_context_def(ctx, move |skill| {
+            handle_on_reply(
+                handler_cloned.clone(),
+                Box::new(BoolValidator::new(false)),
+                skill.info.name,
+            );
+        });
     }
 
     /// Registers a handler for the next user response
@@ -308,16 +172,30 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(return_raw)]
-    pub fn on_reply(
-        ctx: NativeCallContext,
-        handler: String,
-        validator: Dynamic,
-    ) -> Result<(), Box<rhai::EvalAltResult>> {
-        let skill_context = get_skill_context(&ctx)
-            .map_err(|e| Box::new(rhai::EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        handle_on_reply(handler, validator, skill_context.info.name);
-        Ok(())
+    pub fn on_reply(ctx: NativeCallContext, handler: String, validator: Dynamic) {
+        let validator_type = validator.type_name().to_string();
+        let validator_cloned = validator.clone();
+        let handler_cloned = handler.clone();
+
+        skill_context_def(ctx, move |skill| {
+            let v: Box<dyn ValidatorErasure> =
+                if let Some(v) = validator_cloned.clone().try_cast::<AnyValidator>() {
+                    Box::new(v)
+                } else if let Some(v) = validator_cloned.clone().try_cast::<BoolValidator>() {
+                    Box::new(v)
+                } else if let Some(v) = validator_cloned.clone().try_cast::<ListOrNoneValidator>() {
+                    Box::new(v)
+                } else if let Some(v) = validator_cloned.clone().try_cast::<OptionalValidator>() {
+                    Box::new(v)
+                } else if let Some(v) = validator_cloned.clone().try_cast::<MappedValidator>() {
+                    Box::new(v)
+                } else {
+                    error!("Invalid validator type: {}", validator_type);
+                    return;
+                };
+
+            handle_on_reply(handler_cloned.clone(), v, skill.info.name);
+        });
     }
 }
 
@@ -325,38 +203,13 @@ fn device_listen() {
     todo!()
 }
 
-fn handle_on_reply(handler: String, validator: Dynamic, skill_name: String) {
-    let validator_erased: Box<dyn ValidatorErasure> = if validator.is::<BoolValidator>() {
-        Box::new(validator.cast::<BoolValidator>())
-    } else if validator.is::<AnyValidator>() {
-        Box::new(validator.cast::<AnyValidator>())
-    } else if validator.is::<ListOrNoneValidator>() {
-        Box::new(validator.cast::<ListOrNoneValidator>())
-    } else if validator.is::<OptionalValidator>() {
-        Box::new(validator.cast::<OptionalValidator>())
-    } else if validator.is::<MappedValidator<String>>() {
-        Box::new(validator.cast::<MappedValidator<String>>())
-    } else if validator.is::<MappedValidator<i32>>() {
-        Box::new(validator.cast::<MappedValidator<i32>>())
-    } else if validator.is::<MappedValidator<i64>>() {
-        Box::new(validator.cast::<MappedValidator<i64>>())
-    } else if validator.is::<MappedValidator<f32>>() {
-        Box::new(validator.cast::<MappedValidator<f32>>())
-    } else if validator.is::<MappedValidator<f64>>() {
-        Box::new(validator.cast::<MappedValidator<f64>>())
-    } else if validator.is::<MappedValidator<bool>>() {
-        Box::new(validator.cast::<MappedValidator<bool>>())
-    } else {
-        error!("Unknown validator type: {}", validator.type_name());
-        return;
-    };
-
+fn handle_on_reply(handler: String, validator: Box<dyn ValidatorErasure>, skill_name: String) {
     rt_spawn! {
         if let Ok(c) = runtime() { c.reply_manager
         .set_reply(RequestReply {
             skill_request: skill_name,
             handler,
-            validator: validator_erased,
+            validator,
         })
         .await };
     }

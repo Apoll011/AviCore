@@ -12,12 +12,11 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(return_raw)]
-    pub fn info(ctx: NativeCallContext, text: &str) -> Result<(), Box<EvalAltResult>> {
-        let skill_name = get_skill_name(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        info!("Skill {} - {}", skill_name, text);
-        Ok(())
+    pub fn info(ctx: NativeCallContext, text: &str) {
+        match get_skill_name(&ctx) {
+            Ok(v) => info!("Skill {} - {}", v, text),
+            Err(_) => (),
+        };
     }
 
     /// Logs a trace-level message for detailed debugging
@@ -27,12 +26,11 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(return_raw)]
-    pub fn trace(ctx: NativeCallContext, text: &str) -> Result<(), Box<EvalAltResult>> {
-        let skill_name = get_skill_name(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        trace!("Skill {} - {}", skill_name, text);
-        Ok(())
+    pub fn trace(ctx: NativeCallContext, text: &str) {
+        match get_skill_name(&ctx) {
+            Ok(v) => trace!("Skill {} - {}", v, text),
+            Err(_) => (),
+        };
     }
 
     /// Logs a debug-level message
@@ -42,12 +40,11 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(return_raw)]
-    pub fn debug(ctx: NativeCallContext, text: &str) -> Result<(), Box<EvalAltResult>> {
-        let skill_name = get_skill_name(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        debug!("Skill {} - {}", skill_name, text);
-        Ok(())
+    pub fn debug(ctx: NativeCallContext, text: &str) {
+        match get_skill_name(&ctx) {
+            Ok(v) => debug!("Skill {} - {}", v, text),
+            Err(_) => (),
+        };
     }
 
     /// Logs a warning message
@@ -57,12 +54,11 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(return_raw)]
-    pub fn warn(ctx: NativeCallContext, text: &str) -> Result<(), Box<EvalAltResult>> {
-        let skill_name = get_skill_name(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        warn!("Skill {} - {}", skill_name, text);
-        Ok(())
+    pub fn warn(ctx: NativeCallContext, text: &str) {
+        match get_skill_name(&ctx) {
+            Ok(v) => warn!("Skill {} - {}", v, text),
+            Err(_) => (),
+        };
     }
 
     /// Logs an error message
@@ -72,11 +68,10 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(return_raw)]
-    pub fn error(ctx: NativeCallContext, text: &str) -> Result<(), Box<EvalAltResult>> {
-        let skill_name = get_skill_name(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        error!("Skill {} - {}", skill_name, text);
-        Ok(())
+    pub fn error(ctx: NativeCallContext, text: &str) {
+        match get_skill_name(&ctx) {
+            Ok(v) => error!("Skill {} - {}", v, text),
+            Err(_) => (),
+        };
     }
 }

@@ -50,8 +50,6 @@ pub mod slots_module {
     pub fn get(intent: Intent, name: &str) -> Dynamic {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
-            // Convert slot.value.value to Dynamic
-            // You'll need to implement this conversion based on your Intent type
             json_to_dynamic(slot.value.value.clone())
         } else {
             Dynamic::UNIT

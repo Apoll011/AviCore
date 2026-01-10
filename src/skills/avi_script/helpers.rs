@@ -135,6 +135,18 @@ where
     func(skill_context)
 }
 
+pub fn skill_context_def<T: Variant + Clone + Default, F>(ctx: NativeCallContext, func: F) -> T
+where
+    F: Fn(SkillContext) -> T,
+{
+    let skill_context = match get_skill_context(&ctx) {
+        Ok(skill_context) => skill_context,
+        Err(_) => return Default::default(),
+    };
+
+    func(skill_context)
+}
+
 pub fn get_skill_name(ctx: &NativeCallContext) -> Result<String, String> {
     Ok(get_skill_context(ctx)?.info.name)
 }

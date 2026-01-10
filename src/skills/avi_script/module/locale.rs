@@ -1,26 +1,21 @@
 use crate::dialogue::languages::lang;
 use crate::skills::avi_script::helpers::get_skill_context;
+use crate::skills::avi_script::helpers::{skill_context, skill_context_def};
 use rhai::plugin::*;
 use rhai::{Dynamic, EvalAltResult, Map, NativeCallContext, Position};
 
 #[export_module]
 pub mod locale_module {
+
     /// Gets a translation for a given ID in the current locale
     ///
     /// # Arguments
     /// * `id` - The ID of the translation to retrieve
     ///
     /// # Returns
-    /// The translation string if found, or UNIT if not found
-    #[rhai_fn(return_raw)]
-    pub fn get(ctx: NativeCallContext, id: &str) -> Result<Dynamic, Box<EvalAltResult>> {
-        let skill_context = get_skill_context(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-
-        match skill_context.languages.get_translation(id) {
-            Some(translation) => Ok(Dynamic::from(translation)),
-            None => Ok(Dynamic::UNIT),
-        }
+    /// The translation string if found, or None if not found
+    pub fn get(ctx: NativeCallContext, id: &str) -> Option<String> {
+        skill_context(ctx, None, |v| v.languages.get_translation(id))
     }
 
     /// Gets a formatted translation for a given ID in the current locale
@@ -31,26 +26,11 @@ pub mod locale_module {
     ///
     /// # Returns
     /// The formatted translation string if found, or UNIT if not found
-    #[rhai_fn(return_raw)]
-    pub fn get_fmt(
-        ctx: NativeCallContext,
-        id: &str,
-        params: Map,
-    ) -> Result<Dynamic, Box<EvalAltResult>> {
-        let skill_context = get_skill_context(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        let current_lang = lang();
-
-        // Convert Map to HashMap<String, String>
-        let string_params = map_to_string_hashmap(params)?;
-
-        match skill_context
-            .languages
-            .locale_fmt(&current_lang, id, &string_params)
-        {
-            Some(formatted) => Ok(Dynamic::from(formatted)),
-            None => Ok(Dynamic::UNIT),
-        }
+    pub fn get_fmt(ctx: NativeCallContext, id: &str, params: Map) -> Option<String> {
+        let string_params = map_to_string_hashmap(params).ok()?;
+        skill_context(ctx, None, |v| {
+            v.languages.locale_fmt(&lang(), id, &string_params)
+        })
     }
 
     /// Lists all translations for a given locale code
@@ -60,11 +40,8 @@ pub mod locale_module {
     ///
     /// # Returns
     /// A map of translations
-    #[rhai_fn(return_raw)]
-    pub fn list(ctx: NativeCallContext, code: &str) -> Result<Dynamic, Box<EvalAltResult>> {
-        let skill_context = get_skill_context(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        Ok(Dynamic::from(skill_context.languages.list(code)))
+    pub fn list(ctx: NativeCallContext, code: &str) -> Vec<(String, serde_yaml::Value)> {
+        skill_context_def(ctx, |v| v.languages.list(code))
     }
 
     /// Checks if a translation exists for a given ID
@@ -74,11 +51,8 @@ pub mod locale_module {
     ///
     /// # Returns
     /// True if the translation exists, false otherwise
-    #[rhai_fn(return_raw)]
-    pub fn has(ctx: NativeCallContext, id: &str) -> Result<bool, Box<EvalAltResult>> {
-        let skill_context = get_skill_context(&ctx)
-            .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
-        Ok(skill_context.languages.has(id))
+    pub fn has(ctx: NativeCallContext, id: &str) -> bool {
+        skill_context_def(ctx, |v| v.languages.has(id))
     }
 
     /// Gets the current language code

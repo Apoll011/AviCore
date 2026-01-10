@@ -233,15 +233,8 @@ impl ConfigSystem {
         self.get_settings().iter().any(|s| s.name == name)
     }
 
-    pub fn get_setting_full(&self, name: &str) -> SettingNamed {
-        self.get_settings()
-            .iter()
-            .find(|s| s.name == name)
-            .cloned()
-            .unwrap_or(SettingNamed {
-                name: name.to_string(),
-                setting: Setting::default(),
-            })
+    pub fn get_setting_full(&self, name: &str) -> Option<SettingNamed> {
+        self.get_settings().iter().find(|s| s.name == name).cloned()
     }
 
     pub fn get_settings(&self) -> Vec<SettingNamed> {
