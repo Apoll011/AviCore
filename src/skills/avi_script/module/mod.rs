@@ -9,6 +9,8 @@ mod settings;
 mod fs;
 mod slots;
 mod log;
+mod locale;
+mod skill;
 
 pub fn add(engine: &mut Engine) {
     let mut resolver = StaticModuleResolver::new();
@@ -20,6 +22,9 @@ pub fn add(engine: &mut Engine) {
     context::add(&mut resolver);
     fs::add(&mut resolver);
     slots::add(&mut resolver);
-
+    log::add(&mut resolver);
+    locale::add(&mut resolver);
+    skill::add(&mut resolver);
+    
     engine.set_module_resolver(resolver);
 }
