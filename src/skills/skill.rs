@@ -1,10 +1,10 @@
-use std::fs::File;
-use std::io::Read;
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::skills::skill_context::SkillContext;
 use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
+use std::fs::File;
+use std::io::Read;
 use std::sync::{Arc, RwLock};
 
 /// Represents a standalone skill that can be executed by the Avi system.
@@ -36,9 +36,7 @@ impl Skill {
     /// # Errors
     ///
     /// Returns an error if the skill context or module fails to load.
-    pub fn new(
-        name: String,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
         let mut engine = create_avi_script_engine()?;
         engine.set_default_tag(Dynamic::from(context.clone()));
@@ -77,21 +75,19 @@ impl Skill {
                 let re = regex::Regex::new(r#"import\s+"([^"]+)"\s*;"#)?;
                 let script = re.replace_all(&raw_script, r#"import "$1" as $1;"#);
                 Ok(engine.compile(script)?)
-            },
-            Err(e) => Err(Box::from(e))
+            }
+            Err(e) => Err(Box::from(e)),
         }
     }
 
     fn read_file(path: &str) -> Result<String, String> {
-        let mut f = File::open(path).map_err(|_err| {
-            format!("Cannot open script file '{}'", path.to_string())
-        })?;
+        let mut f = File::open(path)
+            .map_err(|_err| format!("Cannot open script file '{}'", path.to_string()))?;
 
         let mut contents = String::new();
 
-        f.read_to_string(&mut contents).map_err(|_err| {
-            format!("Cannot read script file '{}'", path.to_string())
-        })?;
+        f.read_to_string(&mut contents)
+            .map_err(|_err| format!("Cannot read script file '{}'", path.to_string()))?;
 
         if contents.starts_with("#!") {
             match contents.find('\n') {
