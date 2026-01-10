@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::Read;
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::engine::create_avi_script_engine;
@@ -69,7 +71,38 @@ impl Skill {
         path: &str,
         entry: &str,
     ) -> Result<AST, Box<dyn std::error::Error>> {
-        Ok(engine.compile_file(format!("{}/{}", path, entry).into())?)
+        let path = &*format!("{}/{}", path, entry);
+        match Self::read_file(path) {
+            Ok(raw_script) => {
+                let re = regex::Regex::new(r#"import\s+"([^"]+)"\s*;"#)?;
+                let script = re.replace_all(&raw_script, r#"import "$1" as $1;"#);
+                Ok(engine.compile(script)?)
+            },
+            Err(e) => Err(Box::from(e))
+        }
+    }
+
+    fn read_file(path: &str) -> Result<String, String> {
+        let mut f = File::open(path).map_err(|_err| {
+            format!("Cannot open script file '{}'", path.to_string())
+        })?;
+
+        let mut contents = String::new();
+
+        f.read_to_string(&mut contents).map_err(|_err| {
+            format!("Cannot read script file '{}'", path.to_string())
+        })?;
+
+        if contents.starts_with("#!") {
+            match contents.find('\n') {
+                Some(n) => {
+                    contents.drain(0..n).count();
+                }
+                None => contents.clear(),
+            }
+        };
+
+        Ok(contents)
     }
 
     /// Initializes a Dyon runtime for the skill.

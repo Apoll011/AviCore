@@ -86,9 +86,7 @@ impl SkillManager {
     /// # Errors
     ///
     /// Returns an error if the path is not a directory or if the skill initialization fails.
-    fn load_skill(
-        path: PathBuf,
-    ) -> Result<(String, Skill), Box<dyn std::error::Error>> {
+    fn load_skill(path: PathBuf) -> Result<(String, Skill), Box<dyn std::error::Error>> {
         if !path.is_dir() {
             return Err("Not a directory".into());
         }
@@ -103,10 +101,7 @@ impl SkillManager {
             None => return Err("Could not get directory name as string".into()),
         };
 
-        Ok((
-            dir_name_str.into(),
-            Skill::new(dir_name_str.to_string())?,
-        ))
+        Ok((dir_name_str.into(), Skill::new(dir_name_str.to_string())?))
     }
 
     /// Dispatches an intent to the corresponding skill for execution.

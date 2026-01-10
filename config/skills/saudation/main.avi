@@ -1,4 +1,4 @@
-import "dialogue" as dialogue;
+import "dialogue";
 
 on_start {
     print("hhh");
