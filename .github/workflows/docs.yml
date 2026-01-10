@@ -34,21 +34,29 @@ jobs:
         run: |
           cat > site/docusaurus.config.js <<'EOF'
           // @ts-check
-
+          
+          const organizationName = process.env.GITHUB_REPOSITORY_OWNER;
+          const projectName = process.env.GITHUB_REPOSITORY.split('/')[1];
+          
           const config = {
             title: 'API Docs',
-            url: 'https://apoll011.github.io',
-            baseUrl: '/AviCore/',
-            favicon: 'img/favicon.ico',
-
+          
+            url: `https://${organizationName}.github.io`,
+            baseUrl: `/${projectName}/`,
+          
+            organizationName,
+            projectName,
+          
+            trailingSlash: true,
+          
             onBrokenLinks: 'warn',
-
+          
             markdown: {
               hooks: {
                 onBrokenMarkdownLinks: 'warn',
               },
             },
-
+          
             presets: [
               [
                 'classic',
@@ -62,7 +70,7 @@ jobs:
                 },
               ],
             ],
-
+          
             themeConfig: {
               navbar: {
                 title: 'API Docs',
@@ -71,7 +79,7 @@ jobs:
               footer: undefined,
             },
           };
-
+          
           module.exports = config;
           EOF
 
