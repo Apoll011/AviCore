@@ -1,18 +1,50 @@
 {
   "name": "avi-dsl",
+  "private": true,
+  "displayName": "Avi Language Support",
+  "description": "Syntax highlighting for Avi scripts",
+  "publisher": "apollo",
+  "version": "2.0.0",
+  "categories": [
+    "Programming Languages",
+    "Formatters"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
   "contributes": {
+    "languages": [
+      {
+        "id": "avi",
+        "aliases": [
+          "AviScript"
+        ],
+        "extensions": [
+          ".avi"
+        ],
+        "filenames": [],
+        "filenamePatterns": [],
+        "mimetypes": [],
+        "configuration": "./avi.configuration.json"
+      }
+    ],
     "grammars": [
       {
         "language": "avi",
         "scopeName": "source.avi",
         "path": "./avi.tmLanguage.json"
-      }
-    ],
-    "languages": [
+      },
       {
-        "id": "avi",
-        "extensions": [".avi"],
-        "aliases": ["AviScript"]
+        "scopeName": "markdown.avi.codeblock",
+        "path": "./syntax/avi.markdown.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.avi": "avi"
+        }
       }
     ]
   }

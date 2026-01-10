@@ -1,5 +1,7 @@
 use crate::config::ConfigSystem;
 use crate::dialogue::languages::LanguageSystem;
+use rhai::CustomType;
+use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
@@ -39,7 +41,7 @@ pub struct Manifest {
 }
 
 /// The complete context of a skill, including its manifest, constants, settings, and localized resources.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, CustomType)]
 pub struct SkillContext {
     /// The filesystem path to the skill directory.
     pub path: String,

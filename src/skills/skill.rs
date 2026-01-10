@@ -1,10 +1,11 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
-use crate::skills::dsl;
+use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::skills::skill_context::SkillContext;
-use dyon::embed::PushVariable;
-use dyon::{Module, Runtime};
-use std::sync::Arc;
+use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
+use std::fs::File;
+use std::io::Read;
+use std::sync::{Arc, RwLock};
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -16,10 +17,11 @@ pub struct Skill {
     /// The name of the skill.
     #[allow(dead_code)]
     name: String,
-    /// The loaded Dyon module containing the skill's logic.
-    module: Arc<Module>,
+    engine: Engine,
+
+    ast: Arc<RwLock<AST>>,
     /// The Dyon runtime used to execute the skill.
-    runtime: Runtime,
+    scope: Scope<'static>,
     /// The configuration and state of the skill.
     context: SkillContext,
 }
@@ -36,19 +38,20 @@ impl Skill {
     /// Returns an error if the skill context or module fails to load.
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
-
-        let module: Arc<Module> =
-            match dsl::create(&name, &context.info.entry, &Self::skill_path(&name)?) {
-                Ok(v) => v,
-                Err(e) => return Err(format!("Could not load skill module ({})", e).into()),
-            };
+        let mut engine = create_avi_script_engine()?;
+        engine.set_default_tag(Dynamic::from(context.clone()));
 
         Ok(Self {
             pathname: Self::skill_path(&name)?,
             name: name.clone(),
-            module,
-            runtime: Self::create_runtime(context.clone()),
+            ast: Arc::new(RwLock::new(Self::get_ast(
+                &engine,
+                &context.path,
+                &context.info.entry,
+            )?)),
+            scope: Self::create_scope(),
             context,
+            engine,
         })
     }
 
@@ -61,11 +64,46 @@ impl Skill {
         }
     }
 
+    fn get_ast(
+        engine: &Engine,
+        path: &str,
+        entry: &str,
+    ) -> Result<AST, Box<dyn std::error::Error>> {
+        let path = &*format!("{}/{}", path, entry);
+        match Self::read_file(path) {
+            Ok(raw_script) => {
+                let re = regex::Regex::new(r#"import\s+"([^"]+)"\s*;"#)?;
+                let script = re.replace_all(&raw_script, r#"import "$1" as $1;"#);
+                Ok(engine.compile(script)?)
+            }
+            Err(e) => Err(Box::from(e)),
+        }
+    }
+
+    fn read_file(path: &str) -> Result<String, String> {
+        let mut f = File::open(path)
+            .map_err(|_err| format!("Cannot open script file '{}'", path.to_string()))?;
+
+        let mut contents = String::new();
+
+        f.read_to_string(&mut contents)
+            .map_err(|_err| format!("Cannot read script file '{}'", path.to_string()))?;
+
+        if contents.starts_with("#!") {
+            match contents.find('\n') {
+                Some(n) => {
+                    contents.drain(0..n).count();
+                }
+                None => contents.clear(),
+            }
+        };
+
+        Ok(contents)
+    }
+
     /// Initializes a Dyon runtime for the skill.
-    fn create_runtime(context: SkillContext) -> Runtime {
-        let mut runtime = Runtime::new();
-        runtime.push(context);
-        runtime
+    fn create_scope() -> Scope<'static> {
+        Scope::new()
     }
 
     /// Starts the skill by running its main module.
@@ -73,11 +111,24 @@ impl Skill {
     /// # Errors
     ///
     /// Returns an error if the skill is disabled or if the runtime fails.
-    pub fn start(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+    pub fn start(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if self.disabled() {
             return Err("Skill is disabled".into());
         }
-        dsl::start(&mut self.runtime, &self.module)
+
+        self.run()
+    }
+
+    fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(self.engine.run_ast_with_scope(
+            &mut self.scope,
+            &*self.ast.read().map_err(|e| e.to_string())?,
+        )?)
+    }
+
+    pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.scope.push_constant("END", true);
+        self.run()
     }
 
     /// Formats an intent name into a Dyon-compatible function name.
@@ -95,11 +146,15 @@ impl Skill {
     ///
     /// Returns an error if the intent name is missing or if the corresponding Dyon function cannot be found.
     pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
-        let name;
         match intent.intent.clone() {
             Some(v) => {
                 if let Some(intent_name) = v.intent_name {
-                    name = format!("intent_{}", Self::format_intent_name(intent_name)).to_string();
+                    println!("{}", intent_name);
+                    self.scope.push_constant(
+                        "INTENT_NAME",
+                        ImmutableString::from(&Self::format_intent_name(intent_name)),
+                    );
+                    self.scope.push_constant("INTENT", intent.clone());
                 } else {
                     return Err("Intent name is not defined".into());
                 }
@@ -107,15 +162,26 @@ impl Skill {
             None => return Err("Intent is not defined".into()),
         }
 
-        self.run_function(&name, vec![intent])
+        self.run()?;
+        let _ = self.scope.remove::<ImmutableString>("INTENT");
+        let _ = self.scope.remove::<Intent>("INTENT_NAME");
+        Ok(true)
     }
 
-    pub fn run_function<T: PushVariable>(
+    pub fn run_function<T: Variant + Clone>(
         &mut self,
         function_name: &str,
-        args: Vec<T>,
-    ) -> Result<bool, Box<dyn std::error::Error>> {
-        dsl::run_function::<T>(&mut self.runtime, &self.module, function_name, args)
+        args: impl FuncArgs,
+    ) -> Result<T, Box<dyn std::error::Error>> {
+        match self.engine.call_fn::<T>(
+            &mut self.scope,
+            &*self.ast.read().map_err(|e| e.to_string())?,
+            function_name,
+            args,
+        ) {
+            Ok(v) => Ok(v),
+            Err(e) => Err(e),
+        }
     }
 
     /// Checks if the skill is currently disabled.
@@ -125,5 +191,12 @@ impl Skill {
 
     pub fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn reload(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.context = SkillContext::new(&self.pathname)?;
+        let new_ast = Self::get_ast(&self.engine, &self.context.path, &self.context.info.entry)?;
+        *self.ast.write().map_err(|e| e.to_string())? = new_ast;
+        Ok(())
     }
 }

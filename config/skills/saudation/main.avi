@@ -1,30 +1,20 @@
-use setting as setting
-use locale as locale
-use constant as constant
-use test as test
-use dialogue as d
-use context as c
-use user as user
+import "dialogue";
 
-fn intent_hi(intent: Intent) {
-    if (test::is_eco()) {
-        say(unwrap(locale::get_fmt("hello", {"name": user::name()})))
-        d::confirm("ask", "reply")
-    }
-    else {
-        say("Oii!")
-    }
+on_start {
+    print("hhh");
+    hi(true);
+    print(dialogue::any_validator());
+    //print(constant::list());
 }
 
-fn reply(response) {
-    if (response == "true") {
-        say("Okkk!")
-    }
-    else {
-        say("Sorry")
-    }
+fn hi(response) {
+    print(response);
+    print(response.type_of());
+    print("HELLO!");
 }
 
-fn main() {
-    info("Greeting Skill Loaded!")
+on_intent "hi" {
+    print("Hi tiago");
+    //confirm("ask", "hi")
+    dialogue::on_reply("hi", dialogue::bool_validator(true));
 }

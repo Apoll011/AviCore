@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate dyon;
-
 mod actions;
 mod api;
 mod config;
@@ -9,7 +6,7 @@ mod ctx;
 mod dialogue;
 mod log;
 mod macros;
-mod skills;
+pub mod skills;
 mod user;
 mod utils;
 
@@ -21,23 +18,32 @@ use crate::config::setting_or;
 use crate::context::context_cleanup_task;
 use crate::ctx::{create_runtime, runtime};
 use crate::log::AviCoreLogger;
+use crate::utils::generate_documentation;
 use ::log::{error, info};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
+use clap::Parser;
 use std::sync::Arc;
 use std::time::Duration;
 
-/// Entry point for the AviCore application.
-///
-/// This function initializes the device, set up the runtime context,
-/// and registers actions like intent handling and dialogue management.
-///
-/// # Errors
-///
-/// Returns an error if device initialization, context setup, or signal handling fails.
+#[derive(Parser, Debug)]
+#[command(name = "AviCore")]
+#[command(about = "AviCore application", long_about = None)]
+struct Args {
+    /// Generate documentation and exit
+    #[arg(long = "generate-docs")]
+    generate_docs: bool,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     AviCoreLogger::init();
+
+    let args = Args::parse();
+
+    if args.generate_docs {
+        return generate_documentation();
+    }
 
     info!("Starting the System");
 

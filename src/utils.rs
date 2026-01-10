@@ -1,4 +1,7 @@
 use crate::ctx::runtime;
+#[allow(unused_imports)]
+use crate::skills::avi_script::engine::create_avi_script_engine;
+#[allow(unused_imports)]
 use log::warn;
 
 pub async fn core_id() -> Option<String> {
@@ -12,4 +15,47 @@ pub async fn core_id() -> Option<String> {
         },
         Err(_) => None,
     }
+}
+
+#[cfg(feature = "docs")]
+pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
+    use rhai_autodocs::*;
+
+    let engine = create_avi_script_engine()?;
+
+    let docs = export::options()
+        .include_standard_packages(true)
+        .order_items_with(export::ItemsOrder::ByIndex)
+        .format_sections_with(export::SectionFormat::Tabs)
+        .export(&engine)?;
+
+    let path = "./docs";
+    std::fs::create_dir_all(path)?;
+
+    let glossary = generate::docusaurus_glossary()
+        .with_slug("/api")
+        .generate(&docs)?;
+
+    std::fs::write(
+        std::path::PathBuf::from_iter([path, "1-glossary.mdx"]),
+        glossary,
+    )?;
+
+    for (name, doc) in generate::docusaurus().with_slug("/api").generate(&docs)? {
+        println!("Generating doc file: {}.mdx", name);
+        std::fs::write(
+            std::path::PathBuf::from_iter([path, &format!("{}.mdx", &name)]),
+            doc,
+        )?;
+    }
+
+    Ok(())
+}
+
+#[cfg(not(feature = "docs"))]
+pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
+    ::log::error!(
+        "Documentation generation requires the 'docs' feature. Build with: cargo run --features docs -- --generate-docs"
+    );
+    return Err("docs feature not enabled".into());
 }

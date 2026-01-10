@@ -1,8 +1,8 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::skill::Skill;
-use dyon::embed::PushVariable;
 use log::{info, warn};
+use rhai::Variant;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -69,9 +69,12 @@ impl SkillManager {
         }
     }
 
-    pub fn reload(&mut self) {
+    pub fn reload(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         info!("Reloading skills.");
-        self.skills = Self::load_skills();
+        for (_name, skill) in &mut self.skills {
+            skill.reload()?;
+        }
+        Ok(())
     }
 
     /// Loads an individual skill from a directory path.
@@ -137,7 +140,7 @@ impl SkillManager {
         }
     }
 
-    pub fn run_skill_function<T: PushVariable>(
+    pub fn run_skill_function<T: Variant + Clone>(
         &mut self,
         skill_name: &str,
         function_name: &str,

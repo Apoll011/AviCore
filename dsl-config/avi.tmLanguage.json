@@ -1,271 +1,873 @@
 {
-  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Avi",
+  "version": "v2.0.0",
+  "fileTypes": [
+    "avi"
+  ],
+  "uuid": "1e76f176-ee1c-4331-a781-eb21c0da77cf",
+  "scopeName": "source.avi",
+  "information_for_contributors": [
+    "aster: galaster@foxmail.com",
+    "schungx: schungx@live.com",
+    "Apoll011: tiagobernrdo@gmail.com"
+  ],
   "patterns": [
     {
-      "include": "#block_doc_comment"
-    },
-    {
-      "include": "#block_comment"
-    },
-    {
-      "include": "#line_doc_comment"
-    },
-    {
-      "include": "#line_comment"
-    },
-    {
-      "include": "#string_literal"
-    },
-    {
-      "comment": "Floating point literal (fraction)",
-      "name": "constant.numeric.float.dyon",
-      "match": "\\b[0-9][0-9_]*\\.[0-9][0-9_]*([eE][+-]?[0-9_]+)?(f32|f64)?\\b"
-    },
-    {
-      "comment": "Floating point literal (exponent)",
-      "name": "constant.numeric.float.dyon",
-      "match": "\\b[0-9][0-9_]*(\\.[0-9][0-9_]*)?[eE][+-]?[0-9_]+(f32|f64)?\\b"
-    },
-    {
-      "comment": "Floating point literal (decimal)",
-      "name": "constant.numeric.integer.decimal.dyon",
-      "match": "\\b[0-9][0-9_]*\\b"
-    },
-    {
-      "comment": "Static storage modifier",
-      "name": "storage.modifier.static.dyon",
-      "match": "\\bstatic\\b"
-    },
-    {
-      "comment": "Boolean constant",
-      "name": "constant.language.boolean.dyon",
-      "match": "\\b(true|false)\\b"
-    },
-    {
-      "comment": "Control keyword",
-      "name": "keyword.control.dyon",
-      "match": "\\b(break|continue|else|if|for|loop|return|in)\\b"
-    },
-    {
-      "comment": "Keyword",
-      "name": "keyword.other.dyon",
-      "match": "\\b(ns|use|as|link|grab|try|sum|sum_vec4|prod|prod_vec4|min|max|any|all|sift|and|or|go|vec2|vec3|vec4|([xyzw][xyzw]+))\\b"
-    },
-    {
-      "include": "#self"
-    },
-    {
-      "include": "#mut"
-    },
-    {
-      "include": "#lifetime"
-    },
-    {
-      "comment": "Miscellaneous operator",
-      "name": "keyword.operator.misc.dyon",
-      "match": "(\\bx\\s)"
-    },
-    {
-      "comment": "Comparison operator",
-      "name": "keyword.operator.comparison.dyon",
-      "match": "(&&|\\|\\||==|!=)"
-    },
-    {
-      "comment": "Assignment operator",
-      "name": "keyword.operator.assignment.dyon",
-      "match": "(:=|\\+=|-=|/=|\\*=|%=|\\^=|&=|\\|=|<<=|>>=|=)"
-    },
-    {
-      "comment": "Arithmetic operator",
-      "name": "keyword.operator.arithmetic.dyon",
-      "match": "(!|\\+|-|/|\\*|%|\\^|&|\\||<<|>>)"
-    },
-    {
-      "comment": "Comparison operator (second group because of regex precedence)",
-      "name": "keyword.operator.comparison.dyon",
-      "match": "(<=|>=|<|>)"
-    },
-    {
-      "include": "#core_types"
-    },
-    {
-      "include": "#core_vars"
-    },
-    {
-      "comment": "Function call",
-      "match": "\\b(\\p{L}[\\p{L}0-9_]*)\\s*\\(",
-      "captures": {
-        "1": {
-          "name": "entity.name.function.dyon"
-        }
-      }
-    },
-    {
-      "comment": "Named argument",
-      "match": "\\b(\\p{L}[\\p{L}0-9_]*)\\:",
-      "captures": {
-        "1": {
-          "name": "entity.name.function.dyon"
-        }
-      }
-    },
-    {
-      "comment": "Function definition",
-      "begin": "\\b(fn)\\s+(\\p{L}[\\p{L}0-9_]*)",
-      "end": "[\\);]",
-      "beginCaptures": {
-        "1": {
-          "name": "keyword.other.fn.dyon"
-        },
-        "2": {
-          "name": "entity.name.function.dyon"
-        }
-      },
-      "patterns": [
-        {
-          "include": "#block_comment"
-        },
-        {
-          "include": "#line_comment"
-        },
-        {
-          "include": "#self"
-        },
-        {
-          "include": "#mut"
-        },
-        {
-          "include": "#lifetime"
-        },
-        {
-          "include": "#core_types"
-        },
-        {
-          "include": "#type_params"
-        }
-      ]
+      "include": "#core"
     }
   ],
   "repository": {
-    "block_doc_comment": {
-      "comment": "Block documentation comment",
-      "name": "comment.block.documentation.dyon",
-      "begin": "/\\*[\\*!](?![\\*/])",
-      "end": "\\*/",
+    "core": {
       "patterns": [
         {
-          "include": "#block_doc_comment"
-        },
-        {
-          "include": "#block_comment"
+          "include": "#expression"
         }
       ]
     },
-    "block_comment": {
-      "comment": "Block comment",
-      "name": "comment.block.dyon",
-      "begin": "/\\*",
-      "end": "\\*/",
+    "expression": {
       "patterns": [
         {
-          "include": "#block_doc_comment"
+          "include": "#literal-closure-labels"
         },
         {
-          "include": "#block_comment"
+          "include": "#literal-labels"
+        },
+        {
+          "include": "#literal-keywords"
+        },
+        {
+          "include": "#support"
+        },
+        {
+          "include": "#literal-function"
+        },
+        {
+          "include": "#literal-closure"
+        },
+        {
+          "include": "#literal-constant"
+        },
+        {
+          "include": "#literal-template-string"
+        },
+        {
+          "include": "#literal-language-variable"
+        },
+        {
+          "include": "#literal-module"
+        },
+        {
+          "include": "#literal-method-call"
+        },
+        {
+          "include": "#literal-function-call"
+        },
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#brackets"
+        },
+        {
+          "include": "#literal-operators"
+        },
+        {
+          "include": "#literal-namespace"
+        },
+        {
+          "include": "#literal-variable"
+        },
+        {
+          "include": "#literal-punctuation"
         }
       ]
     },
-    "line_doc_comment": {
-      "comment": "Single-line documentation comment",
-      "name": "comment.line.documentation.dyon",
-      "begin": "//[!/](?=[^/])",
-      "end": "$"
-    },
-    "line_comment": {
-      "comment": "Single-line comment",
-      "name": "comment.line.double-slash.dyon",
-      "begin": "//",
-      "end": "$"
-    },
-    "escaped_character": {
-      "name": "constant.character.escape.dyon",
-      "match": "\\\\(x\\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)"
-    },
-    "string_literal": {
-      "comment": "Double-quote string literal",
-      "name": "string.quoted.double.dyon",
-      "begin": "b?\"",
-      "end": "\"",
+    "literal-constant": {
       "patterns": [
         {
-          "include": "#escaped_character"
+          "include": "#literal-number"
+        },
+        {
+          "include": "#literal-string"
+        },
+        {
+          "include": "#literal-language-constant"
         }
       ]
     },
-    "self": {
-      "comment": "Declaration of variable",
-      "match": "\\b(\\p{L}[\\p{L}0-9_]*)\\s(:=)",
-      "captures": {
-        "1": {
-          "name": "variable.language.dyon"
-        },
-        "2": {
-          "name": "keyword.operator.assignment.dyon"
-        }
-      }
-    },
-    "mut": {
-      "comment": "Mutable storage modifier",
-      "name": "storage.modifier.mut.dyon",
-      "match": "\\bmut\\b"
-    },
-    "lifetime": {
-      "comment": "Named lifetime",
-      "name": "storage.modifier.lifetime.dyon",
-      "match": "'(\\p{L}[\\p{L}0-9_]*)\\b",
-      "captures": {
-        "1": {
-          "name": "entity.name.lifetime.dyon"
-        }
-      }
-    },
-    "core_types": {
-      "comment": "Built-in/core type",
-      "name": "storage.type.core.dyon",
-      "match": "\\b(any|bool|f64|vec4|str|opt|res|thr|link|sec)\\b"
-    },
-    "core_vars": {
-      "comment": "Core type variant",
-      "name": "support.constant.core.dyon",
-      "match": "\\b(some|none|ok|err)\\b"
-    },
-    "type_params": {
-      "comment": "Type parameters",
-      "name": "meta.type_params.dyon",
-      "begin": "<(?![=<])",
-      "end": ">",
+    "round-brackets": {
       "patterns": [
         {
-          "include": "#block_comment"
+          "name": "meta.group.braces.round",
+          "begin": "\\((?!\\*)",
+          "beginCaptures": {
+            "0": {
+              "name": "meta.brace.round.avi"
+            }
+          },
+          "end": "(?<!\\*)\\)",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      ]
+    },
+    "square-brackets": {
+      "patterns": [
+        {
+          "name": "meta.group.braces.square",
+          "begin": "\\[|\\?\\[",
+          "beginCaptures": {
+            "0": {
+              "name": "meta.brace.square.avi"
+            }
+          },
+          "end": "\\]",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.square.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      ]
+    },
+    "curly-brackets": {
+      "patterns": [
+        {
+          "name": "meta.group.braces.curly",
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "meta.brace.curly.avi"
+            }
+          },
+          "end": "\\}",
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.curly.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "$self"
+            }
+          ]
+        }
+      ]
+    },
+    "brackets": {
+      "patterns": [
+        {
+          "include": "#round-brackets"
         },
         {
-          "include": "#line_comment"
+          "include": "#square-brackets"
         },
         {
-          "include": "#mut"
+          "include": "#curly-brackets"
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.documentation.avi",
+          "begin": "/\\*\\*(?![/|\\*])",
+          "end": "\\*/",
+          "captures": {
+            "0": {
+              "name": "punctuation.definition.comment.block.documentation.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comments"
+            }
+          ]
         },
         {
-          "include": "#lifetime"
+          "name": "comment.block.avi",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "captures": {
+            "0": {
+              "name": "punctuation.definition.comment.block.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comments"
+            }
+          ]
         },
         {
-          "include": "#core_types"
+          "name": "comment.line.documentation.avi",
+          "match": "(///)[^/].*$\\n?",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.comment.documentation.avi"
+            }
+          }
         },
         {
-          "include": "#type_params"
+          "name": "comment.line.double-slash.avi",
+          "match": "(//).*$\\n?",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.comment.double-slash.avi"
+            }
+          }
+        },
+        {
+          "name": "comment.line.shebang.avi",
+          "match": "^(#!).*$\\n?",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.comment.avi"
+            }
+          }
+        }
+      ]
+    },
+    "function-declaration-parameters": {
+      "patterns": [
+        {
+          "begin": "\\(",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.parameters.begin.avi"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.parameters.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "name": "variable.parameter.function.avi",
+              "match": "[_a-zA-Z]\\w*"
+            },
+            {
+              "name": "punctuation.separator.parameter.function.avi",
+              "match": "\\,"
+            },
+            {
+              "include": "#parameters-list"
+            }
+          ]
+        }
+      ]
+    },
+    "parameters-list": {
+      "patterns": [
+        {
+          "name": "variable.parameter.function.avi",
+          "match": "[_a-zA-Z]\\w*"
+        },
+        {
+          "name": "punctuation.separator.parameter.function.avi",
+          "match": "\\,"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "literal-module": {
+      "patterns": [
+        {
+          "name": "keyword.other.module.avi",
+          "match": "\\b(import|export|as)\\b"
+        }
+      ]
+    },
+    "literal-function": {
+      "patterns": [
+        {
+          "name": "meta.function.avi",
+          "begin": "(?x)\n  (?:\\b(private)\\s+)?\n  \\s*(fn)\n  \\s*([_a-zA-Z]\\w*)\\s*",
+          "beginCaptures": {
+            "1": {
+              "name": "storage.modifier.avi"
+            },
+            "2": {
+              "name": "storage.type.function.avi"
+            },
+            "3": {
+              "name": "entity.name.function.avi"
+            }
+          },
+          "end": "(?<=\\))",
+          "patterns": [
+            {
+              "include": "#parameters-list"
+            }
+          ]
+        },
+        {
+          "name": "keyword.other.function.avi",
+          "match": "\\b(fn)\\b"
+        },
+        {
+          "name": "keyword.other.modifier.avi",
+          "match": "\\b(private)\\b"
+        }
+      ]
+    },
+    "literal-closure": {
+      "patterns": [
+        {
+          "name": "meta.function.closure.avi",
+          "begin": "(\\|)(?=\\s*[_a-zA-Z\\|])",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.closure.begin.avi"
+            }
+          },
+          "end": "(\\|)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.closure.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#parameters-list"
+            }
+          ]
+        },
+        {
+          "name": "meta.function.closure.avi",
+          "begin": "(\\b[_a-zA-Z]\\w*)\\s*(=)\\s*(\\|)(?=\\s*[_a-zA-Z\\|])",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.function.closure.avi"
+            },
+            "2": {
+              "name": "keyword.operator.assignment.avi"
+            },
+            "3": {
+              "name": "punctuation.definition.parameters.closure.begin.avi"
+            }
+          },
+          "end": "(\\|)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.closure.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#parameters-list"
+            }
+          ]
+        },
+        {
+          "name": "meta.function.closure.avi",
+          "begin": "(=>)\\s*(\\|)(?=\\s*[_a-zA-Z\\|])",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.separator.switch.case.avi"
+            },
+            "2": {
+              "name": "punctuation.definition.parameters.closure.begin.avi"
+            }
+          },
+          "end": "(\\|)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.closure.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#parameters-list"
+            }
+          ]
+        }
+      ]
+    },
+    "literal-closure-labels": {
+      "patterns": [
+        {
+          "name": "meta.function.closure.avi",
+          "begin": "(\\b[_a-zA-Z]\\w*)\\s*(\\:)\\s*(\\|)(?=\\s*[_a-zA-Z\\|])",
+          "beginCaptures": {
+            "1": {
+              "name": "string.unquoted.label.avi entity.name.function.method.avi"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.avi"
+            },
+            "3": {
+              "name": "punctuation.definition.parameters.closure.begin.avi"
+            }
+          },
+          "end": "(\\|)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.closure.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#parameters-list"
+            }
+          ]
+        },
+        {
+          "name": "meta.function.closure.avi",
+          "begin": "((\\\")((?:[^\"]|\\\\\")*)(\\\"))\\s*(:)\\s*(\\|)(?=\\s*[_a-zA-Z\\|])",
+          "beginCaptures": {
+            "1": {
+              "name": "string.quoted.double.avi"
+            },
+            "2": {
+              "name": "punctuation.definition.string.begin.avi"
+            },
+            "3": {
+              "name": "entity.name.function.method.avi"
+            },
+            "4": {
+              "name": "punctuation.definition.string.end.avi"
+            },
+            "5": {
+              "name": "punctuation.separator.key-value.avi"
+            },
+            "6": {
+              "name": "punctuation.definition.parameters.closure.begin.avi"
+            }
+          },
+          "end": "(\\|)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.parameters.closure.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#parameters-list"
+            }
+          ]
+        }
+      ]
+    },
+    "literal-function-call": {
+      "patterns": [
+        {
+          "name": "meta.function-call.without-arguments.avi",
+          "match": "(?x)\n  ([_a-zA-Z]\\w*)(!)?\\s*\n  (\\(\\s*\\))",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.avi"
+            },
+            "2": {
+              "name": "punctuation.function-call.capture.avi"
+            },
+            "3": {
+              "name": "meta.group.braces.round.function.arguments.avi"
+            }
+          }
+        },
+        {
+          "name": "meta.function-call.with-arguments.avi",
+          "match": "(?x)\n  ([_a-zA-Z]\\w*)(!)?\\s*\n  (?=\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.avi"
+            },
+            "2": {
+              "name": "punctuation.function-call.capture.avi"
+            }
+          }
+        }
+      ]
+    },
+    "literal-method-call": {
+      "patterns": [
+        {
+          "name": "meta.function-call.method.without-arguments.avi",
+          "match": "(?x)\n  (?<=(\\.|\\?\\.))\n  \\s*([_a-zA-Z]\\w*)\\s*\n  (\\(\\s*\\))",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.avi"
+            },
+            "2": {
+              "name": "meta.group.braces.round.function.arguments.avi"
+            }
+          }
+        },
+        {
+          "name": "meta.function-call.method.with-arguments.avi",
+          "match": "(?x)\n  (?<=(\\.|\\?\\.))\n  \\s*([_a-zA-Z]\\w*)\\s*\n  (?=\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.avi"
+            }
+          }
+        },
+      ]
+    },
+    "literal-language-variable": {
+      "patterns": [
+        {
+          "name": "variable.language.this.avi",
+          "match": "\\bthis\\b"
+        }
+      ]
+    },
+    "literal-language-constant": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.true.avi",
+          "match": "\\btrue\\b"
+        },
+        {
+          "name": "constant.language.boolean.false.avi",
+          "match": "\\bfalse\\b"
+        }
+      ]
+    },
+    "literal-language-namespace": {
+      "patterns": [
+        {
+          "match": "(?<!\\:\\:)\\s*((global)\\s*(\\:\\:))(?!<)",
+          "captures": {
+            "1": {
+              "name": "meta.path.avi"
+            },
+            "2": {
+              "name": "constant.language.namespace.global.avi entity.name.namespace.avi"
+            },
+            "3": {
+              "name": "punctuation.separator.namespace.avi"
+            }
+          }
+        }
+      ]
+    },
+    "literal-keyword-storage": {
+      "patterns": [
+        {
+          "name": "storage.type.avi",
+          "match": "\\b(const|let)\\b"
+        }
+      ]
+    },
+    "literal-keywords": {
+      "patterns": [
+        {
+          "include": "#literal-keyword-storage"
+        },
+        {
+          "name": "keyword.control.flow.avi",
+          "match": "\\b(return|on_start|on_end|on_intent)\\b"
+        },
+        {
+          "name": "keyword.control.conditional.avi",
+          "match": "\\b(if|else|switch)\\b"
+        },
+        {
+          "name": "keyword.control.trycatch.avi",
+          "match": "\\b(throw|try|catch)\\b"
+        },
+        {
+          "name": "keyword.control.loop.avi",
+          "match": "\\b(for|in|loop|do|while|until|break|continue)\\b"
+        }
+      ]
+    },
+    "literal-operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.logical.avi",
+          "match": "(?x)\n  !(?!=)| # logical-not     right-to-left   right\n  &&    | # logical-and     left-to-right   both\n  \\|\\|    # logical-or      left-to-right   both"
+        },
+        {
+          "name": "keyword.operator.containment.avi",
+          "match": "(?x)\n  \\bin\\b   | # in             left-to-right   both\n  \\B!in\\b    # not-in         left-to-right   both"
+        },
+        {
+          "name": "keyword.operator.coalesce.avi",
+          "match": "(?x)\n  \\?\\?    # null-coalesce   left-to-right   both"
+        },
+        {
+          "name": "keyword.operator.assignment.avi",
+          "match": "(?x)\n  =(?![=>]) # assignment    right-to-left   both"
+        },
+        {
+          "name": "keyword.operator.assignment.augmented.avi",
+          "match": "(?x)\n  %=   | # assignment       right-to-left   both\n  &=   | # assignment       right-to-left   both\n  \\*\\*=| # assignment       right-to-left   both\n  (?<!\\*)\\*= | # assignment right-to-left   both\n  \\+=  | # assignment       right-to-left   both\n  -=   | # assignment       right-to-left   both\n  /=   | # assignment       right-to-left   both\n  \\^=  | # assignment       right-to-left   both\n  \\|=  | # assignment       right-to-left   both\n  <<=  | # assignment       right-to-left   both\n  >>=    # assignment       right-to-left   both"
+        },
+        {
+          "name": "keyword.operator.bitwise.avi",
+          "match": "(?x)\n  <<   | # bitwise-shift    left-to-right   both\n  >>   | # bitwise-shift    left-to-right   both\n  &    | # bitwise-and      left-to-right   both\n  \\^   | # bitwise-xor      left-to-right   both\n  \\|     # bitwise-or       left-to-right   both"
+        },
+        {
+          "name": "keyword.operator.relational.avi",
+          "match": "(?x)\n  <=     | # relational     left-to-right   both\n  >=     | # relational     left-to-right   both\n  <(?!-) | # relational     left-to-right   both\n  (?<!-)>  # relational     left-to-right   both"
+        },
+        {
+          "name": "keyword.operator.comparison.avi",
+          "match": "(?x)\n  ==(?!=) | # equality       left-to-right   both\n  !=(?!=)   # equality       left-to-right   both"
+        },
+        {
+          "name": "keyword.operator.arithmetic.avi",
+          "match": "(?x)\n  /         | # division        left-to-right   both\n  %         | # modulus         left-to-right   both\n  \\*\\*      | # power           left-to-right   both\n  \\*(?!\\))  | # multiplication  left-to-right   both\n  \\+(?!\\+)  | # addition        left-to-right   both\n  -(?![>-])   # subtraction     left-to-right   both"
+        },
+        {
+          "name": "keyword.operator.range.exclusive.avi",
+          "match": "\\.\\.(?![\\.=])"
+        },
+        {
+          "name": "keyword.operator.range.inclusive.avi",
+          "match": "\\.\\.="
+        },
+        {
+          "name": "keyword.operator.accessor.avi punctuation.accessor.avi",
+          "match": "\\.(?!\\.)|\\?\\."
+        },
+        {
+          "name": "punctuation.separator.switch.case.avi",
+          "match": "=>"
+        },
+        {
+          "name": "invalid.illegal.operator.avi",
+          "match": "(\\(\\*|\\*\\)|\\+\\+|--|\\.\\.\\.+|~|#(?!{)|@|\\?|\\$(?!{)|->|<-|===|!==|\\:=|\\:\\:<)"
+        }
+      ]
+    },
+    "literal-labels": {
+      "patterns": [
+        {
+          "begin": "(?x)\n  (?<!\\?)(?<!\\?\\s)\n    (?=((\")((?:[^\\:\"]|\\\\\")*)(\"))\\s*:)",
+          "end": ":",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.separator.key-value.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#literal-string"
+            }
+          ]
+        },
+        {
+          "name": "constant.other.object.key.avi",
+          "match": "(?<!\\.|\\?|\\?\\s)([_a-zA-Z]\\w*)\\s*(:)(?!\\:)",
+          "captures": {
+            "1": {
+              "name": "string.unquoted.label.avi"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.avi"
+            }
+          }
+        }
+      ]
+    },
+    "literal-number": {
+      "patterns": [
+        {
+          "name": "constant.numeric.avi",
+          "match": "(?xi)\n  (?:\n    \\b0b[0-1][_0-1]*|                         # binary\n    \\b0o[0-7][_0-7]*|                         # octal\n    \\b0x[\\da-f][_\\da-f]*|                     # hex\n    (\\B[+\\-])?\\b\\d[_\\d]*\\.\\d[_\\d]*(e[+\\-]?\\d[_\\d]*)?| # e.g. 999.999, 999.99e+123\n    (\\B[+\\-])?\\b\\d[_\\d]*\\.(?!\\.)\\B|           # e.g. 999.\n    (\\B[+\\-])?\\b\\d[_\\d]*(e[+\\-]?\\d[_\\d]*)?    # e.g. 999, 999e+123\n  )"
+        }
+      ]
+    },
+    "literal-punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.terminator.statement.avi",
+          "match": "\\;"
+        },
+        {
+          "name": "meta.delimiter.comma.avi",
+          "match": "\\,"
+        }
+      ]
+    },
+    "literal-template-string": {
+      "patterns": [
+        {
+          "name": "string.interpolated.avi",
+          "begin": "`",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.avi"
+            }
+          },
+          "end": "`",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#string-content"
+            },
+            {
+              "name": "meta.interpolation.avi",
+              "begin": "\\${",
+              "beginCaptures": {
+                "0": {
+                  "name": "punctuation.section.interpolation.begin.avi"
+                }
+              },
+              "end": "}",
+              "endCaptures": {
+                "0": {
+                  "name": "punctuation.section.interpolation.end.avi"
+                }
+              },
+              "patterns": [
+                {
+                  "include": "#expression"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "literal-string": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.avi",
+          "match": "('([^'\\\\]|\\\\([tnr'\\\\]|x\\h{2}|u\\h{4}|U\\h{8}))')",
+          "patterns": [
+            {
+              "match": "\\\\([tnr'\\\\]|x\\h{2}|u\\h{4}|U\\h{8})",
+              "name": "constant.character.escape.avi"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.avi",
+          "begin": "(\")",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.begin.avi"
+            }
+          },
+          "end": "(\")",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.end.avi"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#string-content"
+            },
+            {
+              "name": "invalid.illegal.newline.avi",
+              "match": "(?<!\\\\)\\n"
+            },
+            {
+              "name": "constant.character.escape.newline.avi punctuation.separator.continuation",
+              "match": "\\\\\\n"
+            }
+          ]
+        }
+      ]
+    },
+    "string-content": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.avi",
+          "match": "\\\\(x[\\da-fA-F]{2}|u[\\da-fA-F]{4}|U[\\da-fA-F]{8}|t|r|n|\\\\)"
+        },
+        {
+          "name": "invalid.illegal.escape.avi",
+          "match": "\\\\[^xuUtrn\\\\\\n]"
+        }
+      ]
+    },
+    "literal-namespace": {
+      "patterns": [
+        {
+          "include": "#literal-language-namespace"
+        },
+        {
+          "name": "meta.path.avi",
+          "match": "([_a-zA-Z]\\w*)\\s*(\\:\\:)(?!<)",
+          "captures": {
+            "1": {
+              "name": "entity.name.namespace.avi"
+            },
+            "2": {
+              "name": "punctuation.separator.namespace.avi"
+            }
+          }
+        },
+        {
+          "match": "(?<=\\:\\:)(\\s*([_a-zA-Z]\\w*))\\s*(?!\\:\\:)",
+          "captures": {
+            "1": {
+              "name": "meta.path.avi"
+            },
+            "2": {
+              "name": "variable.other.constant.avi"
+            }
+          }
+        }
+      ]
+    },
+    "literal-variable": {
+      "patterns": [
+        {
+          "name": "variable.other.constant.avi",
+          "match": "[A-Z][_\\dA-Z]*\\b"
+        },
+        {
+          "match": "(?<!\\.)\\s*([_a-zA-Z]\\w*)\\s*(?=(\\.|\\?\\.))",
+          "captures": {
+            "1": {
+              "name": "variable.other.object.avi"
+            }
+          }
+        },
+        {
+          "match": "(?<=\\.|\\?\\.)\\s*([_a-zA-Z]\\w*)",
+          "captures": {
+            "1": {
+              "name": "variable.other.property.avi entity.name.property.avi"
+            }
+          }
+        },
+        {
+          "name": "variable.other.readwrite.avi",
+          "match": "[_a-zA-Z]\\w*"
+        }
+      ]
+    },
+    "support": {
+      "patterns": [
+        {
+          "name": "support.function.avi",
+          "match": "\\b(print|debug|Fn|call|curry|eval|type_of|is_def_var|is_def_fn|is_shared)\\b"
+        },
+        {
+          "name": "invalid.illegal.keyword.avi",
+          "match": "\\b(var|static|shared|goto|exit|match|case|public|protected|new|use|with|module|package|super|thread|spawn|go|await|async|sync|yield|default|void|null|nil)\\b"
         }
       ]
     }
-  },
-  "scopeName": "source.dyon"
+  }
 }

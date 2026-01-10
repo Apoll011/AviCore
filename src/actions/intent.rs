@@ -31,7 +31,7 @@ impl IntentAction {
     }
 
     pub async fn parse_as_reply(&self, text: &str) -> bool {
-        let skill_manager = Arc::clone(&self.skill_manager);
+        let skill_manager: Arc<Mutex<SkillManager>> = Arc::clone(&self.skill_manager);
 
         match IntentAction::process_reply_text(text).await {
             Ok(replay) => {
@@ -119,7 +119,7 @@ impl Action for IntentAction {
 
         let _ = subscribe!("skills/reload", captures: [skill_manager], async: |_from, _topic, _data| {
             let mut lock = skill_manager.lock().await;
-            lock.reload();
+            let _ = lock.reload();
         });
 
         if self.config.watch_skill_dir {
@@ -135,7 +135,7 @@ impl Action for IntentAction {
                 }
 
                 let mut lock = skill_manager.lock().await;
-                lock.reload();
+                let _ = lock.reload();
                 info!("Reloaded skills due to change in: {:?}", event.path);
             });
         }

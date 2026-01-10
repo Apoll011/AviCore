@@ -1,4 +1,10 @@
 use crate::dialogue::languages::get_translation_list;
+use rhai::CustomType;
+use rhai::Dynamic;
+use rhai::EvalAltResult;
+use rhai::Position;
+use rhai::TypeBuilder;
+use serde::Deserialize;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -25,7 +31,14 @@ pub trait ResponseValidator {
     fn get_error_txt(&self, error: &ValidationError) -> String;
 }
 
+#[derive(Debug, Deserialize, CustomType, Clone)]
 pub struct AnyValidator;
+
+impl AnyValidator {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 impl ResponseValidator for AnyValidator {
     type Output = String;
@@ -39,6 +52,7 @@ impl ResponseValidator for AnyValidator {
     }
 }
 
+#[derive(Debug, Deserialize, CustomType, Clone)]
 pub struct ListOrNoneValidator {
     pub allowed_values: Vec<String>,
 }
@@ -79,7 +93,13 @@ impl ResponseValidator for ListOrNoneValidator {
     }
 }
 
+#[derive(Debug, Deserialize, CustomType, Clone)]
 pub struct OptionalValidator;
+impl OptionalValidator {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 impl ResponseValidator for OptionalValidator {
     type Output = Option<String>;
@@ -104,6 +124,7 @@ impl ResponseValidator for OptionalValidator {
     }
 }
 
+#[derive(Debug, Deserialize, CustomType, Clone)]
 pub struct BoolValidator {
     pub hard_search: bool,
 }
@@ -154,10 +175,46 @@ impl ResponseValidator for BoolValidator {
     }
 }
 
+#[derive(Clone)]
 pub struct MappedValidator<T: Clone> {
     pub mappings: HashMap<String, T>,
     pub default: Option<T>,
     pub hard_search: bool,
+}
+
+impl<T: Clone + Clone + 'static + Send + Sync> CustomType for MappedValidator<T> {
+    fn build(mut builder: TypeBuilder<Self>) {
+        builder.with_name("MappedValidator");
+        builder.with_get_set(
+            "mappings",
+            |obj: &mut Self| obj.mappings.clone(),
+            |obj: &mut Self, val| obj.mappings = val,
+        );
+        builder.with_get_set(
+            "default",
+            |obj: &mut Self| obj.default.clone().map_or(Dynamic::UNIT, Dynamic::from),
+            |obj: &mut Self, val: Dynamic| {
+                if val.is_unit() {
+                    obj.default = None;
+                    Ok(())
+                } else if let Some(x) = val.read_lock::<T>() {
+                    obj.default = Some(x.clone());
+                    Ok(())
+                } else {
+                    Err(Box::new(EvalAltResult::ErrorMismatchDataType(
+                        "T".to_string(),
+                        val.type_name().to_string(),
+                        Position::NONE,
+                    )))
+                }
+            },
+        );
+        builder.with_get_set(
+            "hard_search",
+            |obj: &mut Self| obj.hard_search.clone(),
+            |obj: &mut Self, val| obj.hard_search = val,
+        );
+    }
 }
 
 impl<T: Clone> MappedValidator<T> {

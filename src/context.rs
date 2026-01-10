@@ -1,5 +1,4 @@
 use crate::ctx::runtime;
-use crate::dialogue::intent::JsonValue;
 use log::{debug, error, info, trace, warn};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -135,28 +134,6 @@ impl ContextManager {
 
         trace!("Context key {} not found in scope {:?}", key, scope);
         None
-    }
-    pub fn set_skill_save(
-        &self,
-        scope: ContextScope,
-        key: String,
-        value: JsonValue,
-        ttl: f64,
-        persistent: bool,
-    ) {
-        let ttl_duration = if ttl == 0.0 {
-            None
-        } else {
-            Some(Duration::from_secs_f64(ttl))
-        };
-
-        self.set(
-            scope,
-            key,
-            serde_json::json!(value),
-            ttl_duration,
-            persistent,
-        );
     }
 
     pub fn remove(&self, scope: &ContextScope, key: &str) {
