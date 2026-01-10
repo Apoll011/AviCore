@@ -5,6 +5,7 @@ use rhai::Position;
 use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
+use crate::skills::avi_script::helpers::json_to_dynamic;
 
 /// Represents a recognized intent from a natural language input.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
@@ -42,6 +43,12 @@ pub struct Slot {
     pub slot_name: String,
     /// The range within the original input text where the slot was found.
     pub range: SlotRange,
+}
+
+impl From<SlotValue> for Dynamic {
+    fn from(val: SlotValue) -> Self {
+        json_to_dynamic(val.value)
+    }
 }
 
 /// The processed value of a slot.

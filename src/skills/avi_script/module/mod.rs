@@ -6,6 +6,9 @@ mod context;
 mod dialogue;
 mod json;
 mod settings;
+mod fs;
+mod slots;
+mod log;
 
 pub fn add(engine: &mut Engine) {
     let mut resolver = StaticModuleResolver::new();
@@ -15,6 +18,8 @@ pub fn add(engine: &mut Engine) {
     settings::add(&mut resolver);
     dialogue::add(&mut resolver);
     context::add(&mut resolver);
+    fs::add(&mut resolver);
+    slots::add(&mut resolver);
 
     engine.set_module_resolver(resolver);
 }
