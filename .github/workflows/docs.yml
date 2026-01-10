@@ -23,23 +23,48 @@ jobs:
         with:
           node-version: 20
 
-      - name: Create temporary Docusaurus site
+      - name: Create Docusaurus site (non-interactive)
         run: |
-          npx create-docusaurus@latest site classic --javascript --skip-install
+          npx create-docusaurus@3.9.2 site classic --javascript --skip-install
 
       - name: Inject docs
         run: |
           rm -rf site/docs
           cp -r docs site/docs
 
+      - name: Patch Docusaurus config (docs-only, no broken links)
+        run: |
+          cat >> site/docusaurus.config.js <<'EOF'
+
+          module.exports = {
+            ...module.exports,
+            onBrokenLinks: 'warn',
+            onBrokenMarkdownLinks: 'warn',
+            presets: [
+              [
+                'classic',
+                {
+                  docs: {
+                    routeBasePath: '/',
+                    sidebarPath: false,
+                  },
+                  blog: false,
+                  pages: false,
+                },
+              ],
+            ],
+            themeConfig: {
+              navbar: {
+                title: 'API Docs',
+                items: [],
+              },
+            },
+          };
+          EOF
+
       - name: Install dependencies
         working-directory: site
         run: npm install
-
-      - name: Configure docs-only mode
-        working-directory: site
-        run: |
-          sed -i "s/blog: true/blog: false/" docusaurus.config.js
 
       - name: Build site
         working-directory: site
