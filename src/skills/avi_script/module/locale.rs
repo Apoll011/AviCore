@@ -12,7 +12,7 @@ pub mod locale_module {
     ///
     /// # Returns
     /// The translation string if found, or UNIT if not found
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn get(ctx: NativeCallContext, id: &str) -> Result<Dynamic, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -31,7 +31,7 @@ pub mod locale_module {
     ///
     /// # Returns
     /// The formatted translation string if found, or UNIT if not found
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn get_fmt(
         ctx: NativeCallContext,
         id: &str,
@@ -60,7 +60,7 @@ pub mod locale_module {
     ///
     /// # Returns
     /// A map of translations
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn list(ctx: NativeCallContext, code: &str) -> Result<Dynamic, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -74,7 +74,7 @@ pub mod locale_module {
     ///
     /// # Returns
     /// True if the translation exists, false otherwise
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn has(ctx: NativeCallContext, id: &str) -> Result<bool, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -85,7 +85,7 @@ pub mod locale_module {
     ///
     /// # Returns
     /// The current language code (e.g., 'en-US')
-    #[rhai_fn(global)]
+
     pub fn current(_ctx: NativeCallContext) -> String {
         lang()
     }

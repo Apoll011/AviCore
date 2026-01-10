@@ -8,7 +8,7 @@ pub mod skill_module {
     ///
     /// # Returns
     /// The path to the skill's root directory
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn dir(ctx: NativeCallContext) -> Result<String, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -19,7 +19,7 @@ pub mod skill_module {
     ///
     /// # Returns
     /// The version string of the skill
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn version(ctx: NativeCallContext) -> Result<String, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -30,7 +30,7 @@ pub mod skill_module {
     ///
     /// # Returns
     /// A map containing the skill's manifest
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn manifest(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -41,7 +41,7 @@ pub mod skill_module {
     ///
     /// # Returns
     /// A list of permissions
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn get_permissions(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -52,7 +52,7 @@ pub mod skill_module {
     ///
     /// # Returns
     /// True if the skill is disabled, false otherwise
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn is_disabled(ctx: NativeCallContext) -> Result<bool, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;

@@ -4,7 +4,6 @@ use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::skills::skill_context::SkillContext;
 use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
 use std::sync::{Arc, RwLock};
-use crate::skills::avi_script::package::AviScriptPackage;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -35,15 +34,21 @@ impl Skill {
     /// # Errors
     ///
     /// Returns an error if the skill context or module fails to load.
-    pub fn new(name: String, avi_script_package: &AviScriptPackage) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(
+        name: String,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
-        let mut engine = create_avi_script_engine(avi_script_package)?;
+        let mut engine = create_avi_script_engine()?;
         engine.set_default_tag(Dynamic::from(context.clone()));
 
         Ok(Self {
             pathname: Self::skill_path(&name)?,
             name: name.clone(),
-            ast: Arc::new(RwLock::new(Self::get_ast(&engine, &context.path, &context.info.entry)?)),
+            ast: Arc::new(RwLock::new(Self::get_ast(
+                &engine,
+                &context.path,
+                &context.info.entry,
+            )?)),
             scope: Self::create_scope(),
             context,
             engine,
@@ -86,7 +91,10 @@ impl Skill {
     }
 
     fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self.engine.run_ast_with_scope(&mut self.scope, &*self.ast.read().map_err(|e| e.to_string())?)?)
+        Ok(self.engine.run_ast_with_scope(
+            &mut self.scope,
+            &*self.ast.read().map_err(|e| e.to_string())?,
+        )?)
     }
 
     pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {

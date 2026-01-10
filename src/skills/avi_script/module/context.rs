@@ -12,7 +12,7 @@ pub mod context_module {
     ///
     /// # Returns
     /// The value associated with the key, or UNIT if not found
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn get(ctx: NativeCallContext, key: String) -> Result<Dynamic, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -28,7 +28,7 @@ pub mod context_module {
     ///
     /// # Returns
     /// True if the key exists, false otherwise
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn has(ctx: NativeCallContext, key: String) -> Result<bool, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -42,7 +42,7 @@ pub mod context_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn remove(ctx: NativeCallContext, key: String) -> Result<(), Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -60,7 +60,7 @@ pub mod context_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn set(
         ctx: NativeCallContext,
         key: String,

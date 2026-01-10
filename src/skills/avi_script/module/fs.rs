@@ -15,7 +15,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// The file contents as a string, or UNIT if the file could not be read
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn read(path: &str) -> Result<Dynamic, Box<EvalAltResult>> {
         match fs::read_to_string(path) {
             Ok(content) => Ok(Dynamic::from(content)),
@@ -34,7 +34,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn write(path: &str, content: &str) -> Result<(), Box<EvalAltResult>> {
         let mut file = OpenOptions::new()
             .create(true)
@@ -66,7 +66,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn append(path: &str, content: &str) -> Result<(), Box<EvalAltResult>> {
         let mut file = OpenOptions::new()
             .create(true)
@@ -96,7 +96,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// True if the path exists, false otherwise
-    #[rhai_fn(global)]
+
     pub fn exists(path: &str) -> bool {
         Path::new(path).exists()
     }
@@ -108,7 +108,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// True if the deletion was successful, false otherwise
-    #[rhai_fn(global)]
+
     pub fn delete(path: &str) -> bool {
         let path = Path::new(path);
         if path.is_dir() {
@@ -126,7 +126,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// True if the copy was successful, false otherwise
-    #[rhai_fn(global)]
+
     pub fn copy(src: &str, dest: &str) -> bool {
         fs::copy(src, dest).is_ok()
     }
@@ -139,7 +139,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// True if the move was successful, false otherwise
-    #[rhai_fn(global, name = "move")]
+    #[rhai_fn(name = "move")]
     pub fn move_file(src: &str, dest: &str) -> bool {
         fs::rename(src, dest).is_ok()
     }
@@ -151,7 +151,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// A list of file and directory names
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn list_files(path: &str) -> Result<Vec<Dynamic>, Box<EvalAltResult>> {
         let mut files = Vec::new();
 
@@ -180,7 +180,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// True if the directory was created successfully, false otherwise
-    #[rhai_fn(global)]
+
     pub fn mkdir(path: &str) -> bool {
         fs::create_dir_all(path).is_ok()
     }
@@ -192,7 +192,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// The last component of the path
-    #[rhai_fn(global)]
+
     pub fn basename(path: &str) -> String {
         Path::new(path)
             .file_name()
@@ -208,7 +208,7 @@ pub mod fs_module {
     ///
     /// # Returns
     /// The parent directory of the path
-    #[rhai_fn(global)]
+
     pub fn dirname(path: &str) -> String {
         Path::new(path)
             .parent()

@@ -18,7 +18,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// An AnyValidator object
-    #[rhai_fn(global)]
+
     pub fn any_validator() -> AnyValidator {
         AnyValidator::new()
     }
@@ -30,7 +30,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A ListOrNoneValidator object
-    #[rhai_fn(global)]
+
     pub fn list_or_none_validator(allowed_values: Vec<String>) -> ListOrNoneValidator {
         ListOrNoneValidator::new(allowed_values)
     }
@@ -39,7 +39,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// An OptionalValidator object
-    #[rhai_fn(global)]
+
     pub fn optional_validator() -> OptionalValidator {
         OptionalValidator::new()
     }
@@ -51,7 +51,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A BoolValidator object
-    #[rhai_fn(global)]
+
     pub fn bool_validator(fuzzy: bool) -> BoolValidator {
         BoolValidator::new(fuzzy)
     }
@@ -63,7 +63,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A MappedValidator object
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn mapped_validator_string(
         map: rhai::Map,
     ) -> Result<MappedValidator<String>, Box<rhai::EvalAltResult>> {
@@ -90,7 +90,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A MappedValidator object
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn mapped_validator_i32(
         map: rhai::Map,
     ) -> Result<MappedValidator<i32>, Box<rhai::EvalAltResult>> {
@@ -117,7 +117,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A MappedValidator object
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn mapped_validator_i64(
         map: rhai::Map,
     ) -> Result<MappedValidator<i64>, Box<rhai::EvalAltResult>> {
@@ -144,7 +144,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A MappedValidator object
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn mapped_validator_f32(
         map: rhai::Map,
     ) -> Result<MappedValidator<f32>, Box<rhai::EvalAltResult>> {
@@ -171,7 +171,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A MappedValidator object
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn mapped_validator_f64(
         map: rhai::Map,
     ) -> Result<MappedValidator<f64>, Box<rhai::EvalAltResult>> {
@@ -198,7 +198,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// A MappedValidator object
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn mapped_validator_bool(
         map: rhai::Map,
     ) -> Result<MappedValidator<bool>, Box<rhai::EvalAltResult>> {
@@ -225,7 +225,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global)]
+
     pub fn say(text: String) {
         speak(&text, true);
     }
@@ -237,7 +237,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global)]
+
     pub fn say_once(text: String) {
         speak!(&text);
     }
@@ -246,7 +246,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global)]
+
     pub fn listen() {
         device_listen();
     }
@@ -255,7 +255,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global)]
+
     pub fn repeat() {
         if let Some(v) = get_ctx!("utterance.last") {
             speak!(&v.to_string())
@@ -266,7 +266,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global, name = "request_attention")]
+    #[rhai_fn(name = "request_attention")]
     pub fn request_attention() {
         speak!(&format!("{}!", user_name()));
         device_listen();
@@ -280,7 +280,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn confirm(
         ctx: NativeCallContext,
         question_locale_id: String,
@@ -308,7 +308,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn on_reply(
         ctx: NativeCallContext,
         handler: String,

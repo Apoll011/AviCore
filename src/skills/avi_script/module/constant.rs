@@ -11,7 +11,7 @@ pub mod constant_module {
     ///
     /// # Returns
     /// The constant value, or UNIT if not found
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn get(ctx: NativeCallContext, name: String) -> Result<Dynamic, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -27,7 +27,7 @@ pub mod constant_module {
     ///
     /// # Returns
     /// A list of constant names
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn list(ctx: NativeCallContext) -> Result<Dynamic, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;
@@ -41,7 +41,7 @@ pub mod constant_module {
     ///
     /// # Returns
     /// True if the constant exists, false otherwise
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn has(ctx: NativeCallContext, name: String) -> Result<bool, Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx)
             .map_err(|e| Box::new(EvalAltResult::ErrorRuntime(e.into(), Position::NONE)))?;

@@ -1,10 +1,10 @@
-import "constant" as c;
 import "dialogue" as dialogue;
 
 on_start {
     print("hhh");
-    print(c::get("HUE_BRIDGE_IP"));
-    print(c::list());
+    hi(true);
+    print(dialogue::any_validator());
+    //print(constant::list());
 }
 
 fn hi(response) {

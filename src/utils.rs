@@ -1,9 +1,8 @@
 use crate::ctx::runtime;
-use log::warn;
 #[allow(unused_imports)]
 use crate::skills::avi_script::engine::create_avi_script_engine;
 #[allow(unused_imports)]
-use crate::skills::avi_script::package::AviScriptPackage;
+use log::warn;
 
 pub async fn core_id() -> Option<String> {
     match runtime() {
@@ -22,7 +21,7 @@ pub async fn core_id() -> Option<String> {
 pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
     use rhai_autodocs::*;
 
-    let engine = create_avi_script_engine(&AviScriptPackage::new())?;
+    let engine = create_avi_script_engine()?;
 
     let docs = export::options()
         .include_standard_packages(true)

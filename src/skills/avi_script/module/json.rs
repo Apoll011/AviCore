@@ -12,7 +12,7 @@ pub mod json_module {
     ///
     /// # Returns
     /// A Rhai object representing the JSON data
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn parse(json_str: &str) -> Result<Dynamic, Box<EvalAltResult>> {
         match serde_json::from_str::<Value>(json_str) {
             Ok(value) => Ok(json_to_dynamic(value)),
@@ -30,7 +30,7 @@ pub mod json_module {
     ///
     /// # Returns
     /// A JSON string
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn to_json(value: Dynamic) -> Result<String, Box<EvalAltResult>> {
         match dynamic_to_json(value) {
             Ok(json_value) => match serde_json::to_string_pretty(&json_value) {

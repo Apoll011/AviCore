@@ -6,7 +6,6 @@ use rhai::Variant;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use crate::skills::avi_script::package::AviScriptPackage;
 
 /// Manages the lifecycle and execution of skills.
 ///
@@ -15,17 +14,14 @@ use crate::skills::avi_script::package::AviScriptPackage;
 pub struct SkillManager {
     /// A collection of loaded skills, keyed by their directory name.
     skills: HashMap<String, Skill>,
-    package: AviScriptPackage,
 }
 
 impl SkillManager {
     /// Creates a new `SkillManager` and loads all available skills.
     pub fn new() -> Self {
         info!("Creating skills manager.");
-        let package =  AviScriptPackage::new();
         Self {
-            skills: Self::load_skills(&package),
-            package,
+            skills: Self::load_skills(),
         }
     }
 
@@ -35,7 +31,7 @@ impl SkillManager {
     ///
     /// A `HashMap` containing the successfully loaded skills.
     ///
-    pub fn load_skills(package: &AviScriptPackage) -> HashMap<String, Skill> {
+    pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
         if let Ok(c) = runtime()
@@ -50,7 +46,7 @@ impl SkillManager {
 
                 let path = entry.path();
 
-                match Self::load_skill(path.clone(), package) {
+                match Self::load_skill(path.clone()) {
                     Ok((dir, mut v)) => match v.start() {
                         Ok(_) => {
                             info!("Loaded skill {} from {}", v.name(), path.display());
@@ -73,11 +69,11 @@ impl SkillManager {
         }
     }
 
-    pub fn reload(&mut self)  -> Result<(), Box<dyn std::error::Error>> {
+    pub fn reload(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         info!("Reloading skills.");
-        for (name, skill) in &mut self.skills {
+        for (_name, skill) in &mut self.skills {
             skill.reload()?;
-        };
+        }
         Ok(())
     }
 
@@ -90,7 +86,9 @@ impl SkillManager {
     /// # Errors
     ///
     /// Returns an error if the path is not a directory or if the skill initialization fails.
-    fn load_skill(path: PathBuf, package: &AviScriptPackage) -> Result<(String, Skill), Box<dyn std::error::Error>> {
+    fn load_skill(
+        path: PathBuf,
+    ) -> Result<(String, Skill), Box<dyn std::error::Error>> {
         if !path.is_dir() {
             return Err("Not a directory".into());
         }
@@ -105,7 +103,10 @@ impl SkillManager {
             None => return Err("Could not get directory name as string".into()),
         };
 
-        Ok((dir_name_str.into(), Skill::new(dir_name_str.to_string(), package)?))
+        Ok((
+            dir_name_str.into(),
+            Skill::new(dir_name_str.to_string())?,
+        ))
     }
 
     /// Dispatches an intent to the corresponding skill for execution.

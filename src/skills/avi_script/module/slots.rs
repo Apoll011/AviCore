@@ -13,7 +13,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// Nothing or throws an error if the slot is missing
-    #[rhai_fn(global, return_raw)]
+    #[rhai_fn(return_raw)]
     pub fn require(intent: Intent, name: &str) -> Result<(), Box<EvalAltResult>> {
         if intent.slots.iter().any(|s| s.slot_name == name) {
             Ok(())
@@ -33,7 +33,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// True if the slot exists, false otherwise
-    #[rhai_fn(global)]
+
     pub fn exists(intent: Intent, name: &str) -> bool {
         intent.slots.iter().any(|s| s.slot_name == name)
     }
@@ -46,7 +46,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// The value of the slot as a Rhai object, or UNIT if the slot is missing
-    #[rhai_fn(global)]
+
     pub fn get(intent: Intent, name: &str) -> Dynamic {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -66,7 +66,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// The raw text value of the slot, or UNIT if the slot is missing
-    #[rhai_fn(global)]
+
     pub fn get_raw(intent: Intent, name: &str) -> Dynamic {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -84,7 +84,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// The full slot object, or UNIT if the slot is missing
-    #[rhai_fn(global)]
+
     pub fn full(intent: Intent, name: &str) -> Dynamic {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -103,7 +103,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// True if the slot value is equal, false otherwise
-    #[rhai_fn(global)]
+
     pub fn assert_equal(intent: Intent, name: &str, val: Dynamic) -> bool {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -123,7 +123,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// True if the slot value is in the list or matches the value, false otherwise
-    #[rhai_fn(global)]
+
     pub fn assert_in(intent: Intent, name: &str, list: Dynamic) -> bool {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -148,7 +148,7 @@ pub mod slots_module {
     ///
     /// # Returns
     /// True if the slot's string value is a key in the map, false otherwise
-    #[rhai_fn(global)]
+
     pub fn assert_in_dict(intent: Intent, name: &str, dict: Dynamic) -> bool {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {

@@ -135,7 +135,7 @@ impl Action for IntentAction {
                 }
 
                 let mut lock = skill_manager.lock().await;
-                lock.reload();
+                let _ = lock.reload();
                 info!("Reloaded skills due to change in: {:?}", event.path);
             });
         }
