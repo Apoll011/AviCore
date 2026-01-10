@@ -8,10 +8,17 @@ on:
       - 'docs/**'
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -91,9 +98,21 @@ jobs:
         working-directory: site
         run: npm run build
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/build
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
-        working-directory: site
-        env:
-          GIT_USER: github-actions[bot]
-          GIT_PASS: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
