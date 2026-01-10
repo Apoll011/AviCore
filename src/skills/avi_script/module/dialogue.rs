@@ -12,60 +12,246 @@ pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
 
     FuncRegistration::new("any_validator")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that accepts any input",
+            "/// ",
+            "/// # Returns",
+            "/// An AnyValidator object"
+        ])
+        .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, AnyValidator::new);
-    FuncRegistration::new("list_or_none_validator").set_into_module(
-        &mut module,
-        ListOrNoneValidator::new,
-    );
-    FuncRegistration::new("optional_validator").set_into_module(
-        &mut module,
-        OptionalValidator::new,
-    );
-    FuncRegistration::new("bool_validator").set_into_module(&mut module, BoolValidator::new);
-    FuncRegistration::new("mapped_validator_string").set_into_module(
-        &mut module,
-        MappedValidator::<String>::new,
-    );
-    FuncRegistration::new("mapped_validator_i32").set_into_module(
-        &mut module,
-        MappedValidator::<i32>::new,
-    );
-    FuncRegistration::new("mapped_validator_i64").set_into_module(
-        &mut module,
-        MappedValidator::<i64>::new,
-    );
-    FuncRegistration::new("mapped_validator_f32").set_into_module(
-        &mut module,
-        MappedValidator::<f32>::new,
-    );
-    FuncRegistration::new("mapped_validator_f64").set_into_module(
-        &mut module,
-        MappedValidator::<f64>::new,
-    );
-    FuncRegistration::new("mapped_validator_bool").set_into_module(
-        &mut module,
-        MappedValidator::<bool>::new,
-    );
-    FuncRegistration::new("say").set_into_module(&mut module, say);
-    FuncRegistration::new("say_once").set_into_module(&mut module, say_once);
-    FuncRegistration::new("listen").set_into_module(&mut module, listen);
-    FuncRegistration::new("repeat").set_into_module(&mut module, repeat);
-    FuncRegistration::new("request_attention").set_into_module(&mut module, req_attention);
 
-    register_skill_func!(&mut module, "confirm", (question_locale_id: String, handler: String), |skill_context| {
-        speak!(
-            &skill_context
-                .languages
-                .get_translation(&question_locale_id)
-                .unwrap()
-        );
+    FuncRegistration::new("list_or_none_validator")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that accepts a list of items or nothing",
+            "/// ",
+            "/// # Returns",
+            "/// A ListOrNoneValidator object"
+        ])
+        .with_params_info(&[] as &[&str])
+        .set_into_module(&mut module, ListOrNoneValidator::new);
 
-        let validator = Dynamic::from(BoolValidator::new(false));
-        handle_on_reply(handler.clone(), validator, skill_context.info.name.clone());
-    });
-    register_skill_func!(&mut module, "on_reply", (handler: String, validator: Dynamic), |skill_context| {
-        handle_on_reply(handler.clone(), validator.clone(), skill_context.info.name.clone());
-    });
+    FuncRegistration::new("optional_validator")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that makes another validator optional",
+            "/// ",
+            "/// # Arguments",
+            "/// * `validator` - The validator to make optional",
+            "/// ",
+            "/// # Returns",
+            "/// An OptionalValidator object"
+        ])
+        .with_params_info(&["validator: Dynamic"])
+        .set_into_module(&mut module, OptionalValidator::new);
+
+    FuncRegistration::new("bool_validator")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that accepts boolean input (yes/no)",
+            "/// ",
+            "/// # Arguments",
+            "/// * `fuzzy` - Whether to use fuzzy matching",
+            "/// ",
+            "/// # Returns",
+            "/// A BoolValidator object"
+        ])
+        .with_params_info(&["fuzzy: bool"])
+        .set_into_module(&mut module, BoolValidator::new);
+
+    FuncRegistration::new("mapped_validator_string")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that maps string input to values",
+            "/// ",
+            "/// # Arguments",
+            "/// * `map` - A map of possible inputs to their string values",
+            "/// ",
+            "/// # Returns",
+            "/// A MappedValidator object"
+        ])
+        .with_params_info(&["map: Map"])
+        .set_into_module(&mut module, MappedValidator::<String>::new);
+
+    FuncRegistration::new("mapped_validator_i32")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that maps string input to i32 values",
+            "/// ",
+            "/// # Arguments",
+            "/// * `map` - A map of possible inputs to their i32 values",
+            "/// ",
+            "/// # Returns",
+            "/// A MappedValidator object"
+        ])
+        .with_params_info(&["map: Map"])
+        .set_into_module(&mut module, MappedValidator::<i32>::new);
+
+    FuncRegistration::new("mapped_validator_i64")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that maps string input to i64 values",
+            "/// ",
+            "/// # Arguments",
+            "/// * `map` - A map of possible inputs to their i64 values",
+            "/// ",
+            "/// # Returns",
+            "/// A MappedValidator object"
+        ])
+        .with_params_info(&["map: Map"])
+        .set_into_module(&mut module, MappedValidator::<i64>::new);
+
+    FuncRegistration::new("mapped_validator_f32")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that maps string input to f32 values",
+            "/// ",
+            "/// # Arguments",
+            "/// * `map` - A map of possible inputs to their f32 values",
+            "/// ",
+            "/// # Returns",
+            "/// A MappedValidator object"
+        ])
+        .with_params_info(&["map: Map"])
+        .set_into_module(&mut module, MappedValidator::<f32>::new);
+
+    FuncRegistration::new("mapped_validator_f64")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that maps string input to f64 values",
+            "/// ",
+            "/// # Arguments",
+            "/// * `map` - A map of possible inputs to their f64 values",
+            "/// ",
+            "/// # Returns",
+            "/// A MappedValidator object"
+        ])
+        .with_params_info(&["map: Map"])
+        .set_into_module(&mut module, MappedValidator::<f64>::new);
+
+    FuncRegistration::new("mapped_validator_bool")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Creates a validator that maps string input to boolean values",
+            "/// ",
+            "/// # Arguments",
+            "/// * `map` - A map of possible inputs to their boolean values",
+            "/// ",
+            "/// # Returns",
+            "/// A MappedValidator object"
+        ])
+        .with_params_info(&["map: Map"])
+        .set_into_module(&mut module, MappedValidator::<bool>::new);
+
+    FuncRegistration::new("say")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Speaks a given text",
+            "/// ",
+            "/// # Arguments",
+            "/// * `text` - The text to speak",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&["text: String"])
+        .set_into_module(&mut module, say);
+
+    FuncRegistration::new("say_once")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Speaks a given text only once",
+            "/// ",
+            "/// # Arguments",
+            "/// * `text` - The text to speak",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&["text: String"])
+        .set_into_module(&mut module, say_once);
+
+    FuncRegistration::new("listen")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Makes the device start listening for voice input",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&[] as &[&str])
+        .set_into_module(&mut module, listen);
+
+    FuncRegistration::new("repeat")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Repeats the last thing spoken or heard",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&[] as &[&str])
+        .set_into_module(&mut module, repeat);
+
+    FuncRegistration::new("request_attention")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Requests the user's attention and starts listening",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&[] as &[&str])
+        .set_into_module(&mut module, req_attention);
+
+    register_skill_func!(
+        &mut module,
+        "confirm",
+        (question_locale_id: String, handler: String),
+        &[
+            "/// Asks the user a yes/no question and handles the response",
+            "/// ",
+            "/// # Arguments",
+            "/// * `question_locale_id` - The locale ID of the question to ask",
+            "/// * `handler` - The name of the function to call with the result",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ],
+        &["question_locale_id: String", "handler: String"],
+        |skill_context| {
+            speak!(
+                &skill_context
+                    .languages
+                    .get_translation(&question_locale_id)
+                    .unwrap()
+            );
+
+            let validator = Dynamic::from(BoolValidator::new(false));
+            handle_on_reply(handler.clone(), validator, skill_context.info.name.clone());
+        }
+    );
+    register_skill_func!(
+        &mut module,
+        "on_reply",
+        (handler: String, validator: Dynamic),
+        &[
+            "/// Registers a handler for the next user response",
+            "/// ",
+            "/// # Arguments",
+            "/// * `handler` - The name of the function to call with the response",
+            "/// * `validator` - The validator to use for the response",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ],
+        &["handler: String", "validator: Dynamic"],
+        |skill_context| {
+            handle_on_reply(handler.clone(), validator.clone(), skill_context.info.name.clone());
+        }
+    );
 
     resolver.insert("dialogue", module);
 }

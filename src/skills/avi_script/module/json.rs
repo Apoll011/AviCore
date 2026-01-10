@@ -6,8 +6,33 @@ use serde_json::Value;
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
 
-    FuncRegistration::new("parse").set_into_module(&mut module, parse_json);
-    FuncRegistration::new("to_json").set_into_module(&mut module, to_json);
+    FuncRegistration::new("parse")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Parses a JSON string into a Rhai object",
+            "/// ",
+            "/// # Arguments",
+            "/// * `json_str` - The JSON string to parse",
+            "/// ",
+            "/// # Returns",
+            "/// A Rhai object representing the JSON data"
+        ])
+        .with_params_info(&["json_str: &str"])
+        .set_into_module(&mut module, parse_json);
+
+    FuncRegistration::new("to_json")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Converts a Rhai object into a pretty-printed JSON string",
+            "/// ",
+            "/// # Arguments",
+            "/// * `value` - The Rhai object to convert",
+            "/// ",
+            "/// # Returns",
+            "/// A JSON string"
+        ])
+        .with_params_info(&["value: Dynamic"])
+        .set_into_module(&mut module, to_json);
 
     resolver.insert("json", module);
 }

@@ -6,14 +6,128 @@ use crate::skills::avi_script::helpers::{json_to_dynamic, dynamic_to_json};
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
 
-    FuncRegistration::new("require").set_into_module(&mut module, require);
-    FuncRegistration::new("exists").set_into_module(&mut module, exists);
-    FuncRegistration::new("get").set_into_module(&mut module, get);
-    FuncRegistration::new("get_raw").set_into_module(&mut module, get_raw);
-    FuncRegistration::new("full").set_into_module(&mut module, full);
-    FuncRegistration::new("assert_equal").set_into_module(&mut module, assert_equal);
-    FuncRegistration::new("assert_in").set_into_module(&mut module, assert_in);
-    FuncRegistration::new("assert_in_dict").set_into_module(&mut module, assert_in_dict);
+    FuncRegistration::new("require")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Asserts that a slot exists in the current intent",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing or throws an error if the slot is missing"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str"])
+        .set_into_module(&mut module, require);
+
+    FuncRegistration::new("exists")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Checks if a slot exists in the current intent",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// ",
+            "/// # Returns",
+            "/// True if the slot exists, false otherwise"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str"])
+        .set_into_module(&mut module, exists);
+
+    FuncRegistration::new("get")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Gets the value of a slot from the current intent",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// ",
+            "/// # Returns",
+            "/// The value of the slot as a Rhai object, or UNIT if the slot is missing"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str"])
+        .set_into_module(&mut module, get);
+
+    FuncRegistration::new("get_raw")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Gets the raw text value of a slot from the current intent",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// ",
+            "/// # Returns",
+            "/// The raw text value of the slot, or UNIT if the slot is missing"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str"])
+        .set_into_module(&mut module, get_raw);
+
+    FuncRegistration::new("full")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Gets the full slot object from the current intent",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// ",
+            "/// # Returns",
+            "/// The full slot object, or UNIT if the slot is missing"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str"])
+        .set_into_module(&mut module, full);
+
+    FuncRegistration::new("assert_equal")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Asserts that a slot's value is equal to a given value",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// * `val` - The value to compare against",
+            "/// ",
+            "/// # Returns",
+            "/// True if the slot value is equal, false otherwise"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str", "val: Dynamic"])
+        .set_into_module(&mut module, assert_equal);
+
+    FuncRegistration::new("assert_in")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Asserts that a slot's value is in a given list or matches a value",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// * `list` - The list of values or a single value to check against",
+            "/// ",
+            "/// # Returns",
+            "/// True if the slot value is in the list or matches the value, false otherwise"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str", "list: Dynamic"])
+        .set_into_module(&mut module, assert_in);
+
+    FuncRegistration::new("assert_in_dict")
+        .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Asserts that a slot's string value is a key in a given map",
+            "/// ",
+            "/// # Arguments",
+            "/// * `intent` - The intent to check",
+            "/// * `name` - The name of the slot",
+            "/// * `dict` - The map to check for the key",
+            "/// ",
+            "/// # Returns",
+            "/// True if the slot's string value is a key in the map, false otherwise"
+        ])
+        .with_params_info(&["intent: Intent", "name: &str", "dict: Dynamic"])
+        .set_into_module(&mut module, assert_in_dict);
 
     resolver.insert("slots", module);
 }

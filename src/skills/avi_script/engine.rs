@@ -1,6 +1,4 @@
 use rhai::Engine;
-use rhai::packages::Package;
-use rhai_url::UrlPackage;
 
 const MAX_MEMORY: usize = 10 * 1024 * 1024; // 10MB
 const MAX_STACK: isize = 1024 * 1024; // 1MB
@@ -49,9 +47,6 @@ pub fn create_avi_script_engine() -> Result<Engine, Box<dyn std::error::Error>> 
     super::module::add(&mut engine);
 
     super::functions::add(&mut engine);
-
-    let url = UrlPackage::new();
-    url.register_into_engine(&mut engine);
 
     Ok(engine)
 }

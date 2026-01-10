@@ -9,22 +9,72 @@ pub fn add(resolver: &mut StaticModuleResolver) {
 
     FuncRegistration::new("info")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Logs an informational message",
+            "/// ",
+            "/// # Arguments",
+            "/// * `message` - The message to log",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_info);
 
     FuncRegistration::new("trace")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Logs a trace-level message for detailed debugging",
+            "/// ",
+            "/// # Arguments",
+            "/// * `message` - The message to log",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_trace);
 
     FuncRegistration::new("debug")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Logs a debug-level message",
+            "/// ",
+            "/// # Arguments",
+            "/// * `message` - The message to log",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_debug);
 
     FuncRegistration::new("warn")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Logs a warning message",
+            "/// ",
+            "/// # Arguments",
+            "/// * `message` - The message to log",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_warn);
 
     FuncRegistration::new("error")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Logs an error message",
+            "/// ",
+            "/// # Arguments",
+            "/// * `message` - The message to log",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ])
+        .with_params_info(&["message: &str"])
         .set_into_module(&mut module, log_error);
 
     resolver.insert("log", module);

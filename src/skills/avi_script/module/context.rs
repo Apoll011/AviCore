@@ -6,18 +6,81 @@ use rhai::{Dynamic, Module};
 pub fn add(resolver: &mut StaticModuleResolver) {
     let mut module = Module::new();
 
-    register_skill_func!(&mut module, "get", (key: String), |skill_context| {
-        get_ctx!(skill: skill_context.info.name, &key).map(|v| json_to_dynamic(v))
-    });
-    register_skill_func!(&mut module, "has", (key: String), |skill_context| {
-        has_ctx!(skill: skill_context.info.name, &key)
-    });
-    register_skill_func!(&mut module, "remove", (key: String), |skill_context| {
-        let _ = remove_ctx!(skill: skill_context.info.name, &key);
-    });
-    register_skill_func!(&mut module, "set", (key: String, value: Dynamic, ttl: u64, persist: bool), |skill_context| {
-        set_ctx!(skill: skill_context.info.name, key, value, ttl, persist);
-    });
+    register_skill_func!(
+        &mut module,
+        "get",
+        (key: String),
+        &[
+            "/// Gets a value from the skill's persistent context",
+            "/// ",
+            "/// # Arguments",
+            "/// * `key` - The key of the value to retrieve",
+            "/// ",
+            "/// # Returns",
+            "/// The value associated with the key, or UNIT if not found"
+        ],
+        &["key: String"],
+        |skill_context| {
+            get_ctx!(skill: skill_context.info.name, &key).map(|v| json_to_dynamic(v))
+        }
+    );
+    register_skill_func!(
+        &mut module,
+        "has",
+        (key: String),
+        &[
+            "/// Checks if a key exists in the skill's persistent context",
+            "/// ",
+            "/// # Arguments",
+            "/// * `key` - The key to check",
+            "/// ",
+            "/// # Returns",
+            "/// True if the key exists, false otherwise"
+        ],
+        &["key: String"],
+        |skill_context| {
+            has_ctx!(skill: skill_context.info.name, &key)
+        }
+    );
+    register_skill_func!(
+        &mut module,
+        "remove",
+        (key: String),
+        &[
+            "/// Removes a value from the skill's persistent context",
+            "/// ",
+            "/// # Arguments",
+            "/// * `key` - The key of the value to remove",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ],
+        &["key: String"],
+        |skill_context| {
+            let _ = remove_ctx!(skill: skill_context.info.name, &key);
+        }
+    );
+    register_skill_func!(
+        &mut module,
+        "set",
+        (key: String, value: Dynamic, ttl: u64, persist: bool),
+        &[
+            "/// Sets a value in the skill's persistent context",
+            "/// ",
+            "/// # Arguments",
+            "/// * `key` - The key to set",
+            "/// * `value` - The value to store",
+            "/// * `ttl` - Time to live in seconds (0 for no TTL)",
+            "/// * `persist` - Whether to persist the value across sessions",
+            "/// ",
+            "/// # Returns",
+            "/// Nothing"
+        ],
+        &["key: String", "value: Dynamic", "ttl: u64", "persist: bool"],
+        |skill_context| {
+            set_ctx!(skill: skill_context.info.name, key, value, ttl, persist);
+        }
+    );
 
     resolver.insert("context", module);
 }

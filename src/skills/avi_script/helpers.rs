@@ -5,14 +5,23 @@ use std::result::Result;
 
 #[macro_export]
 macro_rules! register_skill_func {
-    ($module:expr, $name:expr, ($($param:ident : $type:ty),*), $default:expr, |$skill_ctx:ident| $body:expr) => {
+    ($module:expr, $name:expr, ($($param:ident : $type:ty),*), $default:expr, $comments:expr, $params_info:expr, |$skill_ctx:ident| $body:expr) => {
         rhai::FuncRegistration::new($name)
+            .with_namespace(rhai::FnNamespace::Global)
+            .with_comments($comments)
+            .with_params_info($params_info)
             .set_into_module($module, |ctx: rhai::NativeCallContext, $($param : $type),*| {
                 $crate::skills::avi_script::helpers::skill_context(ctx, $default, |$skill_ctx| $body)
             });
     };
+    ($module:expr, $name:expr, ($($param:ident : $type:ty),*), $comments:expr, $params_info:expr, |$skill_ctx:ident| $body:expr) => {
+        register_skill_func!($module, $name, ($($param : $type),*), ::std::default::Default::default(), $comments, $params_info, |$skill_ctx| $body);
+    };
+    ($module:expr, $name:expr, ($($param:ident : $type:ty),*), $default:expr, |$skill_ctx:ident| $body:expr) => {
+        register_skill_func!($module, $name, ($($param : $type),*), $default, &[] as &[&str], &[] as &[&str], |$skill_ctx| $body);
+    };
     ($module:expr, $name:expr, ($($param:ident : $type:ty),*), |$skill_ctx:ident| $body:expr) => {
-        register_skill_func!($module, $name, ($($param : $type),*), ::std::default::Default::default(), |$skill_ctx| $body);
+        register_skill_func!($module, $name, ($($param : $type),*), ::std::default::Default::default(), &[] as &[&str], &[] as &[&str], |$skill_ctx| $body);
     };
 }
 

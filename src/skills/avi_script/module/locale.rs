@@ -9,22 +9,70 @@ pub fn add(resolver: &mut StaticModuleResolver) {
 
     FuncRegistration::new("get")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Gets a translation for a given ID in the current locale",
+            "/// ",
+            "/// # Arguments",
+            "/// * `id` - The ID of the translation to retrieve",
+            "/// ",
+            "/// # Returns",
+            "/// The translation string if found, or UNIT if not found"
+        ])
+        .with_params_info(&["id: &str"])
         .set_into_module(&mut module, locale_get);
 
     FuncRegistration::new("get_fmt")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Gets a formatted translation for a given ID in the current locale",
+            "/// ",
+            "/// # Arguments",
+            "/// * `id` - The ID of the translation to retrieve",
+            "/// * `params` - A map of parameters to interpolate into the translation",
+            "/// ",
+            "/// # Returns",
+            "/// The formatted translation string if found, or UNIT if not found"
+        ])
+        .with_params_info(&["id: &str", "params: Map"])
         .set_into_module(&mut module, locale_get_fmt);
 
     FuncRegistration::new("list")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Lists all translations for a given locale code",
+            "/// ",
+            "/// # Arguments",
+            "/// * `code` - The locale code (e.g., 'en-US')",
+            "/// ",
+            "/// # Returns",
+            "/// A map of translations"
+        ])
+        .with_params_info(&["code: &str"])
         .set_into_module(&mut module, list_locales);
 
     FuncRegistration::new("has")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Checks if a translation exists for a given ID",
+            "/// ",
+            "/// # Arguments",
+            "/// * `id` - The ID of the translation to check",
+            "/// ",
+            "/// # Returns",
+            "/// True if the translation exists, false otherwise"
+        ])
+        .with_params_info(&["id: &str"])
         .set_into_module(&mut module, has_locale);
 
     FuncRegistration::new("current")
         .with_namespace(rhai::FnNamespace::Global)
+        .with_comments(&[
+            "/// Gets the current language code",
+            "/// ",
+            "/// # Returns",
+            "/// The current language code (e.g., 'en-US')"
+        ])
+        .with_params_info(&[] as &[&str])
         .set_into_module(&mut module, current_lang);
 
     resolver.insert("locale", module);
