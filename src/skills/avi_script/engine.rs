@@ -35,14 +35,18 @@ fn register_types(engine: &mut Engine) {
         .build_type::<crate::dialogue::response::MappedValidator<bool>>();
 }
 
-pub fn create_avi_script_engine() -> Result<Engine, Box<dyn std::error::Error>> {
+pub fn create_avi_script_engine(static_m: bool) -> Result<Engine, Box<dyn std::error::Error>> {
     let mut engine = Engine::new();
 
     constraint_engine(&mut engine);
 
     register_types(&mut engine);
 
-    super::module::add(&mut engine);
+    if static_m {
+        super::module::add_static_modules(&mut engine);
+    } else {
+        super::module::add(&mut engine);
+    }
 
     super::syntax::add(&mut engine)?;
 

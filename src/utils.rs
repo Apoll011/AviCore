@@ -1,3 +1,4 @@
+use log::info;
 use crate::ctx::runtime;
 #[allow(unused_imports)]
 use crate::skills::avi_script::engine::create_avi_script_engine;
@@ -17,21 +18,25 @@ pub async fn core_id() -> Option<String> {
     }
 }
 
-#[cfg(feature = "docs")]
 pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
     use rhai_autodocs::*;
+    info!("Generating documentation");
+    let engine = create_avi_script_engine(true)?;
 
-    let engine = create_avi_script_engine()?;
+    info!("Got {} functions from engine", engine.gen_fn_signatures(true).len());
 
     let docs = export::options()
         .include_standard_packages(true)
-        .order_items_with(export::ItemsOrder::ByIndex)
         .format_sections_with(export::SectionFormat::Tabs)
         .export(&engine)?;
 
+    info!("Trying to create dir ./docs");
     let path = "./docs";
+    std::fs::remove_dir_all(path)?;
     std::fs::create_dir_all(path)?;
+    info!("Created dir ./docs");
 
+    info!("Generating glossary.");
     let glossary = generate::docusaurus_glossary()
         .with_slug("/api")
         .generate(&docs)?;
@@ -40,22 +45,15 @@ pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
         std::path::PathBuf::from_iter([path, "1-glossary.mdx"]),
         glossary,
     )?;
+    info!("Generated glossary");
 
     for (name, doc) in generate::docusaurus().with_slug("/api").generate(&docs)? {
-        println!("Generating doc file: {}.mdx", name);
+        info!("Generating doc file: {}.mdx", name);
         std::fs::write(
             std::path::PathBuf::from_iter([path, &format!("{}.mdx", &name)]),
             doc,
         )?;
     }
-
+    info!("Generated Documentation");
     Ok(())
-}
-
-#[cfg(not(feature = "docs"))]
-pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
-    ::log::error!(
-        "Documentation generation requires the 'docs' feature. Build with: cargo run --features docs -- --generate-docs"
-    );
-    return Err("docs feature not enabled".into());
 }
