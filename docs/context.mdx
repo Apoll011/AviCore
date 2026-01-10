@@ -1,0 +1,99 @@
+---
+title: context
+slug: /api/context
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+```Namespace: global/context```
+
+
+
+
+## <code>fn</code> get {#fn-get}
+
+```js
+fn get(key: String) -> ?
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Gets a value from the skill's persistent context
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `key` - The key of the value to retrieve
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        The value associated with the key, or UNIT if not found
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> has {#fn-has}
+
+```js
+fn has(key: String) -> bool
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Checks if a key exists in the skill's persistent context
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `key` - The key to check
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        True if the key exists, false otherwise
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> remove {#fn-remove}
+
+```js
+fn remove(key: String)
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Removes a value from the skill's persistent context
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `key` - The key of the value to remove
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> set {#fn-set}
+
+```js
+fn set(key: String, value: ?, ttl: u64, persist: bool)
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Sets a value in the skill's persistent context
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `key` - The key to set
+        * `value` - The value to store
+        * `ttl` - Time to live in seconds (0 for no TTL)
+        * `persist` - Whether to persist the value across sessions
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>

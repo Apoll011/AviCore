@@ -1,0 +1,52 @@
+name: Build & Deploy Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create temporary Docusaurus site
+        run: |
+          npx create-docusaurus@latest site classic --skip-install
+
+      - name: Inject docs
+        run: |
+          rm -rf site/docs
+          cp -r docs site/docs
+
+      - name: Install dependencies
+        working-directory: site
+        run: npm install
+
+      - name: Configure docs-only mode
+        working-directory: site
+        run: |
+          sed -i "s/blog: true/blog: false/" docusaurus.config.js
+
+      - name: Build site
+        working-directory: site
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        working-directory: site
+        env:
+          GIT_USER: github-actions[bot]
+          GIT_PASS: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run deploy

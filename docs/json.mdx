@@ -1,0 +1,54 @@
+---
+title: json
+slug: /api/json
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+```Namespace: global/json```
+
+
+
+
+## <code>fn</code> parse {#fn-parse}
+
+```js
+fn parse(json_str: String) -> ?
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Parses a JSON string into a Rhai object
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `json_str` - The JSON string to parse
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        A Rhai object representing the JSON data
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> to_json {#fn-to_json}
+
+```js
+fn to_json(value: ?) -> String
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Converts a Rhai object into a pretty-printed JSON string
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `value` - The Rhai object to convert
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        A JSON string
+    </TabItem>
+</Tabs>

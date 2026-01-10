@@ -1,5 +1,6 @@
 /target
 /lib
 logs/
-docs/
 definitions/
+.idea
+config/context

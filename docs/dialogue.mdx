@@ -1,0 +1,246 @@
+---
+title: dialogue
+slug: /api/dialogue
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+```Namespace: global/dialogue```
+
+
+
+
+## <code>fn</code> any_validator {#fn-any_validator}
+
+```js
+fn any_validator() -> AnyValidator
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Creates a validator that accepts any input
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        An AnyValidator object
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> bool_validator {#fn-bool_validator}
+
+```js
+fn bool_validator(fuzzy: bool) -> BoolValidator
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Creates a validator that accepts boolean input (yes/no)
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `fuzzy` - Whether to use fuzzy matching
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        A BoolValidator object
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> confirm {#fn-confirm}
+
+```js
+fn confirm(question_locale_id: String, handler: String)
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Asks the user a yes/no question and handles the response
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `question_locale_id` - The locale ID of the question to ask
+        * `handler` - The name of the function to call with the result
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> list_or_none_validator {#fn-list_or_none_validator}
+
+```js
+fn list_or_none_validator(allowed_values: Vec<String>) -> ListOrNoneValidator
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Creates a validator that accepts a list of items or nothing
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `allowed_values` - A list of accepted string values
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        A ListOrNoneValidator object
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> listen {#fn-listen}
+
+```js
+fn listen()
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Makes the device start listening for voice input
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> mapped_validator {#fn-mapped_validator}
+
+```js
+fn mapped_validator(map: Map) -> MappedValidator
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Creates a validator that maps string input to values
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `map` - A map of possible inputs to their string values
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        A MappedValidator object
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> on_reply {#fn-on_reply}
+
+```js
+fn on_reply(handler: String, validator: ?)
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Registers a handler for the next user response
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `handler` - The name of the function to call with the response
+        * `validator` - The validator to use for the response
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> optional_validator {#fn-optional_validator}
+
+```js
+fn optional_validator() -> OptionalValidator
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Creates a validator that makes another validator optional
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        An OptionalValidator object
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> repeat {#fn-repeat}
+
+```js
+fn repeat()
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Repeats the last thing spoken or heard
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> request_attention {#fn-request_attention}
+
+```js
+fn request_attention()
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Requests the user's attention and starts listening
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> say {#fn-say}
+
+```js
+fn say(text: String)
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Speaks a given text
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `text` - The text to speak
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> say_once {#fn-say_once}
+
+```js
+fn say_once(text: String)
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Speaks a given text only once
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `text` - The text to speak
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        Nothing
+    </TabItem>
+</Tabs>

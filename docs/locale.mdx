@@ -1,0 +1,114 @@
+---
+title: locale
+slug: /api/locale
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+```Namespace: global/locale```
+
+
+
+
+## <code>fn</code> current {#fn-current}
+
+```js
+fn current() -> String
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Gets the current language code
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        The current language code (e.g., 'en-US')
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> get {#fn-get}
+
+```js
+fn get(id: String) -> Option<String>
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Gets a translation for a given ID in the current locale
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `id` - The ID of the translation to retrieve
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        The translation string if found, or None if not found
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> get_fmt {#fn-get_fmt}
+
+```js
+fn get_fmt(id: String, params: Map) -> Option<String>
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Gets a formatted translation for a given ID in the current locale
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `id` - The ID of the translation to retrieve
+        * `params` - A map of parameters to interpolate into the translation
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        The formatted translation string if found, or UNIT if not found
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> has {#fn-has}
+
+```js
+fn has(id: String) -> bool
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Checks if a translation exists for a given ID
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `id` - The ID of the translation to check
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        True if the translation exists, false otherwise
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> list {#fn-list}
+
+```js
+fn list(code: String) -> Value)>
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Lists all translations for a given locale code
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+        * `code` - The locale code (e.g., 'en-US')
+    </TabItem>
+    <TabItem value="Returns" default>
+
+        A map of translations
+    </TabItem>
+</Tabs>
