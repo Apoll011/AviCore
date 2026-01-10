@@ -5,9 +5,14 @@ on_start {
     print("hhh");
     print(c::get("HUE_BRIDGE_IP"));
     print(c::list());
-    print(on_reply(dialogue::bool_validator(true)));
+}
+
+fn hi() {
+    print("HELLO!");
 }
 
 on_intent "hi" {
     print("Hi tiago");
+    //confirm("ask", "hi")
+    dialogue::on_reply("hi", dialogue::bool_validator(true));
 }
