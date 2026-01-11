@@ -27,6 +27,7 @@ dependencies = [
  "strfmt",
  "tempfile",
  "tokio",
+ "url",
  "uuid",
 ]
 

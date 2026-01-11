@@ -1,8 +1,10 @@
 import "dialogue";
+import "url";
 
 on_start {
     print("hhh");
     hi(true);
+    print(url::Url("https://g.com/"));
     print(dialogue::any_validator());
     //print(constant::list());
 }

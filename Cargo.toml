@@ -23,6 +23,7 @@ rhai = { version = "1.23.6", features = ["debugging", "decimal", "serde", "sync"
 rhai-autodocs = { version = "0.10.0"}
 clap = { version = "4.5.54", features = ["derive"] }
 regex = "1.12.2"
+url = "2.5.8"
 
 [dev-dependencies]
 async-trait = "0.1.89"
