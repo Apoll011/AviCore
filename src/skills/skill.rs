@@ -6,6 +6,7 @@ use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
 use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, RwLock};
+use crate::skills::avi_script::helpers::fix_module_imports;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -72,9 +73,7 @@ impl Skill {
         let path = &*format!("{}/{}", path, entry);
         match Self::read_file(path) {
             Ok(raw_script) => {
-                let re = regex::Regex::new(r#"import\s+"([^"]+)"\s*;"#)?;
-                let script = re.replace_all(&raw_script, r#"import "$1" as $1;"#);
-                Ok(engine.compile(script)?)
+                Ok(engine.compile(fix_module_imports(raw_script)?)?)
             }
             Err(e) => Err(Box::from(e)),
         }

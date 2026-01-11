@@ -291,7 +291,7 @@
       "patterns": [
         {
           "name": "keyword.other.module.avi",
-          "match": "\\b(import|export|as)\\b"
+          "match": "\\b(import|export|as|use)\\b"
         }
       ]
     },
@@ -865,7 +865,7 @@
         },
         {
           "name": "invalid.illegal.keyword.avi",
-          "match": "\\b(var|static|shared|goto|exit|match|case|public|protected|new|use|with|module|package|super|thread|spawn|go|await|async|sync|yield|default|void|null|nil)\\b"
+          "match": "\\b(var|static|shared|goto|exit|match|case|public|protected|new|with|module|package|super|thread|spawn|go|await|async|sync|yield|default|void|null|nil)\\b"
         }
       ]
     }

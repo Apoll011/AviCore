@@ -1,5 +1,6 @@
 import "dialogue";
 import "url";
+use "test";
 
 on_start {
     print("hhh");

@@ -1,3 +1,4 @@
+use std::error::Error;
 use crate::skills::skill_context::SkillContext;
 use rhai::{Dynamic, Map, NativeCallContext, Variant};
 use serde_json::Value;
@@ -163,4 +164,11 @@ pub fn get_skill_context(ctx: &NativeCallContext) -> Result<SkillContext, String
     };
 
     Ok(skill_context)
+}
+
+pub fn fix_module_imports(content: String) -> Result<String, Box<dyn Error>> {
+    let re = regex::Regex::new(r#"import\s+"([^"]+)"\s*;"#)?;
+    let script = re.replace_all(&content, r#"import "$1" as $1;"#);
+    let re2 = regex::Regex::new(r#"use\s+"([^"]+)"\s*;"#)?;
+    Ok(re2.replace_all(&script, r#"import "$1";"#).to_string())
 }
