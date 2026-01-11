@@ -25,7 +25,7 @@ pub mod url_module {
     /// let url = Url("http://test.dev/")
     /// let fullUrl = url.href // 'http://test.dev/'
     /// ```
-    #[rhai_fn( get = "href", pure)]
+    #[rhai_fn(get = "href", pure)]
     pub fn href(url: &mut Url) -> ImmutableString {
         url.to_string().into()
     }
@@ -38,7 +38,7 @@ pub mod url_module {
     /// let url = Url("http://test.dev/")
     /// let scheme = url.scheme // 'http'
     /// ```
-    #[rhai_fn( get = "scheme", pure)]
+    #[rhai_fn(get = "scheme", pure)]
     pub fn scheme(url: &mut Url) -> ImmutableString {
         url.scheme().into()
     }
@@ -65,7 +65,7 @@ pub mod url_module {
     /// let scheme = url.scheme // 'https'
     /// let fullUrl = url.href // 'https://test.dev/'
     /// ```
-    #[rhai_fn( set = "scheme", pure)]
+    #[rhai_fn(set = "scheme", pure)]
     pub fn set_scheme(url: &mut Url, value: &str) {
         _ = url.set_scheme(value);
     }
@@ -78,7 +78,7 @@ pub mod url_module {
     /// let url = Url("http://test.dev/")
     /// let domain = url.domain // 'test.dev'
     /// ```
-    #[rhai_fn( get = "domain", pure)]
+    #[rhai_fn(get = "domain", pure)]
     pub fn domain(url: &mut Url) -> ImmutableString {
         url.domain().unwrap_or("").into()
     }
@@ -91,13 +91,13 @@ pub mod url_module {
     /// let url = Url("http://test.dev/path")
     /// let path = url.path // '/path'
     /// ```
-    #[rhai_fn( get = "path", pure)]
+    #[rhai_fn(get = "path", pure)]
     pub fn path(url: &mut Url) -> ImmutableString {
         url.path().into()
     }
 
     /// Sets the Url path.
-    #[rhai_fn( set = "path", pure)]
+    #[rhai_fn(set = "path", pure)]
     pub fn set_path(url: &mut Url, value: &str) {
         url.set_path(value)
     }
@@ -110,13 +110,13 @@ pub mod url_module {
     /// let url = Url("http://test.dev/?page=2")
     /// let query = url.query // 'page=2'
     /// ```
-    #[rhai_fn( get = "query", pure)]
+    #[rhai_fn(get = "query", pure)]
     pub fn query(url: &mut Url) -> ImmutableString {
         url.query().unwrap_or("").into()
     }
 
     /// Sets the Url query string.
-    #[rhai_fn( set = "query", pure)]
+    #[rhai_fn(set = "query", pure)]
     pub fn set_query(url: &mut Url, value: &str) {
         if value.len() > 0 {
             url.set_query(Some(value))
@@ -126,7 +126,7 @@ pub mod url_module {
     }
 
     /// Sets the Url query string.
-    #[rhai_fn( set = "query", pure)]
+    #[rhai_fn(set = "query", pure)]
     pub fn set_query_option(url: &mut Url, value: Option<&str>) {
         match value {
             Some(value) => url.set_query(Some(value)),
@@ -142,13 +142,13 @@ pub mod url_module {
     /// let url = Url("http://test.dev/?#row=4")
     /// let fragment = url.fragment // 'row=4'
     /// ```
-    #[rhai_fn( get = "fragment", pure)]
+    #[rhai_fn(get = "fragment", pure)]
     pub fn fragment(url: &mut Url) -> ImmutableString {
         url.fragment().unwrap_or("").into()
     }
 
     /// Sets the Url fragment.
-    #[rhai_fn( set = "fragment", pure)]
+    #[rhai_fn(set = "fragment", pure)]
     pub fn set_fragment(url: &mut Url, value: &str) {
         if value.len() > 0 {
             url.set_fragment(Some(value))
@@ -158,7 +158,7 @@ pub mod url_module {
     }
 
     /// Sets the Url fragment.
-    #[rhai_fn( set = "fragment", pure)]
+    #[rhai_fn(set = "fragment", pure)]
     pub fn set_fragment_option(url: &mut Url, value: Option<&str>) {
         match value {
             Some(value) => url.set_fragment(Some(value)),
@@ -174,13 +174,13 @@ pub mod url_module {
     /// let url = Url("http://test.dev/?#row=4");
     /// let hash = url.hash; // 'row=4'
     /// ```
-    #[rhai_fn( get = "hash", pure)]
+    #[rhai_fn(get = "hash", pure)]
     pub fn hash(url: &mut Url) -> ImmutableString {
         url.fragment().unwrap_or("").into()
     }
 
     /// Sets the Url hash.
-    #[rhai_fn( set = "hash", pure)]
+    #[rhai_fn(set = "hash", pure)]
     pub fn set_hash(url: &mut Url, value: &str) {
         if value.len() > 0 {
             url.set_fragment(Some(value))
@@ -190,7 +190,7 @@ pub mod url_module {
     }
 
     /// Sets the Url hash.
-    #[rhai_fn( set = "hash", pure)]
+    #[rhai_fn(set = "hash", pure)]
     pub fn set_hash_option(url: &mut Url, value: Option<&str>) {
         match value {
             Some(value) => url.set_fragment(Some(value)),
@@ -202,10 +202,7 @@ pub mod url_module {
      * Functions
      ************************************************************/
 
-    #[rhai_fn(
-        name = "query_clear",
-        pure
-    )]
+    #[rhai_fn(name = "query_clear", pure)]
     /// Clear the query string.
     ///
     /// ### Example
@@ -233,7 +230,7 @@ pub mod url_module {
     ///
     /// url == "http://test.dev/?b=1"
     /// ```
-    #[rhai_fn( name = "query_delete", name = "query_remove", pure)]
+    #[rhai_fn(name = "query_delete", name = "query_remove", pure)]
     pub fn query_delete(url: &mut Url, key: &str) {
         let query: Vec<(String, String)> = url
             .query_pairs()

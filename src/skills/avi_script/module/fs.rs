@@ -18,12 +18,10 @@ pub mod fs_module {
     pub fn read(path: &str) -> Result<String, Box<EvalAltResult>> {
         match fs::read_to_string(path) {
             Ok(content) => Ok(content),
-            Err(e) => {
-                Err(Box::new(EvalAltResult::ErrorRuntime(
-                    format!("Could not read directory: {}", e).into(),
-                    Position::NONE,
-                )))
-            }
+            Err(e) => Err(Box::new(EvalAltResult::ErrorRuntime(
+                format!("Could not read directory: {}", e).into(),
+                Position::NONE,
+            ))),
         }
     }
 

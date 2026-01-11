@@ -80,10 +80,10 @@ pub struct Metadata {
     pub last_interaction: DateTime<Utc>, // Unix timestamp
 }
 
+use chrono::{DateTime, Utc};
 use parking_lot::RwLock;
 use rhai::CustomType;
 use std::sync::Arc;
-use chrono::{DateTime, Utc};
 
 #[derive(Clone)]
 pub struct UserManager {

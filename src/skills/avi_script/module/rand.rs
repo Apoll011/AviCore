@@ -4,11 +4,10 @@ use rhai::plugin::*;
 #[export_module]
 pub mod rand_functions {
     use rand::prelude::*;
-    use rhai::{EvalAltResult, Position, INT};
+    use rhai::{EvalAltResult, INT, Position};
     use std::ops::{Range, RangeInclusive};
 
     use rhai::FLOAT;
-
 
     /// Generate a random boolean value.
     ///
@@ -49,7 +48,7 @@ pub mod rand_functions {
                 ),
                 Position::NONE,
             )
-                .into())
+            .into())
         } else {
             Ok(rand::rng().random_bool(probability as f64))
         }
@@ -84,7 +83,7 @@ pub mod rand_functions {
                 format!("Range is empty: {:?}", range),
                 Position::NONE,
             )
-                .into())
+            .into())
         } else {
             Ok(rand::rng().random_range(range))
         }
@@ -106,7 +105,7 @@ pub mod rand_functions {
                 format!("Range is empty: {:?}", range),
                 Position::NONE,
             )
-                .into())
+            .into())
         } else {
             Ok(rand::rng().random_range(range))
         }
@@ -128,7 +127,7 @@ pub mod rand_functions {
                 format!("Range is empty: {}..{}", start, end),
                 Position::NONE,
             )
-                .into())
+            .into())
         } else {
             Ok(rand::rng().random_range(start..=end))
         }
@@ -166,7 +165,7 @@ pub mod rand_functions {
                 format!("Range is empty: {}..{}", start, end),
                 Position::NONE,
             )
-                .into())
+            .into())
         } else {
             Ok(rand::rng().random_range(start..=end))
         }

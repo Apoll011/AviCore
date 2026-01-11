@@ -1,5 +1,5 @@
+use rhai::NativeCallContext;
 use rhai::plugin::*;
-use rhai::{NativeCallContext};
 
 #[export_module]
 pub mod skill_module {

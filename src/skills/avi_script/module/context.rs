@@ -1,5 +1,5 @@
 use crate::skills::avi_script::helpers::json_to_dynamic;
-use crate::skills::avi_script::helpers::{skill_context_def};
+use crate::skills::avi_script::helpers::skill_context_def;
 use crate::{get_ctx, has_ctx, remove_ctx, set_ctx};
 use rhai::plugin::*;
 use rhai::{Dynamic, NativeCallContext};

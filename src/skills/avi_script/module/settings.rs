@@ -1,7 +1,5 @@
 use crate::config::{Setting, SettingNamed};
-use crate::skills::avi_script::helpers::{
-    skill_context, skill_context_def, yaml_to_dynamic,
-};
+use crate::skills::avi_script::helpers::{skill_context, skill_context_def, yaml_to_dynamic};
 use rhai::plugin::*;
 use rhai::{Dynamic, NativeCallContext};
 use std::collections::HashMap;

@@ -8,14 +8,14 @@ pub(crate) mod fs;
 pub(crate) mod json;
 pub(crate) mod locale;
 pub(crate) mod log;
+mod ml;
+mod rand;
 pub(crate) mod settings;
 pub(crate) mod skill;
 pub(crate) mod slots;
+mod urls;
 mod user;
 mod util;
-mod urls;
-mod ml;
-mod rand;
 
 pub fn add(engine: &mut Engine) {
     let mut resolver = StaticModuleResolver::new();
@@ -43,7 +43,7 @@ pub fn add(engine: &mut Engine) {
     resolver.insert("util", rhai::exported_module!(util::util_module));
     resolver.insert("url", rhai::exported_module!(urls::url_module));
     resolver.insert("ml", rhai::exported_module!(ml::ml));
-    resolver.insert("rand", rhai::exported_module!(rand::rand_functions));
+    resolver.insert("rand", rhai::exported_module!(rand::rand_functionsca));
 
     engine.set_module_resolver(resolver);
 }

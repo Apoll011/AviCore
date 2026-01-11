@@ -1,5 +1,5 @@
 use rhai::plugin::*;
-use rhai::{Array, Dynamic, EvalAltResult, ImmutableString, Position, FLOAT, INT};
+use rhai::{Array, Dynamic, EvalAltResult, FLOAT, INT, ImmutableString, Position};
 use smartcorelib::{
     linalg::basic::matrix::DenseMatrix,
     linear::{
@@ -57,11 +57,7 @@ pub mod ml {
         // Make x array
         let array_as_vec_vec_float = &x
             .into_iter()
-            .map(|observation| {
-                array_to_vec_float(
-                    &mut observation.clone().into_array().unwrap(),
-                )
-            })
+            .map(|observation| array_to_vec_float(&mut observation.clone().into_array().unwrap()))
             .collect::<Vec<Vec<FLOAT>>>();
 
         // Check if x array is empty
@@ -69,12 +65,12 @@ pub mod ml {
             Err(EvalAltResult::ErrorArrayBounds(0, 0, Position::NONE).into())
         } else {
             let algorithm_string = algorithm.as_str();
-            let xvec = DenseMatrix::from_2d_vec(
-                array_as_vec_vec_float,
-            ).map_err(|e| Box::new(EvalAltResult::ErrorRuntime(
-                format!("Could not load dense matrix: {}", e).into(),
-                Position::NONE,
-            )))?;
+            let xvec = DenseMatrix::from_2d_vec(array_as_vec_vec_float).map_err(|e| {
+                Box::new(EvalAltResult::ErrorRuntime(
+                    format!("Could not load dense matrix: {}", e).into(),
+                    Position::NONE,
+                ))
+            })?;
             match algorithm_string {
                 "linear" => {
                     let yvec = y
@@ -92,7 +88,7 @@ pub mod ml {
                             format!("{e}"),
                             Position::NONE,
                         )
-                            .into()),
+                        .into()),
                     }
                 }
                 "lasso" => {
@@ -110,7 +106,7 @@ pub mod ml {
                             format!("{e}"),
                             Position::NONE,
                         )
-                            .into()),
+                        .into()),
                     }
                 }
                 "logistic" => {
@@ -132,14 +128,14 @@ pub mod ml {
                             format!("{e}"),
                             Position::NONE,
                         )
-                            .into()),
+                        .into()),
                     }
                 }
                 &_ => Err(EvalAltResult::ErrorArithmetic(
                     format!("{} is not a recognized model type.", algorithm_string),
                     Position::NONE,
                 )
-                    .into()),
+                .into()),
             }
         }
     }
@@ -161,21 +157,19 @@ pub mod ml {
         // Make x array
         let array_as_vec_vec_float = &x
             .into_iter()
-            .map(|observation| {
-                array_to_vec_float(
-                    &mut observation.clone().into_array().unwrap(),
-                )
-            })
+            .map(|observation| array_to_vec_float(&mut observation.clone().into_array().unwrap()))
             .collect::<Vec<Vec<FLOAT>>>();
 
         // Check if x array is empty
         if array_as_vec_vec_float.len() == 0 {
             Err(EvalAltResult::ErrorArrayBounds(0, 0, Position::NONE).into())
         } else {
-            let xvec = DenseMatrix::from_2d_vec(array_as_vec_vec_float).map_err(|e| Box::new(EvalAltResult::ErrorRuntime(
-                format!("Could not load dense matrix: {}", e).into(),
-                Position::NONE,
-            )))?;
+            let xvec = DenseMatrix::from_2d_vec(array_as_vec_vec_float).map_err(|e| {
+                Box::new(EvalAltResult::ErrorRuntime(
+                    format!("Could not load dense matrix: {}", e).into(),
+                    Position::NONE,
+                ))
+            })?;
             let algorithm_string = model.model_type.as_str();
             match algorithm_string {
                 "linear" => {
@@ -194,7 +188,7 @@ pub mod ml {
                             format!("{e}"),
                             Position::NONE,
                         )
-                            .into()),
+                        .into()),
                     };
                 }
                 "lasso" => {
@@ -209,7 +203,7 @@ pub mod ml {
                             format!("{e}"),
                             Position::NONE,
                         )
-                            .into()),
+                        .into()),
                     };
                 }
                 "logistic" => {
@@ -224,14 +218,14 @@ pub mod ml {
                             format!("{e}"),
                             Position::NONE,
                         )
-                            .into()),
+                        .into()),
                     };
                 }
                 &_ => Err(EvalAltResult::ErrorArithmetic(
                     format!("{} is not a recognized model type.", algorithm_string),
                     Position::NONE,
                 )
-                    .into()),
+                .into()),
             }
         }
     }
