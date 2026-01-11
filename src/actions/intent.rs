@@ -1,5 +1,5 @@
 use crate::actions::action::Action;
-use crate::api::api::Api;
+use crate::api::Api;
 use crate::ctx::runtime;
 use crate::dialogue::reply::Replayed;
 use crate::skills::manager::SkillManager;
