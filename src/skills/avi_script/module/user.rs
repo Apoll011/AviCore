@@ -3,6 +3,7 @@ use rhai::plugin::*;
 
 #[export_module]
 pub mod user_module {
+    use chrono::{DateTime, Utc};
     use crate::dialogue::languages::lang;
     use crate::user::{Location, QuietHours, user_name};
 
@@ -62,7 +63,7 @@ pub mod user_module {
     ///
     /// # Returns
     /// The birthday timestamp
-    pub fn birthday() -> Option<i64> {
+    pub fn birthday() -> Option<DateTime<Utc>> {
         match runtime() {
             Ok(c) => c.user.get_birthday(),
             Err(_) => None,

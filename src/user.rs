@@ -24,7 +24,7 @@ pub struct UserProfile {
     pub language: String,
     pub timezone: String,
     pub location: Option<Location>,
-    pub birthday: Option<i64>, // Unix timestamp
+    pub birthday: Option<DateTime<Utc>>, // Unix timestamp
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
@@ -75,14 +75,15 @@ pub struct VoiceData {
 
 #[derive(Debug, Clone, Serialize, Deserialize, CustomType)]
 pub struct Metadata {
-    pub created_at: i64,       // Unix timestamp
-    pub last_updated: i64,     // Unix timestamp
-    pub last_interaction: i64, // Unix timestamp
+    pub created_at: DateTime<Utc>,       // Unix timestamp
+    pub last_updated: DateTime<Utc>,     // Unix timestamp
+    pub last_interaction: DateTime<Utc>, // Unix timestamp
 }
 
 use parking_lot::RwLock;
 use rhai::CustomType;
 use std::sync::Arc;
+use chrono::{DateTime, Utc};
 
 #[derive(Clone)]
 pub struct UserManager {
@@ -100,7 +101,7 @@ impl UserManager {
 
     fn create_default_user() -> User {
         trace!("Creating default user profile");
-        let now = chrono::Utc::now().timestamp();
+        let now = Utc::now();
 
         User {
             id: uuid::Uuid::new_v4().to_string(),
@@ -164,7 +165,7 @@ impl UserManager {
     }
 
     fn update_last_modified(&self) {
-        self.user.write().metadata.last_updated = chrono::Utc::now().timestamp();
+        self.user.write().metadata.last_updated = Utc::now();
     }
 
     pub fn get_from_disk(&self) {
@@ -290,13 +291,13 @@ impl UserManager {
         });
     }
 
-    pub fn get_birthday(&self) -> Option<i64> {
+    pub fn get_birthday(&self) -> Option<DateTime<Utc>> {
         self.user.read().profile.birthday
     }
 
-    pub fn set_birthday(&self, timestamp: i64) {
+    pub fn set_birthday(&self, date: DateTime<Utc>) {
         let mut user = self.user.write();
-        user.profile.birthday = Some(timestamp);
+        user.profile.birthday = Some(date);
         drop(user);
 
         let self_clone = self.clone();
@@ -474,21 +475,21 @@ impl UserManager {
 
     // ==================== METADATA METHODS ====================
 
-    pub fn get_created_at(&self) -> i64 {
+    pub fn get_created_at(&self) -> DateTime<Utc> {
         self.user.read().metadata.created_at
     }
 
-    pub fn get_last_updated(&self) -> i64 {
+    pub fn get_last_updated(&self) -> DateTime<Utc> {
         self.user.read().metadata.last_updated
     }
 
-    pub fn get_last_interaction(&self) -> i64 {
+    pub fn get_last_interaction(&self) -> DateTime<Utc> {
         self.user.read().metadata.last_interaction
     }
 
     pub fn update_last_interaction(&self) {
         let mut user = self.user.write();
-        user.metadata.last_interaction = chrono::Utc::now().timestamp();
+        user.metadata.last_interaction = Utc::now();
         drop(user);
 
         let self_clone = self.clone();
@@ -636,7 +637,7 @@ mod tests {
         user_manager.set_location(Some("São Paulo".to_string()), "Brasil".to_string());
 
         // Birthday como timestamp
-        let birthday_timestamp = chrono::Utc::now().timestamp();
+        let birthday_timestamp = Utc::now();
         user_manager.set_birthday(birthday_timestamp);
 
         // Preferences

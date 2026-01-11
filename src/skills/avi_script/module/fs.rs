@@ -1,6 +1,5 @@
-use log::warn;
 use rhai::plugin::*;
-use rhai::{Dynamic, EvalAltResult, Position};
+use rhai::{EvalAltResult, Position};
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;

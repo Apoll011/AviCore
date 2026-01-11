@@ -15,7 +15,6 @@ use std::collections::HashMap;
 #[export_module]
 pub mod dialogue_module {
     use crate::skills::avi_script::helpers::skill_context_def;
-    use rhai::EvalAltResult;
 
     /// Creates a validator that accepts any input
     ///
