@@ -14,6 +14,7 @@ pub(crate) mod slots;
 mod user;
 mod util;
 mod urls;
+mod ml;
 
 pub fn add(engine: &mut Engine) {
     let mut resolver = StaticModuleResolver::new();
@@ -40,6 +41,7 @@ pub fn add(engine: &mut Engine) {
     resolver.insert("user", rhai::exported_module!(user::user_module));
     resolver.insert("util", rhai::exported_module!(util::util_module));
     resolver.insert("url", rhai::exported_module!(urls::url_module));
+    resolver.insert("ml", rhai::exported_module!(ml::ml));
 
     engine.set_module_resolver(resolver);
 }
@@ -73,4 +75,5 @@ pub(crate) fn add_static_modules(engine: &mut Engine) {
     engine.register_static_module("user", rhai::exported_module!(user::user_module).into());
     engine.register_static_module("util", rhai::exported_module!(util::util_module).into());
     engine.register_static_module("url", rhai::exported_module!(urls::url_module).into());
+    engine.register_static_module("ml", rhai::exported_module!(ml::ml).into());
 }
