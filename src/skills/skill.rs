@@ -1,12 +1,12 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::engine::create_avi_script_engine;
+use crate::skills::avi_script::helpers::fix_module_imports;
 use crate::skills::skill_context::SkillContext;
 use rhai::{AST, Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant};
 use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, RwLock};
-use crate::skills::avi_script::helpers::fix_module_imports;
 
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
@@ -72,9 +72,7 @@ impl Skill {
     ) -> Result<AST, Box<dyn std::error::Error>> {
         let path = &*format!("{}/{}", path, entry);
         match Self::read_file(path) {
-            Ok(raw_script) => {
-                Ok(engine.compile(fix_module_imports(raw_script)?)?)
-            }
+            Ok(raw_script) => Ok(engine.compile(fix_module_imports(raw_script)?)?),
             Err(e) => Err(Box::from(e)),
         }
     }

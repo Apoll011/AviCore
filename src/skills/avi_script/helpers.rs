@@ -1,7 +1,7 @@
-use std::error::Error;
 use crate::skills::skill_context::SkillContext;
 use rhai::{Dynamic, Map, NativeCallContext, Variant};
 use serde_json::Value;
+use std::error::Error;
 use std::result::Result;
 
 #[macro_export]

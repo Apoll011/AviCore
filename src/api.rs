@@ -3,10 +3,10 @@ use crate::dialogue::intent::Intent;
 use crate::dialogue::lang_parse::{
     ExtractDatetime, ExtractDuration, ExtractNumber, ExtractNumbers, IsFractional,
 };
-use std::collections::HashMap;
 use log::{debug, error, trace};
 use reqwest::{Client, Method, RequestBuilder};
 use serde_json::Value;
+use std::collections::HashMap;
 
 /// Represents a structured response from the Avi server.
 #[derive(Debug)]
