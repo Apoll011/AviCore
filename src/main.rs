@@ -16,27 +16,130 @@ mod utils;
 use crate::log::AviCoreLogger;
 use crate::start::start_avi;
 use crate::utils::{generate_documentation, generate_dsl_definition};
-use clap::{Parser, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum};
+use ::log::{info};
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Parser, Debug)]
-#[command(name = "AviCore", about = "AviCore application", long_about = None)]
+#[command(
+    name = "AviCore",
+    version = VERSION,
+    author = "AviCore Team",
+    about = "AviCore - Advanced Voice Interface Core System",
+    long_about = "AviCore is a distributed voice interface system that enables seamless \
+                  interaction across multiple nodes. It supports both CORE and NODE device \
+                  types with optional CAN gateway integration for automotive applications."
+)]
 struct Args {
-    /// Generate documentation and exit
-    #[arg(long = "generate-docs", short = 'd')]
-    generate_docs: bool,
-    #[arg(long, short = 's')]
-    start: bool,
-    #[arg(long)]
-    dsl: bool,
-    #[arg(long = "type", default_value = "core", short = 't')]
-    dev_type: AviDeviceType,
-    #[arg(long = "can-gateway")]
-    gateway: bool,
+    #[command(subcommand)]
+    command: Commands,
 }
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Start the AviCore system
+    #[command(about = "Launch AviCore in the specified mode")]
+    Start {
+        /// Device type to run as
+        #[arg(
+            long = "type",
+            short = 't',
+            default_value = "core",
+            help = "Specify device type: CORE (main controller) or NODE (peripheral device)"
+        )]
+        dev_type: AviDeviceType,
+
+        /// Enable CAN gateway functionality
+        #[arg(
+            long = "can-gateway",
+            short = 'g',
+            help = "Enable CAN bus gateway for automotive integration"
+        )]
+        gateway: bool,
+
+        /// Configuration file path
+        #[arg(
+            long = "config",
+            short = 'c',
+            help = "Path to configuration path (optional)"
+        )]
+        config: Option<String>,
+
+        /// Log level
+        #[arg(
+            long = "log-level",
+            short = 'l',
+            default_value = "info",
+            help = "Set logging level: trace, debug, info, warn, error"
+        )]
+        log_level: Option<String>,
+    },
+
+    /// Generate comprehensive system documentation
+    #[command(about = "Generate markdown documentation for all skills and APIs")]
+    GenerateDocs {
+        /// Output directory for documentation
+        #[arg(
+            long = "output",
+            short = 'o',
+            default_value = "./docs",
+            help = "Directory where documentation will be generated"
+        )]
+        output: String,
+
+        /// Include internal APIs
+        #[arg(
+            long = "include-internal",
+            short = 'i',
+            help = "Include internal/private API documentation"
+        )]
+        include_internal: bool,
+    },
+
+    /// Generate DSL (Domain Specific Language) definition
+    #[command(about = "Generate DSL schema and grammar definitions")]
+    GenerateDsl {
+        /// Output path
+        #[arg(
+            long = "output",
+            short = 'o',
+            default_value = "./definitions",
+            help = "Output path (defaults to stdout)"
+        )]
+        output: String,
+    },
+
+    /// Display version and build information
+    #[command(about = "Show detailed version and build information")]
+    Version {
+        /// Show verbose build information
+        #[arg(
+            long = "verbose",
+            short = 'v',
+            help = "Display extended version info including enabled features"
+        )]
+        verbose: bool,
+    },
+}
+
 #[derive(Copy, Clone, Debug, ValueEnum)]
 pub enum AviDeviceType {
+    /// Main controller node with full orchestration capabilities
+    #[value(name = "core")]
     CORE,
+
+    /// Peripheral node for distributed processing
+    #[value(name = "node")]
     NODE,
+}
+
+impl std::fmt::Display for AviDeviceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AviDeviceType::CORE => write!(f, "CORE"),
+            AviDeviceType::NODE => write!(f, "NODE"),
+        }
+    }
 }
 
 #[tokio::main]
@@ -45,17 +148,64 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args = Args::parse();
 
-    if args.generate_docs {
-        return generate_documentation();
-    } else if args.start {
-        let is_core = match args.dev_type {
-            AviDeviceType::NODE => false,
-            AviDeviceType::CORE => true,
-        };
-        return start_avi(is_core, args.gateway).await;
-    } else if args.dsl {
-        return generate_dsl_definition();
-    }
+    match args.command {
+        Commands::Start {
+            dev_type,
+            gateway,
+            config,
+            log_level,
+        } => {
+            if let Some(level) = log_level {
+                AviCoreLogger::set_level(&level);
+            }
 
-    Ok(())
+            if let Some(config_path) = config.clone() {
+                info!("Loading configuration from: {}", config_path);
+            }
+
+            let is_core = matches!(dev_type, AviDeviceType::CORE);
+
+            info!(
+                "Starting AviCore as {} device{}",
+                dev_type,
+                if gateway { " with CAN gateway enabled" } else { "" }
+            );
+
+            start_avi(is_core, gateway, config.unwrap_or("./config".to_string())).await
+        }
+
+        Commands::GenerateDocs {
+            output,
+            include_internal,
+        } => {
+            info!("Generating documentation to: {}", output);
+            if include_internal {
+                info!("Including internal API documentation");
+            }
+            generate_documentation(include_internal)
+        }
+
+        Commands::GenerateDsl { output } => {
+            info!("Generating DSL definition");
+            info!("Output will be written to: {}", output);
+            generate_dsl_definition(output)
+        }
+
+        Commands::Version { verbose } => {
+            println!("AviCore v{}", VERSION);
+
+            if verbose {
+                println!("\nBuild Information:");
+                println!("  Package: {}", env!("CARGO_PKG_NAME"));
+                println!("  Version: {}", VERSION);
+                println!("\nRuntime Information:");
+                println!("  Platform: {}", std::env::consts::OS);
+                println!("  Architecture: {}", std::env::consts::ARCH);
+
+                println!("\nFor more information, visit: https://github.com/your-org/avicore");
+            }
+
+            Ok(())
+        }
+    }
 }

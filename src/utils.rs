@@ -18,18 +18,18 @@ pub async fn core_id() -> Option<String> {
     }
 }
 
-pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
+pub fn generate_documentation(include_internal: bool) -> Result<(), Box<dyn std::error::Error>> {
     use rhai_autodocs::*;
     info!("Generating documentation");
     let engine = create_avi_script_engine(true)?;
 
     info!(
         "Got {} functions from engine",
-        engine.gen_fn_signatures(true).len()
+        engine.gen_fn_signatures(include_internal).len()
     );
 
     let docs = export::options()
-        .include_standard_packages(true)
+        .include_standard_packages(include_internal)
         .format_sections_with(export::SectionFormat::Tabs)
         .export(&engine)?;
 
@@ -61,7 +61,7 @@ pub fn generate_documentation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn generate_dsl_definition() -> Result<(), Box<dyn std::error::Error>> {
+pub fn generate_dsl_definition(path: String) -> Result<(), Box<dyn std::error::Error>> {
     info!("Generating DSL definition");
     let engine = create_avi_script_engine(true)?;
 
@@ -74,9 +74,9 @@ pub fn generate_dsl_definition() -> Result<(), Box<dyn std::error::Error>> {
         .definitions()
         .with_headers(true) // write headers in all files
         .include_standard_packages(true) // skip standard packages
-        .write_to_dir("./definitions")?;
+        .write_to_dir(path.clone())?;
 
-    for entry in std::fs::read_dir("./definitions")? {
+    for entry in std::fs::read_dir(path)? {
         let entry = entry?;
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("rhai") {

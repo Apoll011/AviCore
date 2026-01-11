@@ -15,10 +15,10 @@ use std::time::Duration;
 pub async fn start_avi(
     is_core: bool,
     can_gate_away: bool,
+    config_path: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting the System");
 
-    let config_path = "./config";
     let config = AviDeviceConfig {
         node_name: "avi-core".to_string(),
         device_type: if is_core {
@@ -34,7 +34,7 @@ pub async fn start_avi(
 
     device.start_event_loop();
 
-    create_runtime(config_path, device);
+    create_runtime(&config_path, device);
 
     register_action!(DialogueAction, {
         capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "both".to_string())),

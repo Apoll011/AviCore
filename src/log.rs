@@ -1,9 +1,12 @@
 use chrono::Local;
 use colored::*;
-use log::{Level, LevelFilter, Log, Metadata, Record};
+use log::{info, Level, LevelFilter, Log, Metadata, Record};
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU8, Ordering};
+
+static MAX_LEVEL: AtomicU8 = AtomicU8::new(LevelFilter::Trace as u8);
 
 pub struct AviCoreLogger {
     file: Mutex<File>,
@@ -26,6 +29,37 @@ impl AviCoreLogger {
         log::set_boxed_logger(Box::new(logger))
             .map(|()| log::set_max_level(LevelFilter::Trace))
             .expect("Failed to initialize logger");
+    }
+
+    pub fn set_level(level_str: &str) {
+        let level_filter = match level_str.to_lowercase().as_str() {
+            "trace" => LevelFilter::Trace,
+            "debug" => LevelFilter::Debug,
+            "info" => LevelFilter::Info,
+            "warn" => LevelFilter::Warn,
+            "error" => LevelFilter::Error,
+            "off" => LevelFilter::Off,
+            _ => {
+                eprintln!("Invalid log level '{}', using Info", level_str);
+                LevelFilter::Info
+            }
+        };
+
+        MAX_LEVEL.store(level_filter as u8, Ordering::Relaxed);
+
+        info!("Log level set to: {:?}", level_filter);
+    }
+
+    fn get_current_level() -> LevelFilter {
+        match MAX_LEVEL.load(Ordering::Relaxed) {
+            0 => LevelFilter::Off,
+            1 => LevelFilter::Error,
+            2 => LevelFilter::Warn,
+            3 => LevelFilter::Info,
+            4 => LevelFilter::Debug,
+            5 => LevelFilter::Trace,
+            _ => LevelFilter::Info,
+        }
     }
 
     fn write_to_file(&self, message: &str) {
@@ -79,7 +113,7 @@ impl Log for AviCoreLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            if record.level() <= Level::Info {
+            if record.level() <= Self::get_current_level() {
                 self.format_console(record);
             }
 
