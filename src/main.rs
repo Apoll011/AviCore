@@ -61,9 +61,10 @@ enum Commands {
         #[arg(
             long = "config",
             short = 'c',
-            help = "Path to configuration path (optional)"
+            default_value = "./config",
+            help = "Path to configuration path"
         )]
-        config: Option<String>,
+        config: String,
 
         /// Log level
         #[arg(
@@ -159,9 +160,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AviCoreLogger::set_level(&level);
             }
 
-            if let Some(config_path) = config.clone() {
-                info!("Loading configuration from: {}", config_path);
-            }
+            info!("Loading configuration from: {}", config);
 
             let is_core = matches!(dev_type, AviDeviceType::CORE);
 
@@ -175,7 +174,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             );
 
-            start_avi(is_core, gateway, config.unwrap_or("./config".to_string())).await
+            start_avi(is_core, gateway, config).await
         }
 
         Commands::GenerateDocs {
@@ -206,7 +205,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("  Platform: {}", std::env::consts::OS);
                 println!("  Architecture: {}", std::env::consts::ARCH);
 
-                println!("\nFor more information, visit: https://github.com/your-org/avicore");
+                println!("\nFor more information, visit: https://github.com/apoll011/AviCore");
             }
 
             Ok(())

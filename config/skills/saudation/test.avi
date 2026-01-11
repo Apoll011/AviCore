@@ -1,7 +1,6 @@
-ns test
-use setting as setting
+import "settings";
 
-fn is_eco() -> {
-    to_check := "eco"
-    return unwrap(setting::get("mode")) == to_check
+fn is_eco() {
+    to_check = "eco";
+    return settings::get("mode") == to_check;
 }

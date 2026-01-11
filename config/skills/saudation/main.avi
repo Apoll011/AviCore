@@ -21,3 +21,7 @@ on_intent "hi" {
     //confirm("ask", "hi")
     dialogue::on_reply("hi", dialogue::bool_validator(true));
 }
+
+subscribe topic "intent/parse/text" as <input> {
+
+}

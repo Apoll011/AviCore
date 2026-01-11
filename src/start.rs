@@ -36,13 +36,13 @@ pub async fn start_avi(
 
     create_runtime(&config_path, device);
 
-    register_action!(DialogueAction, {
-        capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "both".to_string())),
-    });
-
     register_action!(IntentAction, if: is_core, {
         watch_skill_dir: setting_or::<bool>("watch_skill_dir", false),
         watch_dir_debounce_time: setting_or::<u64>("watch_dir_debounce_time", 1),
+    });
+
+    register_action!(DialogueAction, {
+        capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "both".to_string())),
     });
 
     register_action!(MeshAction, if: is_core);
