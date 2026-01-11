@@ -43,7 +43,7 @@ pub fn add(engine: &mut Engine) {
     resolver.insert("util", rhai::exported_module!(util::util_module));
     resolver.insert("url", rhai::exported_module!(urls::url_module));
     resolver.insert("ml", rhai::exported_module!(ml::ml));
-    resolver.insert("rand", rhai::exported_module!(rand::rand_functionsca));
+    resolver.insert("rand", rhai::exported_module!(rand::rand_functions));
 
     engine.set_module_resolver(resolver);
 }
