@@ -1,5 +1,6 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
+use crate::skills::avi_script::avi_librarymanager::initialize_avi_library;
 use crate::skills::skill::Skill;
 use log::{info, warn};
 use rhai::Variant;
@@ -19,6 +20,13 @@ pub struct SkillManager {
 impl SkillManager {
     /// Creates a new `SkillManager` and loads all available skills.
     pub fn new() -> Self {
+        match initialize_avi_library() {
+            Ok(_) => (),
+            Err(e) => {
+                warn!("Failed to initialize avi_library: {}", e);
+                ()
+            }
+        }
         info!("Creating skills manager.");
         Self {
             skills: Self::load_skills(),

@@ -21,7 +21,7 @@ pub async fn core_id() -> Option<String> {
 pub fn generate_documentation(include_internal: bool) -> Result<(), Box<dyn std::error::Error>> {
     use rhai_autodocs::*;
     info!("Generating documentation");
-    let engine = create_avi_script_engine(true)?;
+    let engine = create_avi_script_engine(true, None)?;
 
     info!(
         "Got {} functions from engine",
@@ -63,7 +63,7 @@ pub fn generate_documentation(include_internal: bool) -> Result<(), Box<dyn std:
 
 pub fn generate_dsl_definition(path: String) -> Result<(), Box<dyn std::error::Error>> {
     info!("Generating DSL definition");
-    let engine = create_avi_script_engine(true)?;
+    let engine = create_avi_script_engine(true, None)?;
 
     info!(
         "Got {} functions from engine",

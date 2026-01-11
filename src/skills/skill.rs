@@ -39,7 +39,7 @@ impl Skill {
     /// Returns an error if the skill context or module fails to load.
     pub fn new(name: String) -> Result<Self, Box<dyn std::error::Error>> {
         let context = SkillContext::new(&Self::skill_path(&name)?)?;
-        let mut engine = create_avi_script_engine(false)?;
+        let mut engine = create_avi_script_engine(false, Self::skill_path(&name).ok())?;
         engine.set_default_tag(Dynamic::from(context.clone()));
 
         Ok(Self {

@@ -17,7 +17,7 @@ mod urls;
 mod user;
 mod util;
 
-pub fn add(engine: &mut Engine) {
+pub fn resolver() -> StaticModuleResolver {
     let mut resolver = StaticModuleResolver::new();
 
     resolver.insert("log", rhai::exported_module!(log::log_module));
@@ -45,7 +45,7 @@ pub fn add(engine: &mut Engine) {
     resolver.insert("ml", rhai::exported_module!(ml::ml));
     resolver.insert("rand", rhai::exported_module!(rand::rand_functions));
 
-    engine.set_module_resolver(resolver);
+    resolver
 }
 
 pub(crate) fn add_static_modules(engine: &mut Engine) {

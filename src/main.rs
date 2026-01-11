@@ -16,8 +16,8 @@ mod utils;
 use crate::log::AviCoreLogger;
 use crate::start::start_avi;
 use crate::utils::{generate_documentation, generate_dsl_definition};
+use ::log::info;
 use clap::{Parser, Subcommand, ValueEnum};
-use ::log::{info};
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Parser, Debug)]
@@ -168,7 +168,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             info!(
                 "Starting AviCore as {} device{}",
                 dev_type,
-                if gateway { " with CAN gateway enabled" } else { "" }
+                if gateway {
+                    " with CAN gateway enabled"
+                } else {
+                    ""
+                }
             );
 
             start_avi(is_core, gateway, config.unwrap_or("./config".to_string())).await

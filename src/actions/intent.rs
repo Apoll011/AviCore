@@ -2,6 +2,7 @@ use crate::actions::action::Action;
 use crate::api::Api;
 use crate::ctx::runtime;
 use crate::dialogue::reply::Replayed;
+use crate::skills::avi_script::avi_librarymanager::initialize_avi_library;
 use crate::skills::manager::SkillManager;
 use crate::{subscribe, watch_dir};
 use avi_device::device::AviDevice;

@@ -1,4 +1,6 @@
+use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use rhai::Engine;
+use rhai::module_resolvers::{FileModuleResolver, ModuleResolversCollection};
 
 fn constraint_engine(engine: &mut Engine) {
     engine.set_max_array_size(256);
@@ -37,17 +39,30 @@ fn register_types(engine: &mut Engine) {
         .build_type::<crate::skills::skill_context::SkillContext>();
 }
 
-pub fn create_avi_script_engine(static_m: bool) -> Result<Engine, Box<dyn std::error::Error>> {
+pub fn create_avi_script_engine(
+    docs: bool,
+    path: Option<String>,
+) -> Result<Engine, Box<dyn std::error::Error>> {
     let mut engine = Engine::new();
 
     constraint_engine(&mut engine);
 
     register_types(&mut engine);
 
-    if static_m {
+    if docs {
         super::module::add_static_modules(&mut engine);
     } else {
-        super::module::add(&mut engine);
+        let path = path.ok_or("Path not provided")?;
+        let mut collection = ModuleResolversCollection::new();
+
+        let file_resolver = FileModuleResolver::new_with_path_and_extension(path, "avi");
+        let lib_resolver = FileModuleResolver::new_with_path_and_extension(get_lib_path(), "avi");
+
+        collection.push(super::module::resolver());
+        collection.push(file_resolver);
+        collection.push(lib_resolver);
+
+        engine.set_module_resolver(collection);
     }
 
     super::syntax::add(&mut engine)?;

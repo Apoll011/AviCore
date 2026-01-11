@@ -1,3 +1,4 @@
+use log::info;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
@@ -106,26 +107,30 @@ impl AviScriptLibraryManager {
     }
 }
 
-pub fn initialize_rhai_library() -> io::Result<AviScriptLibraryManager> {
-    let library_dir = if cfg!(windows) {
-        // On Windows, use %APPDATA%\resultyour_app_name\rhai_scripts
+pub fn get_lib_path() -> PathBuf {
+    if cfg!(windows) {
         let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
         path.push("avi");
         path.push("library");
         path
     } else {
-        // On Unix, use ~/.local/share/your_app_name/rhai_scripts or similar
         let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
         path.push("avi");
         path.push("library");
         path
-    };
+    }
+}
 
-    let mut manager = AviScriptLibraryManager::new(library_dir);
+pub fn initialize_avi_library() -> io::Result<AviScriptLibraryManager> {
+    info!("Starting library manager.");
+    let mut manager = AviScriptLibraryManager::new(get_lib_path());
 
-    manager.register_scripts(&[("config.avi", include_str!("library/config.avi"))]);
+    if !get_lib_path().exists() {
+        info!("Library don´t exist, creating it...");
+        manager.register_scripts(&[("config.avi", include_str!("library/config.avi"))]);
 
-    manager.install_scripts()?;
-
+        info!("Installing scripts...");
+        manager.install_scripts()?;
+    }
     Ok(manager)
 }
