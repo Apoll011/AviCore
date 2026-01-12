@@ -386,11 +386,19 @@ macro_rules! watch_dir {
         ::log::info!("Watching directory: {}", path);
         std::thread::spawn(move || {
             let (tx, rx) = channel();
-            let mut debouncer = new_debouncer($duration, tx).expect("Watcher fail");
 
-            debouncer.watcher()
-                .watch(std::path::Path::new(&path), RecursiveMode::Recursive)
-                .expect("Path fail");
+            let mut debouncer = match new_debouncer($duration, tx) {
+                Ok(d) => d,
+                Err(e) => {
+                    ::log::error!("Failed to create debouncer for {}: {}", path, e);
+                    return;
+                }
+            };
+
+            if let Err(e) = debouncer.watcher().watch(std::path::Path::new(&path), RecursiveMode::Recursive) {
+                ::log::error!("Failed to watch path {}: {}", path, e);
+                return;
+            }
 
             for result in rx {
                 if let Ok(events) = result {
@@ -412,12 +420,18 @@ macro_rules! watch_dir {
 
         let (tx, rx) = channel();
 
-        let mut debouncer = new_debouncer($duration, tx)
-            .expect("Failed to create debouncer");
+        let mut debouncer = match new_debouncer($duration, tx) {
+            Ok(d) => d,
+            Err(e) => {
+                ::log::error!("Failed to create debouncer for {}: {}", path, e);
+                return;
+            }
+        };
 
-        debouncer.watcher()
-            .watch(Path::new($path), RecursiveMode::Recursive)
-            .expect("Failed to watch path");
+        if let Err(e) = debouncer.watcher().watch(std::path::Path::new(&path), RecursiveMode::Recursive) {
+            ::log::error!("Failed to watch path {}: {}", path, e);
+            return;
+        }
 
         ::log::info!("Watching directory: {}", path);
         for result in rx {

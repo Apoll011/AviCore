@@ -160,8 +160,13 @@ impl UserManager {
         self.save_all().await;
     }
 
-    pub async fn save(&self) {
-        self.save_all().await;
+    pub fn save(&self) {
+        let self_clone = self.clone();
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                self_clone.auto_save().await;
+            });
+        });
     }
 
     fn update_last_modified(&self) {
@@ -198,16 +203,8 @@ impl UserManager {
     }
 
     pub fn set_name(&self, name: String) {
-        let mut user = self.user.write();
-        user.profile.name = name;
-        drop(user);
-
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.user.write().profile.name = name;
+        self.save();
     }
 
     pub fn get_nickname(&self) -> Option<String> {
@@ -215,16 +212,9 @@ impl UserManager {
     }
 
     pub fn set_nickname(&self, nickname: Option<String>) {
-        let mut user = self.user.write();
-        user.profile.nickname = nickname;
-        drop(user);
+        self.user.write().profile.nickname = nickname;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_language(&self) -> String {
@@ -232,16 +222,9 @@ impl UserManager {
     }
 
     pub fn set_language(&self, language: String) {
-        let mut user = self.user.write();
-        user.profile.language = language;
-        drop(user);
+        self.user.write().profile.language = language;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_timezone(&self) -> String {
@@ -249,16 +232,9 @@ impl UserManager {
     }
 
     pub fn set_timezone(&self, timezone: String) {
-        let mut user = self.user.write();
-        user.profile.timezone = timezone;
-        drop(user);
+        self.user.write().profile.timezone = timezone;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_location(&self) -> Option<Location> {
@@ -266,29 +242,15 @@ impl UserManager {
     }
 
     pub fn set_location(&self, city: Option<String>, country: String) {
-        let mut user = self.user.write();
-        user.profile.location = Some(Location { city, country });
-        drop(user);
+        self.user.write().profile.location = Some(Location { city, country });
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn remove_location(&self) {
-        let mut user = self.user.write();
-        user.profile.location = None;
-        drop(user);
+        self.user.write().profile.location = None;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_birthday(&self) -> Option<DateTime<Utc>> {
@@ -296,29 +258,15 @@ impl UserManager {
     }
 
     pub fn set_birthday(&self, date: DateTime<Utc>) {
-        let mut user = self.user.write();
-        user.profile.birthday = Some(date);
-        drop(user);
+        self.user.write().profile.birthday = Some(date);
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn remove_birthday(&self) {
-        let mut user = self.user.write();
-        user.profile.birthday = None;
-        drop(user);
+        self.user.write().profile.birthday = None;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     // ==================== PREFERENCES METHODS ====================
@@ -328,16 +276,9 @@ impl UserManager {
     }
 
     pub fn set_communication_style(&self, style: CommunicationStyle) {
-        let mut user = self.user.write();
-        user.preferences.communication_style = style;
-        drop(user);
+        self.user.write().preferences.communication_style = style;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_response_length(&self) -> ResponseLength {
@@ -345,16 +286,9 @@ impl UserManager {
     }
 
     pub fn set_response_length(&self, length: ResponseLength) {
-        let mut user = self.user.write();
-        user.preferences.response_length = length;
-        drop(user);
+        self.user.write().preferences.response_length = length;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_topics_of_interest(&self) -> Vec<String> {
@@ -362,44 +296,26 @@ impl UserManager {
     }
 
     pub fn add_topic_of_interest(&self, topic: String) {
-        let mut user = self.user.write();
-        if !user.preferences.topics_of_interest.contains(&topic) {
-            user.preferences.topics_of_interest.push(topic);
-            drop(user);
+        let mut topics_of_interest = self.user.read().preferences.topics_of_interest.clone();
 
-            let self_clone = self.clone();
-            std::thread::spawn(move || {
-                tokio::runtime::Runtime::new().unwrap().block_on(async {
-                    self_clone.auto_save().await;
-                });
-            });
+        if !topics_of_interest.contains(&topic) {
+            topics_of_interest.push(topic);
+            self.user.write().preferences.topics_of_interest = topics_of_interest;
+
+            self.save()
         }
     }
 
     pub fn remove_topic_of_interest(&self, topic: &str) {
-        let mut user = self.user.write();
-        user.preferences.topics_of_interest.retain(|t| t != topic);
-        drop(user);
+        self.user.write().preferences.topics_of_interest.retain(|t| t != topic);
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn clear_topics_of_interest(&self) {
-        let mut user = self.user.write();
-        user.preferences.topics_of_interest.clear();
-        drop(user);
+        self.user.write().preferences.topics_of_interest.clear();
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_quiet_hours(&self) -> Option<QuietHours> {
@@ -412,29 +328,15 @@ impl UserManager {
     }
 
     pub fn set_quiet_hours(&self, start: String, end: String) {
-        let mut user = self.user.write();
-        user.preferences.notification_preferences.quiet_hours = Some(QuietHours { start, end });
-        drop(user);
+        self.user.write().preferences.notification_preferences.quiet_hours = Some(QuietHours { start, end });
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn remove_quiet_hours(&self) {
-        let mut user = self.user.write();
-        user.preferences.notification_preferences.quiet_hours = None;
-        drop(user);
+        self.user.write().preferences.notification_preferences.quiet_hours = None;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     // ==================== VOICE DATA METHODS ====================
@@ -444,16 +346,9 @@ impl UserManager {
     }
 
     pub fn set_voice_profile_id(&self, id: Option<String>) {
-        let mut user = self.user.write();
-        user.voice_data.voice_profile_id = id;
-        drop(user);
+        self.user.write().voice_data.voice_profile_id = id;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub fn get_voice_speed(&self) -> f32 {
@@ -461,16 +356,9 @@ impl UserManager {
     }
 
     pub fn set_voice_speed(&self, speed: f32) {
-        let mut user = self.user.write();
-        user.voice_data.preferred_voice_speed = speed.clamp(0.5, 2.0);
-        drop(user);
+        self.user.write().voice_data.preferred_voice_speed = speed.clamp(0.5, 2.0);
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     // ==================== METADATA METHODS ====================
@@ -488,16 +376,9 @@ impl UserManager {
     }
 
     pub fn update_last_interaction(&self) {
-        let mut user = self.user.write();
-        user.metadata.last_interaction = Utc::now();
-        drop(user);
+        self.user.write().metadata.last_interaction = Utc::now();
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     // ==================== GENERIC METHODS ====================
@@ -516,12 +397,7 @@ impl UserManager {
             .map_err(|e| format!("Failed to deserialize: {}", e))?;
         drop(user);
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
         Ok(())
     }
 
@@ -530,16 +406,9 @@ impl UserManager {
     }
 
     pub fn replace_user(&self, user: User) {
-        let mut user_lock = self.user.write();
-        *user_lock = user;
-        drop(user_lock);
+        *self.user.write() = user;
 
-        let self_clone = self.clone();
-        std::thread::spawn(move || {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self_clone.auto_save().await;
-            });
-        });
+        self.save();
     }
 
     pub async fn delete_all(&self) -> Result<(), String> {
@@ -663,7 +532,7 @@ mod tests {
         user_manager.update_last_interaction();
 
         // Manual save (já faz auto-save em cada operação para todos os lugares)
-        user_manager.save().await;
+        user_manager.save();
 
         // Recarregar do device ctx
         // user_manager.reload().await.unwrap(); // This will fail if runtime is not fully set up in tests

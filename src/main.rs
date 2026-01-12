@@ -8,16 +8,18 @@ mod ctx;
 mod dialogue;
 mod log;
 mod macros;
-pub mod skills;
+mod skills;
 mod start;
 mod user;
 mod utils;
 
 use crate::log::AviCoreLogger;
+use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
 use crate::utils::{generate_documentation, generate_dsl_definition};
-use ::log::info;
 use clap::{Parser, Subcommand, ValueEnum};
+use ::log::info;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Parser, Debug)]
@@ -124,7 +126,7 @@ enum Commands {
 }
 
 #[derive(Copy, Clone, Debug, ValueEnum)]
-pub enum AviDeviceType {
+enum AviDeviceType {
     /// Main controller node with full orchestration capabilities
     #[value(name = "core")]
     CORE,
@@ -146,7 +148,7 @@ impl std::fmt::Display for AviDeviceType {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     AviCoreLogger::init();
-
+    info!("AviCore v{}", VERSION);
     let args = Args::parse();
 
     match args.command {
@@ -202,6 +204,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("  Package: {}", env!("CARGO_PKG_NAME"));
                 println!("  Version: {}", VERSION);
                 println!("\nRuntime Information:");
+                println!("  Library path: {}", get_lib_path().display());
                 println!("  Platform: {}", std::env::consts::OS);
                 println!("  Architecture: {}", std::env::consts::ARCH);
 

@@ -1,0 +1,7 @@
+[jobs.build]
+command = ["cargo", "build", "--color", "always"]
+need_stdout = false
+
+[jobs.default]
+command = ["cargo", "build", "--color", "always"]
+need_stdout = false

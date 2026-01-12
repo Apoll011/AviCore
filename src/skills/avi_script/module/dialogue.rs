@@ -135,19 +135,17 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    pub fn confirm(ctx: NativeCallContext, question_locale_id: String, handler: String) {
-        let skill_context = match get_skill_context(&ctx) {
-            Ok(c) => c,
-            Err(e) => {
-                error!("confirm: {}", e);
-                return;
-            }
-        };
+    #[rhai_fn(return_raw)]
+    pub fn confirm(ctx: NativeCallContext, question_locale_id: String, handler: String) -> Result<(),Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx).map_err(|_| Box::new(EvalAltResult::ErrorRuntime(
+            "Could not get the skill context".to_string().into(),
+                Position::NONE,
+            )))?;
+
         speak!(
             &skill_context
                 .languages
-                .get_translation(&question_locale_id)
-                .unwrap()
+                .get_translation(&question_locale_id).ok_or(Box::new(EvalAltResult::ErrorRuntime(format!("Could not get translation for {}", question_locale_id).into(),Position::NONE)))?
         );
 
         let handler_cloned = handler.clone();
@@ -158,6 +156,8 @@ pub mod dialogue_module {
                 skill.info.name,
             );
         });
+
+        Ok(())
     }
 
     /// Registers a handler for the next user response

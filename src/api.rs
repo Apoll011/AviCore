@@ -150,18 +150,18 @@ impl Api {
                 Ok(Alive {
                     alive: v
                         .get("on")
-                        .expect("Expected a boolean")
+                        .ok_or("Expected a boolean")?
                         .as_bool()
                         .unwrap_or(false),
                     version: v
                         .get("version")
-                        .expect("Expected a version string")
+                        .ok_or("Expected a version string")?
                         .as_str()
                         .unwrap_or("0.0")
                         .to_string(),
                     installed_lang: v
                         .get("lang")
-                        .expect("Expected a list of installed lang's")
+                        .ok_or("Expected a list of installed lang's")?
                         .as_array()
                         .unwrap()
                         .iter()

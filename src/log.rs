@@ -1,10 +1,10 @@
 use chrono::Local;
 use colored::*;
-use log::{Level, LevelFilter, Log, Metadata, Record, info};
+use log::{info, Level, LevelFilter, Log, Metadata, Record};
 use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::Mutex;
 
 static MAX_LEVEL: AtomicU8 = AtomicU8::new(LevelFilter::Trace as u8);
 
@@ -63,8 +63,9 @@ impl AviCoreLogger {
     }
 
     fn write_to_file(&self, message: &str) {
-        let mut file = self.file.lock().unwrap();
-        writeln!(file, "{}", message).unwrap();
+        if let Ok(mut file) = self.file.lock() {
+            let _ = writeln!(file, "{}", message);
+        }
     }
 
     fn format_console(&self, record: &Record) {
@@ -122,7 +123,8 @@ impl Log for AviCoreLogger {
     }
 
     fn flush(&self) {
-        let mut file = self.file.lock().unwrap();
-        file.flush().unwrap();
+        if let Ok(mut file) = self.file.lock() {
+            let _ = file.flush();
+        }
     }
 }

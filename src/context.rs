@@ -18,7 +18,7 @@ impl ContextValue {
     pub fn new(value: serde_json::Value, ttl: Option<Duration>) -> Self {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
+            .unwrap_or_default()
             .as_secs();
 
         let expires_at = ttl.map(|d| now + d.as_secs());
@@ -34,7 +34,7 @@ impl ContextValue {
         if let Some(expires_at) = self.expires_at {
             let now = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .expect("Time went backwards")
+                .unwrap_or_default()
                 .as_secs();
             return now >= expires_at;
         }
