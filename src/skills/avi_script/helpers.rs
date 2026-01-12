@@ -32,11 +32,11 @@ pub fn json_to_dynamic(value: Value) -> Dynamic {
         Value::Bool(b) => Dynamic::from(b),
         Value::Number(n) => {
             if n.is_i64() {
-                Dynamic::from(n.as_i64().unwrap())
+                Dynamic::from(n.as_i64().unwrap_or(0))
             } else if n.is_u64() {
-                Dynamic::from(n.as_u64().unwrap() as i64)
+                Dynamic::from(n.as_u64().unwrap_or(0) as i64)
             } else {
-                Dynamic::from(n.as_f64().unwrap())
+                Dynamic::from(n.as_f64().unwrap_or(0.0))
             }
         }
         Value::String(s) => Dynamic::from(s),
@@ -60,12 +60,10 @@ pub fn json_to_dynamic(value: Value) -> Dynamic {
 pub fn dynamic_to_json(value: Dynamic) -> Result<Value, String> {
     match value.type_name() {
         "()" => Ok(Value::Null),
-        "bool" => Ok(Value::Bool(value.as_bool().unwrap())),
-        "i32" | "i64" => Ok(Value::Number(serde_json::Number::from(
-            value.as_int().unwrap(),
-        ))),
+        "bool" => Ok(Value::Bool(value.as_bool()?)),
+        "i32" | "i64" => Ok(Value::Number(serde_json::Number::from(value.as_int()?))),
         "f32" | "f64" => {
-            let float_val = value.as_float().unwrap();
+            let float_val = value.as_float()?;
             match serde_json::Number::from_f64(float_val) {
                 Some(num) => Ok(Value::Number(num)),
                 None => Err(format!("Cannot convert float {} to JSON number", float_val)),
@@ -75,7 +73,7 @@ pub fn dynamic_to_json(value: Dynamic) -> Result<Value, String> {
             Ok(Value::String(value.into_immutable_string()?.to_string()))
         }
         "array" => {
-            let array = value.into_array().unwrap();
+            let array = value.into_array()?;
             let mut json_array = Vec::new();
             for item in array {
                 json_array.push(dynamic_to_json(item)?);

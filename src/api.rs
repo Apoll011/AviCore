@@ -163,9 +163,9 @@ impl Api {
                         .get("lang")
                         .ok_or("Expected a list of installed lang's")?
                         .as_array()
-                        .unwrap()
+                        .ok_or("Error converting list into array")?
                         .iter()
-                        .map(|x| x.as_str().unwrap().to_string())
+                        .map(|x| x.clone().to_string())
                         .collect(),
                 })
             }

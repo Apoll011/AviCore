@@ -148,7 +148,6 @@ impl std::fmt::Display for AviDeviceType {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     AviCoreLogger::init();
-    info!("AviCore v{}", VERSION);
     let args = Args::parse();
 
     match args.command {
@@ -158,6 +157,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             config,
             log_level,
         } => {
+            info!("AviCore v{}", VERSION);
+
             if let Some(level) = log_level {
                 AviCoreLogger::set_level(&level);
             }

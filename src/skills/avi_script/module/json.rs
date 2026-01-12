@@ -41,7 +41,7 @@ pub mod json_module {
                 ))),
             },
             Err(err) => Err(Box::new(EvalAltResult::ErrorRuntime(
-                err.to_string().parse().unwrap(),
+                Dynamic::from(err),
                 Position::NONE,
             ))),
         }

@@ -91,18 +91,20 @@ impl ContextManager {
         );
         let ctx_value = ContextValue::new(value, ttl);
 
-        // Save to memory
-        {
-            let mut store = self.memory_store.write().unwrap();
-            store
-                .entry(scope.clone())
-                .or_default()
-                .insert(key.clone(), ctx_value.clone());
-        }
+        self.save(&scope, &key, &ctx_value);
 
         // Save to persistent storage if requested
         if persistent {
             self.save_persistent(&scope, &key, &ctx_value);
+        }
+    }
+
+    fn save(&self, scope: &ContextScope, key: &str, ctx_value: &ContextValue) {
+        if let Ok(mut store) = self.memory_store.write() {
+            store
+                .entry(scope.clone())
+                .or_default()
+                .insert(key.to_string(), ctx_value.clone());
         }
     }
 
@@ -118,12 +120,7 @@ impl ContextManager {
         if let Some(ctx_value) = self.load_persistent(scope, key) {
             if !ctx_value.is_expired() {
                 debug!("Found {} in persistent storage for scope {:?}", key, scope);
-                // Cache it back to memory
-                let mut store = self.memory_store.write().unwrap();
-                store
-                    .entry(scope.clone())
-                    .or_default()
-                    .insert(key.to_string(), ctx_value.clone());
+                self.save(&scope, &key, &ctx_value);
                 return Some(ctx_value.value);
             } else {
                 debug!("Found expired {} in persistent storage, deleting", key);
@@ -145,7 +142,7 @@ impl ContextManager {
     }
 
     pub fn get_memory(&self, scope: &ContextScope, key: &str) -> Option<serde_json::Value> {
-        let store = self.memory_store.read().unwrap();
+        let store = self.memory_store.read().ok()?;
         if let Some(scope_map) = store.get(scope)
             && let Some(ctx_value) = scope_map.get(key)
             && !ctx_value.is_expired()
@@ -235,16 +232,17 @@ impl ContextManager {
 
     pub fn cleanup_expired(&self) {
         trace!("Cleaning up expired context values");
-        let mut store = self.memory_store.write().unwrap();
-        for scope_map in store.values_mut() {
-            scope_map.retain(|k, v| {
-                if v.is_expired() {
-                    debug!("Memory context expired for key: {}", k);
-                    false
-                } else {
-                    true
-                }
-            });
+        if let Ok(mut store) = self.memory_store.write() {
+            for scope_map in store.values_mut() {
+                scope_map.retain(|k, v| {
+                    if v.is_expired() {
+                        debug!("Memory context expired for key: {}", k);
+                        false
+                    } else {
+                        true
+                    }
+                });
+            }
         }
 
         // Also cleanup persistent files
