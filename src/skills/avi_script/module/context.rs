@@ -17,7 +17,7 @@ pub mod context_module {
     #[rhai_fn(volatile)]
     pub fn get(ctx: NativeCallContext, key: String) -> Dynamic {
         skill_context_def(ctx, |v| {
-            get_ctx!(skill: v.info.name, &key)
+            get_ctx!(skill: v.info.name.clone(), &key)
                 .map(|v| json_to_dynamic(v))
                 .unwrap_or(Dynamic::UNIT)
         })
@@ -32,7 +32,7 @@ pub mod context_module {
     /// True if the key exists, false otherwise
     #[rhai_fn(volatile)]
     pub fn has(ctx: NativeCallContext, key: String) -> bool {
-        skill_context_def(ctx, |v| has_ctx!(skill: v.info.name, &key))
+        skill_context_def(ctx, |v| has_ctx!(skill: v.info.name.clone(), &key))
     }
 
     /// Removes a value from the skill's persistent context
@@ -45,7 +45,7 @@ pub mod context_module {
     #[rhai_fn(volatile)]
     pub fn remove(ctx: NativeCallContext, key: String) {
         skill_context_def(ctx, |v| {
-            let _ = remove_ctx!(skill: v.info.name, &key);
+            let _ = remove_ctx!(skill: v.info.name.clone(), &key);
         });
     }
 
@@ -63,7 +63,7 @@ pub mod context_module {
     pub fn set(ctx: NativeCallContext, key: String, value: Dynamic, ttl: u64, persist: bool) {
         skill_context_def(
             ctx,
-            |v| set_ctx!(skill: v.info.name, key, value, ttl, persist),
+            |v| set_ctx!(skill: v.info.name.clone(), key, value, ttl, persist),
         );
     }
 }

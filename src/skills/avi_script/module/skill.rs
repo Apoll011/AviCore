@@ -1,5 +1,5 @@
-use rhai::NativeCallContext;
 use rhai::plugin::*;
+use rhai::NativeCallContext;
 
 #[export_module]
 pub mod skill_module {
@@ -11,7 +11,7 @@ pub mod skill_module {
     /// # Returns
     /// The path to the skill's root directory
     pub fn dir(ctx: NativeCallContext) -> String {
-        skill_context_def(ctx, |v| v.path.clone())
+        skill_context_def(ctx, |v| v.path.to_string())
     }
 
     /// Gets the version of the current skill
@@ -27,7 +27,7 @@ pub mod skill_module {
     /// # Returns
     /// A map containing the skill's manifest
     pub fn manifest(ctx: NativeCallContext) -> Manifest {
-        skill_context_def(ctx, |v| v.info.clone())
+        skill_context_def(ctx, |v| (*v.info).clone())
     }
 
     /// Gets the permissions required by the current skill

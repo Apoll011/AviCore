@@ -15,15 +15,15 @@ use std::sync::{Arc, RwLock};
 /// A skill consists of a Rhai module, a runtime environment, and a configuration context.
 pub struct Skill {
     /// The filesystem path to the skill.
-    pathname: String,
+    pathname: Arc<str>,
     /// The name of the skill.
-    name: String,
+    name: Arc<str>,
     /// The Rhai engine instance
-    engine: Engine,
+    engine: Arc<Engine>,
     /// Compiled AST (shared for thread safety)
     ast: Arc<RwLock<AST>>,
     /// The Rhai scope used to execute the skill.
-    scope: Scope<'static>,
+    scope: Arc<RwLock<Scope<'static>>>,
     /// The configuration and state of the skill.
     context: SkillContext,
 }
@@ -43,7 +43,9 @@ impl Skill {
         let context = SkillContext::new(&pathname)?;
 
         let mut engine = create_avi_script_engine(false, Some(pathname.clone()))?;
-        engine.set_default_tag(Dynamic::from(context.clone()));
+        Arc::<Engine>::get_mut(&mut engine)
+            .ok_or("Failed to get mutable engine")?
+            .set_default_tag(Dynamic::from(context.clone()));
 
         let ast = Arc::new(RwLock::new(Self::compile_ast(
             &engine,
@@ -52,11 +54,11 @@ impl Skill {
         )?));
 
         Ok(Self {
-            pathname,
-            name,
+            pathname: Arc::from(pathname),
+            name: Arc::from(name),
             engine,
             ast,
-            scope: Self::create_scope(),
+            scope: Arc::new(RwLock::new(Self::create_scope())),
             context,
         })
     }
@@ -112,22 +114,36 @@ impl Skill {
         }
 
         let subscriptions = self.context.info.subscription.clone();
-        let skill_path = self.pathname.clone();
+        let skill_path = Arc::clone(&self.pathname);
         let ast = Arc::clone(&self.ast);
-        let scope = self.scope.clone();
+        let scope = Arc::clone(&self.scope);
+        let engine = Arc::clone(&self.engine);
 
         rt_spawn! {
-            let _ = Self::subscribe_internal(subscriptions, skill_path, ast, scope).await;
+            let _ = Self::subscribe_internal(subscriptions, skill_path, ast, scope, engine).await;
         }
 
         self.run()
     }
 
+    /// Subscribes to all events defined in the skill's configuration
+    pub async fn subscribe(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        Self::subscribe_internal(
+            self.context.info.subscription.clone(),
+            Arc::clone(&self.pathname),
+            Arc::clone(&self.ast),
+            Arc::clone(&self.scope),
+            Arc::clone(&self.engine),
+        )
+        .await
+    }
+
     async fn subscribe_internal(
         subscriptions: Vec<String>,
-        skill_path: String,
+        _skill_path: Arc<str>,
         ast: Arc<RwLock<AST>>,
-        scope: Scope<'static>,
+        scope: Arc<RwLock<Scope<'static>>>,
+        engine: Arc<Engine>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         for subscription in subscriptions {
             let event = Event::get_event(subscription.to_string())?;
@@ -135,30 +151,29 @@ impl Skill {
             if matches!(event.event_type, EventType::TOPIC) {
                 // Clone Arc and create new engine instance for closure
                 let ast_clone = Arc::clone(&ast);
-                let scope_clone = scope.clone();
-                let path_clone = skill_path.clone();
+                let scope_clone = Arc::clone(&scope);
+                let engine_clone = Arc::clone(&engine);
 
                 subscribe!(event.event_name.clone(), move |from, _topic, data| {
-                    let mut scope_clone = scope_clone.clone();
-                    let engine = match create_avi_script_engine(false, Some(path_clone.clone())) {
-                        Ok(eng) => eng,
-                        Err(_) => return, // Can't handle event without engine
+                    let mut scope_guard = match scope_clone.write() {
+                        Ok(v) => v,
+                        Err(_) => return,
                     };
 
                     // Prepare scope with event data
-                    scope_clone.push_constant("EVENT_NAME", event.string());
-                    scope_clone.push_constant("EVENT_DATA", data);
-                    scope_clone.push_constant("EVENT_FROM", from.to_string());
+                    scope_guard.push_constant("EVENT_NAME", event.string());
+                    scope_guard.push_constant("EVENT_DATA", data);
+                    scope_guard.push_constant("EVENT_FROM", from.to_string());
 
                     // Execute the skill
                     if let Ok(ast_guard) = ast_clone.read() {
-                        let _ = engine.run_ast_with_scope(&mut scope_clone, &*ast_guard);
+                        let _ = engine_clone.run_ast_with_scope(&mut *scope_guard, &*ast_guard);
                     }
 
                     // Clean up scope
-                    let _ = scope_clone.remove::<ImmutableString>("EVENT_NAME");
-                    let _ = scope_clone.remove::<Vec<u8>>("EVENT_DATA");
-                    let _ = scope_clone.remove::<String>("EVENT_FROM");
+                    let _ = scope_guard.remove::<ImmutableString>("EVENT_NAME");
+                    let _ = scope_guard.remove::<Vec<u8>>("EVENT_DATA");
+                    let _ = scope_guard.remove::<String>("EVENT_FROM");
                 });
             }
         }
@@ -173,16 +188,25 @@ impl Skill {
             .read()
             .map_err(|e| format!("Failed to acquire AST lock: {}", e))?;
 
-        self.engine
-            .run_ast_with_scope(&mut self.scope, &*ast_guard)?;
+        self.engine.run_ast_with_scope(
+            &mut *self.scope.write().map_err(|e| e.to_string())?,
+            &*ast_guard,
+        )?;
         Ok(())
     }
 
     /// Stops the skill execution
     pub fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.scope.push_constant("END", true);
+        self.scope
+            .write()
+            .map_err(|e| e.to_string())?
+            .push_constant("END", true);
         self.run()?;
-        let _ = self.scope.remove::<bool>("END");
+        let _ = self
+            .scope
+            .write()
+            .map_err(|e| e.to_string())?
+            .remove::<bool>("END");
         Ok(())
     }
 
@@ -210,15 +234,20 @@ impl Skill {
 
         let formatted_name = Self::format_intent_name(intent_name);
 
-        self.scope
-            .push_constant("INTENT_NAME", ImmutableString::from(formatted_name));
-        self.scope.push_constant("INTENT", intent);
+        {
+            let mut scope = self.scope.write().map_err(|e| e.to_string())?;
+            scope.push_constant("INTENT_NAME", ImmutableString::from(formatted_name));
+            scope.push_constant("INTENT", intent);
+        }
 
         let result = self.run();
 
         // Clean up scope
-        let _ = self.scope.remove::<ImmutableString>("INTENT_NAME");
-        let _ = self.scope.remove::<Intent>("INTENT");
+        {
+            let mut scope = self.scope.write().map_err(|e| e.to_string())?;
+            let _ = scope.remove::<ImmutableString>("INTENT_NAME");
+            let _ = scope.remove::<Intent>("INTENT");
+        }
 
         result?;
         Ok(true)
@@ -235,9 +264,12 @@ impl Skill {
             .read()
             .map_err(|e| format!("Failed to acquire AST lock: {}", e))?;
 
-        Ok(self
-            .engine
-            .call_fn::<T>(&mut self.scope, &*ast_guard, function_name, args)?)
+        Ok(self.engine.call_fn::<T>(
+            &mut *self.scope.write().map_err(|e| e.to_string())?,
+            &*ast_guard,
+            function_name,
+            args,
+        )?)
     }
 
     /// Checks if the skill is currently disabled.

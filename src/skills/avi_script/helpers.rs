@@ -147,7 +147,7 @@ where
 }
 
 pub fn get_skill_name(ctx: &NativeCallContext) -> Result<String, String> {
-    Ok(get_skill_context(ctx)?.info.name)
+    Ok(get_skill_context(ctx)?.info.name.clone())
 }
 
 pub fn get_skill_context(ctx: &NativeCallContext) -> Result<SkillContext, String> {

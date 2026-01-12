@@ -8,8 +8,8 @@ use crate::skills::avi_script::helpers::get_skill_context;
 use crate::user::user_name;
 use crate::{get_ctx, rt_spawn, speak};
 use log::error;
-use rhai::Dynamic;
 use rhai::plugin::*;
+use rhai::Dynamic;
 use std::collections::HashMap;
 
 #[export_module]
@@ -136,16 +136,26 @@ pub mod dialogue_module {
     /// # Returns
     /// Nothing
     #[rhai_fn(return_raw)]
-    pub fn confirm(ctx: NativeCallContext, question_locale_id: String, handler: String) -> Result<(),Box<EvalAltResult>> {
-        let skill_context = get_skill_context(&ctx).map_err(|_| Box::new(EvalAltResult::ErrorRuntime(
-            "Could not get the skill context".to_string().into(),
+    pub fn confirm(
+        ctx: NativeCallContext,
+        question_locale_id: String,
+        handler: String,
+    ) -> Result<(), Box<EvalAltResult>> {
+        let skill_context = get_skill_context(&ctx).map_err(|_| {
+            Box::new(EvalAltResult::ErrorRuntime(
+                "Could not get the skill context".to_string().into(),
                 Position::NONE,
-            )))?;
+            ))
+        })?;
 
         speak!(
             &skill_context
                 .languages
-                .get_translation(&question_locale_id).ok_or(Box::new(EvalAltResult::ErrorRuntime(format!("Could not get translation for {}", question_locale_id).into(),Position::NONE)))?
+                .get_translation(&question_locale_id)
+                .ok_or(Box::new(EvalAltResult::ErrorRuntime(
+                    format!("Could not get translation for {}", question_locale_id).into(),
+                    Position::NONE
+                )))?
         );
 
         let handler_cloned = handler.clone();
@@ -153,7 +163,7 @@ pub mod dialogue_module {
             handle_on_reply(
                 handler_cloned.clone(),
                 Box::new(BoolValidator::new(false)),
-                skill.info.name,
+                skill.info.name.clone(),
             );
         });
 
@@ -190,7 +200,7 @@ pub mod dialogue_module {
                     return;
                 };
 
-            handle_on_reply(handler_cloned.clone(), v, skill.info.name);
+            handle_on_reply(handler_cloned.clone(), v, skill.info.name.clone());
         });
     }
 }

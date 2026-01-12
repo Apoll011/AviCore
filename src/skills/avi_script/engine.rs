@@ -1,6 +1,7 @@
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
-use rhai::Engine;
 use rhai::module_resolvers::{FileModuleResolver, ModuleResolversCollection};
+use rhai::Engine;
+use std::sync::Arc;
 
 fn constraint_engine(engine: &mut Engine) {
     engine.set_max_array_size(256);
@@ -42,7 +43,7 @@ fn register_types(engine: &mut Engine) {
 pub fn create_avi_script_engine(
     docs: bool,
     path: Option<String>,
-) -> Result<Engine, Box<dyn std::error::Error>> {
+) -> Result<Arc<Engine>, Box<dyn std::error::Error>> {
     let mut engine = Engine::new();
 
     constraint_engine(&mut engine);
@@ -67,5 +68,5 @@ pub fn create_avi_script_engine(
 
     super::syntax::add(&mut engine)?;
 
-    Ok(engine)
+    Ok(Arc::new(engine))
 }

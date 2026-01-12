@@ -2,7 +2,7 @@ use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::avi_librarymanager::initialize_avi_library;
 use crate::skills::skill::Skill;
-use log::{info, warn};
+use log::{debug, info, warn};
 use rhai::Variant;
 use std::collections::HashMap;
 use std::fs;
@@ -109,6 +109,7 @@ impl SkillManager {
             Ok((dir, mut v)) => match v.start() {
                 Ok(_) => {
                     info!("Loaded skill {} from {}", v.name(), path.display());
+                    debug!("{:?}", v);
                     Ok((dir.to_string(), v))
                 }
                 Err(e) => Err(format!(

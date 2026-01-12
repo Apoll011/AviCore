@@ -4,6 +4,7 @@ use rhai::CustomType;
 use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::sync::Arc;
 
 /// Helper function to provide a default value of `true` for serde.
 fn default_true() -> bool {
@@ -47,17 +48,17 @@ pub struct Manifest {
 pub struct SkillContext {
     #[rhai_type(readonly)]
     /// The filesystem path to the skill directory.
-    pub path: String,
+    pub path: Arc<str>,
     #[rhai_type(readonly)]
     /// Metadata about the skill.
-    pub info: Manifest,
+    pub info: Arc<Manifest>,
 
     #[rhai_type(skip)]
-    pub config: ConfigSystem,
+    pub config: Arc<ConfigSystem>,
 
     #[rhai_type(skip)]
     /// Localized resources for the skill.
-    pub languages: LanguageSystem,
+    pub languages: Arc<LanguageSystem>,
 }
 
 impl SkillContext {
@@ -69,10 +70,10 @@ impl SkillContext {
     ///
     pub fn new(path: &str) -> Result<Self, String> {
         Ok(Self {
-            path: path.to_string(),
-            info: Self::load_manifest(path.into())?,
-            config: ConfigSystem::new(&format!("{}/config", path)),
-            languages: LanguageSystem::new(&format!("{}/responses", path)),
+            path: Arc::from(path),
+            info: Arc::new(Self::load_manifest(path.into())?),
+            config: Arc::new(ConfigSystem::new(&format!("{}/config", path))),
+            languages: Arc::new(LanguageSystem::new(&format!("{}/responses", path))),
         })
     }
 
