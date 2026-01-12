@@ -28,6 +28,8 @@ pub struct Manifest {
     pub capabilities: Vec<String>,
     /// A list of permissions required by the skill.
     pub permissions: Vec<String>,
+    /// A list of subscriptions the skill asks.
+    pub subscription: Vec<String>,
     /// Whether the skill supports repeating the last response.
     #[serde(default = "default_true")]
     pub can_repeat_last_response: bool,

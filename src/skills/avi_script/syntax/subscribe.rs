@@ -1,7 +1,5 @@
-use rhai::{
-    Dynamic, Engine, EvalAltResult, EvalContext, Expression, ImmutableString, LexError,
-    ParseErrorType, Position,
-};
+use crate::utils::{Event, EventType};
+use rhai::{Dynamic, Engine, EvalAltResult, EvalContext, Expression, ImmutableString, Position};
 
 pub fn add(engine: &mut Engine) -> Result<(), Box<EvalAltResult>> {
     engine.register_custom_syntax(
@@ -19,28 +17,6 @@ pub fn add(engine: &mut Engine) -> Result<(), Box<EvalAltResult>> {
         on_sub_syntax_handler,
     )?;
     Ok(())
-}
-
-#[derive(Eq, PartialEq)]
-enum EventType {
-    TOPIC,
-    EVENT,
-}
-
-impl EventType {
-    pub fn from(string: &str) -> Option<EventType> {
-        if string.eq_ignore_ascii_case("topic") {
-            return Some(EventType::TOPIC);
-        } else if string.eq_ignore_ascii_case("event") {
-            return Some(EventType::EVENT);
-        }
-        None
-    }
-}
-
-struct Event {
-    pub e_type: EventType,
-    pub event_name: String,
 }
 
 fn on_sub_syntax_handler(
@@ -79,9 +55,9 @@ fn on_sub_syntax_handler(
 
     match event_name {
         Some(event_name) => {
-            let received_event = get_event(event_name.to_string())?;
+            let received_event = Event::get_event(event_name.to_string())?;
             if received_event.event_name.eq_ignore_ascii_case(&event)
-                && received_event.e_type != expected_type
+                && received_event.event_type != expected_type
             {
                 return Ok(Dynamic::UNIT);
             }
@@ -95,25 +71,4 @@ fn on_sub_syntax_handler(
     };
 
     Ok(Dynamic::UNIT)
-}
-
-fn get_event(event_string: String) -> Result<Event, Box<EvalAltResult>> {
-    let event_vec = event_string.split(":").collect::<Vec<&str>>();
-    if event_vec.len() != 2 {
-        return Err(Box::new(EvalAltResult::ErrorParsing(
-            ParseErrorType::BadInput(LexError::UnexpectedInput(
-                "Expected topic/event:{name}".to_string(),
-            )),
-            Position::NONE,
-        )));
-    }
-    Ok(Event {
-        e_type: EventType::from(event_vec[0]).ok_or(Box::new(EvalAltResult::ErrorParsing(
-            ParseErrorType::BadInput(LexError::UnexpectedInput(
-                "Expected topic/event on the first hand side".to_string(),
-            )),
-            Position::NONE,
-        )))?,
-        event_name: event_vec[1].to_string(),
-    })
 }

@@ -53,21 +53,13 @@ impl SkillManager {
                 };
 
                 let path = entry.path();
-
-                match Self::load_skill(path.clone()) {
-                    Ok((dir, mut v)) => match v.start() {
-                        Ok(_) => {
-                            info!("Loaded skill {} from {}", v.name(), path.display());
-                            skills.insert(dir.to_string(), v);
-                        }
-                        Err(e) => warn!(
-                            "Error loading skill from {} ({}): {}",
-                            path.display(),
-                            v.name(),
-                            e
-                        ),
-                    },
-                    Err(e) => warn!("Error loading skill (SkillManager): {}", e),
+                match Self::load(path) {
+                    Ok((dir, skill)) => {
+                        skills.insert(dir, skill);
+                    }
+                    Err(e) => {
+                        warn!("{}", e)
+                    }
                 }
             }
 
@@ -110,6 +102,24 @@ impl SkillManager {
         };
 
         Ok((dir_name_str.into(), Skill::new(dir_name_str.to_string())?))
+    }
+
+    fn load(path: PathBuf) -> Result<(String, Skill), String> {
+        match Self::load_skill(path.clone()) {
+            Ok((dir, mut v)) => match v.start() {
+                Ok(_) => {
+                    info!("Loaded skill {} from {}", v.name(), path.display());
+                    Ok((dir.to_string(), v))
+                }
+                Err(e) => Err(format!(
+                    "Error loading skill from {} ({}): {}",
+                    path.display(),
+                    v.name(),
+                    e
+                )),
+            },
+            Err(e) => Err(format!("Error loading skill (SkillManager): {}", e)),
+        }
     }
 
     /// Dispatches an intent to the corresponding skill for execution.

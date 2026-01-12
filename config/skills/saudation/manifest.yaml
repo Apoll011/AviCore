@@ -8,5 +8,7 @@ capabilities:
 permissions:
   - "speak"
   - "display"
+subscribes:
+  - "topic:intent/parse/text"
 author: "Avi Labs"
 version: "1.0.0"

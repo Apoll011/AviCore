@@ -5,6 +5,52 @@ use log::info;
 #[allow(unused_imports)]
 use log::warn;
 
+#[derive(Eq, PartialEq)]
+pub enum EventType {
+    TOPIC,
+    EVENT,
+}
+
+impl EventType {
+    pub fn from(string: &str) -> Option<EventType> {
+        if string.eq_ignore_ascii_case("topic") {
+            return Some(EventType::TOPIC);
+        } else if string.eq_ignore_ascii_case("event") {
+            return Some(EventType::EVENT);
+        }
+        None
+    }
+    pub fn name(&self) -> String {
+        match self {
+            EventType::TOPIC => "topic".to_string(),
+            EventType::EVENT => "event".to_string(),
+        }
+    }
+}
+
+pub struct Event {
+    pub event_type: EventType,
+    pub event_name: String,
+}
+
+impl Event {
+    pub fn string(&self) -> String {
+        format!("{}:{}", self.event_type.name(), self.event_name)
+    }
+
+    pub fn get_event(event_string: String) -> Result<Event, String> {
+        let event_vec = event_string.split(":").collect::<Vec<&str>>();
+        if event_vec.len() != 2 {
+            return Err("Expected topic/event:{name}".to_string());
+        }
+        Ok(Event {
+            event_type: EventType::from(event_vec[0])
+                .ok_or("Expected topic/event on the first hand side".to_string())?,
+            event_name: event_vec[1].to_string(),
+        })
+    }
+}
+
 pub async fn core_id() -> Option<String> {
     match runtime() {
         Ok(c) => match c.device.get_core_id().await {
