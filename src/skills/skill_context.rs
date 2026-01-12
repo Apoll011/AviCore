@@ -1,5 +1,6 @@
 use crate::config::ConfigSystem;
 use crate::dialogue::languages::LanguageSystem;
+use memory_size_derive::{DeepSize, DeepSizeTree};
 use rhai::CustomType;
 use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
@@ -12,7 +13,7 @@ fn default_true() -> bool {
 }
 
 /// The manifest file containing metadata and configuration for a skill.
-#[derive(Debug, Serialize, Default, Deserialize, Clone, CustomType)]
+#[derive(Debug, Serialize, Default, Deserialize, Clone, CustomType, DeepSize, DeepSizeTree)]
 pub struct Manifest {
     /// Unique identifier for the skill.
     pub id: String,
@@ -44,7 +45,7 @@ pub struct Manifest {
 }
 
 /// The complete context of a skill, including its manifest, constants, settings, and localized resources.
-#[derive(Debug, Clone, CustomType)]
+#[derive(Debug, Clone, CustomType, DeepSize, DeepSizeTree)]
 pub struct SkillContext {
     #[rhai_type(readonly)]
     /// The filesystem path to the skill directory.
@@ -54,9 +55,11 @@ pub struct SkillContext {
     pub info: Arc<Manifest>,
 
     #[rhai_type(skip)]
+    #[deep_size(opaque)]
     pub config: Arc<ConfigSystem>,
 
     #[rhai_type(skip)]
+    #[deep_size(opaque)]
     /// Localized resources for the skill.
     pub languages: Arc<LanguageSystem>,
 }

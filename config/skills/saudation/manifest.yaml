@@ -9,6 +9,6 @@ permissions:
   - "speak"
   - "display"
 subscription:
-  - "topic:intent/parse/text"
+  - "topic:intent/execute/text"
 author: "Avi Labs"
 version: "1.0.0"

@@ -5,6 +5,7 @@ use crate::skills::avi_script::helpers::fix_module_imports;
 use crate::skills::skill_context::SkillContext;
 use crate::utils::{Event, EventType};
 use crate::{rt_spawn, subscribe};
+use memory_size_derive::{DeepSize, DeepSizeTree};
 use rhai::{Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant, AST};
 use std::fs;
 use std::path::Path;
@@ -13,15 +14,19 @@ use std::sync::{Arc, RwLock};
 /// Represents a standalone skill that can be executed by the Avi system.
 ///
 /// A skill consists of a Rhai module, a runtime environment, and a configuration context.
+#[derive(Clone, DeepSize, DeepSizeTree)]
 pub struct Skill {
     /// The filesystem path to the skill.
     pathname: Arc<str>,
     /// The name of the skill.
     name: Arc<str>,
+    #[deep_size(opaque)]
     /// The Rhai engine instance
     engine: Arc<Engine>,
+    #[deep_size(opaque)]
     /// Compiled AST (shared for thread safety)
     ast: Arc<RwLock<AST>>,
+    #[deep_size(opaque)]
     /// The Rhai scope used to execute the skill.
     scope: Arc<RwLock<Scope<'static>>>,
     /// The configuration and state of the skill.

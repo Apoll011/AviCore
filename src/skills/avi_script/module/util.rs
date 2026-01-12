@@ -1,5 +1,5 @@
 use rhai::plugin::*;
-use rhai::{Dynamic, EvalAltResult, NativeCallContext, Position};
+use rhai::{EvalAltResult, Position};
 use std::process::Command;
 use uuid::Uuid;
 
@@ -81,5 +81,9 @@ pub mod util_module {
     /// The environment variable value, or the default if not found
     pub fn env(name: String, default: String) -> String {
         std::env::var(name).unwrap_or(default)
+    }
+
+    pub fn get_string(data: Vec<u8>) -> String {
+        String::from_utf8_lossy(&data).to_string()
     }
 }

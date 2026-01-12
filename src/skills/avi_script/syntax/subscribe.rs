@@ -11,7 +11,7 @@ pub fn add(engine: &mut Engine) -> Result<(), Box<EvalAltResult>> {
             "<",
             "$ident$",
             ">",
-            "$func$",
+            "$block$",
         ],
         true,
         on_sub_syntax_handler,
@@ -45,6 +45,7 @@ fn on_sub_syntax_handler(
 
     let event_name = context.scope().get_value::<ImmutableString>("EVENT_NAME");
     let event_data = context.scope().get_value::<Dynamic>("EVENT_DATA");
+    let event_from = context.scope().get_value::<Dynamic>("EVENT_FROM");
 
     let expected_type =
         EventType::from(e_type).ok_or(Box::new(EvalAltResult::ErrorCustomSyntax(
@@ -63,8 +64,8 @@ fn on_sub_syntax_handler(
             }
 
             let scope = context.scope_mut();
-            scope.push_constant(ident, event_data);
-
+            scope.push_constant(ident, event_data.ok_or("Expected Data")?);
+            scope.push_constant("from", event_from.ok_or("Expected Data")?);
             let _ = context.eval_expression_tree(func);
         }
         None => {}

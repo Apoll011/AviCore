@@ -1,14 +1,9 @@
 import "dialogue";
 import "url";
+import "util";
 use "test";
 
-on_start {
-    print("hhh");
-    hi(true);
-    print(url::Url("https://g.com/"));
-    print(dialogue::any_validator());
-    //print(constant::list());
-}
+on_start {}
 
 fn hi(response) {
     print(response);
@@ -19,9 +14,10 @@ fn hi(response) {
 on_intent "hi" {
     print("Hi tiago");
     //confirm("ask", "hi")
-    dialogue::on_reply("hi", dialogue::bool_validator(true));
+    dialogue::confirm("ask", "hi");
 }
 
-subscribe topic "intent/parse/text" as <input> {
-
+subscribe topic "intent/execute/text" as <input> {
+    print(util::get_string(input));
+    print(from);
 }
