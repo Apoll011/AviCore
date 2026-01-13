@@ -85,21 +85,10 @@ pub fn generate_documentation(include_internal: bool) -> Result<(), Box<dyn std:
     std::fs::create_dir_all(path)?;
     info!("Created dir ./docs");
 
-    info!("Generating glossary.");
-    let glossary = generate::docusaurus_glossary()
-        .with_slug("/api")
-        .generate(&docs)?;
-
-    std::fs::write(
-        std::path::PathBuf::from_iter([path, "1-glossary.mdx"]),
-        glossary,
-    )?;
-    info!("Generated glossary");
-
-    for (name, doc) in generate::docusaurus().with_slug("/api").generate(&docs)? {
-        info!("Generating doc file: {}.mdx", name);
+    for (name, doc) in generate::mdbook().generate(&docs)? {
+        info!("Generating doc file: {}.md", name);
         std::fs::write(
-            std::path::PathBuf::from_iter([path, &format!("{}.mdx", &name)]),
+            std::path::PathBuf::from_iter([path, &format!("{}.md", &name)]),
             doc,
         )?;
     }
