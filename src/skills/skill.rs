@@ -5,6 +5,7 @@ use crate::skills::avi_script::helpers::fix_module_imports;
 use crate::skills::skill_context::SkillContext;
 use crate::utils::{Event, EventType};
 use crate::{rt_spawn, subscribe};
+use log::error;
 use memory_size_derive::{DeepSize, DeepSizeTree};
 use rhai::{Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant, AST};
 use std::fs;
@@ -253,8 +254,10 @@ impl Skill {
             let _ = scope.remove::<ImmutableString>("INTENT_NAME");
             let _ = scope.remove::<Intent>("INTENT");
         }
-
-        result?;
+        match result {
+            Ok(_) => {}
+            Err(e) => error!("Error running the intent: {}", e),
+        };
         Ok(true)
     }
 

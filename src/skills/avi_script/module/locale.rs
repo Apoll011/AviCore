@@ -13,8 +13,14 @@ pub mod locale_module {
     ///
     /// # Returns
     /// The translation string if found, or None if not found
-    pub fn get(ctx: NativeCallContext, id: &str) -> Option<String> {
-        skill_context(ctx, None, |v| v.languages.get_translation(id))
+    #[rhai_fn(return_raw)]
+    pub fn get(ctx: NativeCallContext, id: String) -> Result<String, Box<EvalAltResult>> {
+        skill_context(ctx, None, |v| v.languages.get_translation(&id)).ok_or(Box::new(
+            EvalAltResult::ErrorRuntime(
+                "Could not get the skill context".to_string().into(),
+                Position::NONE,
+            ),
+        ))
     }
 
     /// Gets a formatted translation for a given ID in the current locale
@@ -25,11 +31,20 @@ pub mod locale_module {
     ///
     /// # Returns
     /// The formatted translation string if found, or UNIT if not found
-    pub fn get_fmt(ctx: NativeCallContext, id: &str, params: Map) -> Option<String> {
-        let string_params = map_to_string_hashmap(params).ok()?;
+    #[rhai_fn(return_raw)]
+    pub fn get_fmt(
+        ctx: NativeCallContext,
+        id: String,
+        params: Map,
+    ) -> Result<String, Box<EvalAltResult>> {
+        let string_params = map_to_string_hashmap(params)?;
         skill_context(ctx, None, |v| {
-            v.languages.locale_fmt(&lang(), id, &string_params)
+            v.languages.locale_fmt(&lang(), &id, &string_params)
         })
+        .ok_or(Box::new(EvalAltResult::ErrorRuntime(
+            "Could not get the skill context".to_string().into(),
+            Position::NONE,
+        )))
     }
 
     /// Lists all translations for a given locale code
@@ -39,8 +54,8 @@ pub mod locale_module {
     ///
     /// # Returns
     /// A map of translations
-    pub fn list(ctx: NativeCallContext, code: &str) -> Vec<(String, serde_yaml::Value)> {
-        skill_context_def(ctx, |v| v.languages.list(code))
+    pub fn list(ctx: NativeCallContext, code: String) -> Vec<(String, serde_yaml::Value)> {
+        skill_context_def(ctx, |v| v.languages.list(&code))
     }
 
     /// Checks if a translation exists for a given ID
@@ -50,8 +65,8 @@ pub mod locale_module {
     ///
     /// # Returns
     /// True if the translation exists, false otherwise
-    pub fn has(ctx: NativeCallContext, id: &str) -> bool {
-        skill_context_def(ctx, |v| v.languages.has(id))
+    pub fn has(ctx: NativeCallContext, id: String) -> bool {
+        skill_context_def(ctx, |v| v.languages.has(&id))
     }
 
     /// Gets the current language code
