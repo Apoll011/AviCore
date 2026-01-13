@@ -209,8 +209,8 @@ let path = url.path // '/path'
 
 ```rust,ignore
 get Url.query -> String
-set Url.query = Option<String>
 set Url.query = String
+set Url.query = Option<String>
 ```
 
 <div>

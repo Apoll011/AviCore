@@ -7,8 +7,8 @@
 
 ```rust,ignore
 fn rand() -> int
-fn rand(range: Range<int>) -> int
 fn rand(range: RangeInclusive<int>) -> int
+fn rand(range: Range<int>) -> int
 fn rand(start: int, end: int) -> int
 ```
 
