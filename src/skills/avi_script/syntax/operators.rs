@@ -9,11 +9,5 @@ pub fn add(engine: &mut Engine) -> Result<(), Box<EvalAltResult>> {
                 if a.to_string().is_empty() { b } else { a }
             },
         );
-
-    engine
-        .register_custom_operator("@@", 160)?
-        .register_fn("@@", |a: ImmutableString, b: ImmutableString| {
-            format!("{}{}", a, b)
-        });
     Ok(())
 }
