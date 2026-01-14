@@ -297,7 +297,7 @@ macro_rules! register_action {
         type Config = <$action_type as $crate::actions::action::Action>::Config;
         match <$action_type>::new(Config {
             $($field: $value),*
-        }) {
+        }).await {
             Ok(mut action) => {
                 ::log::debug!("Action {} initialized, registering...", stringify!($action_type));
                 action.register().await;

@@ -76,7 +76,7 @@ impl Action for DialogueAction {
     type Config = DialogueConfig;
 
     /// Creates a new instance of `DialogueAction` with the provided configuration.
-    fn new(config: Self::Config) -> Result<DialogueAction, String> {
+    async fn new(config: Self::Config) -> Result<DialogueAction, String> {
         Ok(Self {
             device: Arc::clone(&runtime()?.device),
             config,

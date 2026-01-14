@@ -36,9 +36,9 @@ impl IntentAction {
         match IntentAction::process_reply_text(text).await {
             Ok(replay) => {
                 let mut mg = skill_manager.lock().await;
-                if let Err(e) = mg.run_skill_function(
+                if let Err(e) = mg.run_skill_function_ptr(
                     &replay.pending_reply.skill_request,
-                    &replay.pending_reply.handler,
+                    replay.pending_reply.handler,
                     vec![replay.parsed_output],
                 ) {
                     warn!("Error executing replay: {}", e);
@@ -83,10 +83,21 @@ impl IntentAction {
 impl Action for IntentAction {
     type Config = IntentConfig;
 
-    fn new(config: Self::Config) -> Result<IntentAction, String> {
+    async fn new(config: Self::Config) -> Result<IntentAction, String> {
+        let api = Api::new();
+
+        match api.alive().await {
+            Ok(_) => {
+                info!("Avi NLU API is up and running.");
+            }
+            Err(_) => {
+                return Err("Avi NLU API is not running. Skipping intent actions.".to_string());
+            }
+        };
+
         Ok(Self {
             device: Arc::clone(&runtime()?.device),
-            api: Arc::new(Mutex::new(Api::new())),
+            api: Arc::new(Mutex::new(api)),
             skill_manager: Arc::new(Mutex::new(SkillManager::new())),
             config,
         })

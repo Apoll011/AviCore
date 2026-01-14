@@ -84,7 +84,7 @@ pub async fn on_peer_connected(_device: AviDevice, peer_id: String, address: Str
 
 impl Action for MeshAction {
     type Config = MeshConfig;
-    fn new(_config: Self::Config) -> Result<MeshAction, String> {
+    async fn new(_config: Self::Config) -> Result<MeshAction, String> {
         Ok(Self {
             device: Arc::clone(&runtime()?.device),
         })
