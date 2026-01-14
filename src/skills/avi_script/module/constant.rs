@@ -14,7 +14,7 @@ pub mod constant_module {
     /// # Returns
     /// The constant value, or UNIT if not found
     #[rhai_fn(volatile)]
-    pub fn get(ctx: NativeCallContext, name: String) -> Dynamic {
+    pub fn get(ctx: NativeCallContext, name: ImmutableString) -> Dynamic {
         skill_context_def(ctx, |v| {
             yaml_to_dynamic(&v.config.constant(&name).unwrap_or(serde_yaml::Value::Null))
         })
@@ -25,12 +25,12 @@ pub mod constant_module {
     /// # Returns
     /// A list of constant names
     #[rhai_fn(volatile)]
-    pub fn list(ctx: NativeCallContext) -> HashMap<String, Dynamic> {
+    pub fn list(ctx: NativeCallContext) -> HashMap<ImmutableString, Dynamic> {
         skill_context_def(ctx, |v| {
             v.config
                 .list_constants()
                 .iter()
-                .map(|(k, v)| (k.clone(), yaml_to_dynamic(v)))
+                .map(|(k, v)| (ImmutableString::from(k), yaml_to_dynamic(v)))
                 .collect()
         })
     }
@@ -43,7 +43,7 @@ pub mod constant_module {
     /// # Returns
     /// True if the constant exists, false otherwise
     #[rhai_fn(volatile)]
-    pub fn has(ctx: NativeCallContext, name: String) -> bool {
+    pub fn has(ctx: NativeCallContext, name: ImmutableString) -> bool {
         skill_context_def(ctx, |v| v.config.has_constant(&name))
     }
 }

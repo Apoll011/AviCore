@@ -15,7 +15,7 @@ pub mod context_module {
     /// # Returns
     /// The value associated with the key, or UNIT if not found
     #[rhai_fn(volatile)]
-    pub fn get(ctx: NativeCallContext, key: String) -> Dynamic {
+    pub fn get(ctx: NativeCallContext, key: ImmutableString) -> Dynamic {
         skill_context_def(ctx, |v| {
             get_ctx!(skill: v.info.name.clone(), &key)
                 .map(|v| json_to_dynamic(v))
@@ -31,7 +31,7 @@ pub mod context_module {
     /// # Returns
     /// True if the key exists, false otherwise
     #[rhai_fn(volatile)]
-    pub fn has(ctx: NativeCallContext, key: String) -> bool {
+    pub fn has(ctx: NativeCallContext, key: ImmutableString) -> bool {
         skill_context_def(ctx, |v| has_ctx!(skill: v.info.name.clone(), &key))
     }
 
@@ -43,7 +43,7 @@ pub mod context_module {
     /// # Returns
     /// Nothing
     #[rhai_fn(volatile)]
-    pub fn remove(ctx: NativeCallContext, key: String) {
+    pub fn remove(ctx: NativeCallContext, key: ImmutableString) {
         skill_context_def(ctx, |v| {
             let _ = remove_ctx!(skill: v.info.name.clone(), &key);
         });
@@ -60,7 +60,13 @@ pub mod context_module {
     /// # Returns
     /// Nothing
     #[rhai_fn(volatile)]
-    pub fn set(ctx: NativeCallContext, key: String, value: Dynamic, ttl: u64, persist: bool) {
+    pub fn set(
+        ctx: NativeCallContext,
+        key: ImmutableString,
+        value: Dynamic,
+        ttl: u64,
+        persist: bool,
+    ) {
         skill_context_def(
             ctx,
             |v| set_ctx!(skill: v.info.name.clone(), key, value, ttl, persist),
