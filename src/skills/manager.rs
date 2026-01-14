@@ -3,7 +3,7 @@ use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::avi_librarymanager::initialize_avi_library;
 use crate::skills::skill::Skill;
 use log::{info, warn};
-use rhai::Variant;
+use rhai::{FnPtr, Variant};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -166,6 +166,18 @@ impl SkillManager {
     ) -> Result<bool, Box<dyn std::error::Error>> {
         match self.skills.get_mut(skill_name) {
             Some(v) => Ok(v.run_function(function_name, args)?),
+            None => Err(format!("Skill {} not found", skill_name).into()),
+        }
+    }
+
+    pub fn run_skill_function_ptr<T: Variant + Clone>(
+        &mut self,
+        skill_name: &str,
+        function: FnPtr,
+        args: Vec<T>,
+    ) -> Result<bool, Box<dyn std::error::Error>> {
+        match self.skills.get_mut(skill_name) {
+            Some(v) => Ok(v.run_function_ptr(function, args)?),
             None => Err(format!("Skill {} not found", skill_name).into()),
         }
     }

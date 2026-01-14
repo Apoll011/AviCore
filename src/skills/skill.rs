@@ -7,7 +7,7 @@ use crate::utils::{Event, EventType};
 use crate::{rt_spawn, subscribe};
 use log::error;
 use memory_size_derive::{DeepSize, DeepSizeTree};
-use rhai::{Dynamic, Engine, FuncArgs, ImmutableString, Scope, Variant, AST};
+use rhai::{Dynamic, Engine, FnPtr, FuncArgs, ImmutableString, Scope, Variant, AST};
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
@@ -278,6 +278,20 @@ impl Skill {
             function_name,
             args,
         )?)
+    }
+
+    /// Calls a specific function within the skill
+    pub fn run_function_ptr<T: Variant + Clone>(
+        &mut self,
+        function: FnPtr,
+        args: impl FuncArgs,
+    ) -> Result<T, Box<dyn std::error::Error>> {
+        let ast_guard = self
+            .ast
+            .read()
+            .map_err(|e| format!("Failed to acquire AST lock: {}", e))?;
+
+        Ok(function.call(&self.engine, &ast_guard, args)?)
     }
 
     /// Checks if the skill is currently disabled.

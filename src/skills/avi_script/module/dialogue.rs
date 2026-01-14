@@ -3,18 +3,19 @@ use crate::dialogue::reply::{RequestReply, ValidatorErasure};
 use crate::dialogue::response::{
     AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator,
 };
-use crate::dialogue::utils::speak;
+use crate::dialogue::utils::{listen, speak};
 use crate::skills::avi_script::helpers::get_skill_context;
 use crate::user::user_name;
 use crate::{get_ctx, rt_spawn, speak};
 use log::error;
 use rhai::plugin::*;
-use rhai::Dynamic;
+use rhai::{Dynamic, FnPtr};
 use std::collections::HashMap;
 
 #[export_module]
 pub mod dialogue_module {
     use crate::skills::avi_script::helpers::skill_context_def;
+    use rhai::FnPtr;
 
     /// Creates a validator that accepts any input
     ///
@@ -81,7 +82,7 @@ pub mod dialogue_module {
     /// # Returns
     /// Nothing
 
-    pub fn say(text: String) {
+    pub fn say(text: ImmutableString) {
         speak(&text, true);
     }
 
@@ -93,7 +94,7 @@ pub mod dialogue_module {
     /// # Returns
     /// Nothing
 
-    pub fn say_once(text: String) {
+    pub fn say_once(text: ImmutableString) {
         speak!(&text);
     }
 
@@ -103,7 +104,7 @@ pub mod dialogue_module {
     /// Nothing
 
     pub fn listen() {
-        device_listen();
+        listen();
     }
 
     /// Repeats the last thing spoken or heard
@@ -124,7 +125,7 @@ pub mod dialogue_module {
     #[rhai_fn(name = "request_attention")]
     pub fn request_attention() {
         speak!(&format!("{}!", user_name()));
-        device_listen();
+        listen();
     }
 
     /// Asks the user a yes/no question and handles the response
@@ -138,8 +139,8 @@ pub mod dialogue_module {
     #[rhai_fn(return_raw)]
     pub fn confirm(
         ctx: NativeCallContext,
-        question_locale_id: String,
-        handler: String,
+        question_locale_id: ImmutableString,
+        handler: FnPtr,
     ) -> Result<(), Box<EvalAltResult>> {
         let skill_context = get_skill_context(&ctx).map_err(|_| {
             Box::new(EvalAltResult::ErrorRuntime(
@@ -163,7 +164,7 @@ pub mod dialogue_module {
             handle_on_reply(
                 handler_cloned.clone(),
                 Box::new(BoolValidator::new(false)),
-                skill.info.name.clone(),
+                skill.info.id.clone(),
             );
         });
 
@@ -178,7 +179,7 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-    pub fn on_reply(ctx: NativeCallContext, handler: String, validator: Dynamic) {
+    pub fn on_reply(ctx: NativeCallContext, handler: FnPtr, validator: Dynamic) {
         let validator_type = validator.type_name().to_string();
         let validator_cloned = validator.clone();
         let handler_cloned = handler.clone();
@@ -200,16 +201,12 @@ pub mod dialogue_module {
                     return;
                 };
 
-            handle_on_reply(handler_cloned.clone(), v, skill.info.name.clone());
+            handle_on_reply(handler_cloned.clone(), v, skill.info.id.clone());
         });
     }
 }
 
-fn device_listen() {
-    todo!()
-}
-
-fn handle_on_reply(handler: String, validator: Box<dyn ValidatorErasure>, skill_name: String) {
+fn handle_on_reply(handler: FnPtr, validator: Box<dyn ValidatorErasure>, skill_name: String) {
     rt_spawn! {
         if let Ok(c) = runtime() { c.reply_manager
         .set_reply(RequestReply {

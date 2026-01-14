@@ -14,11 +14,9 @@ fn hi(response) {
 }
 
 on_intent "hi" {
-    print("fff");
     let text = locale::get_fmt("hello", #{name: user::name()});
-    print(text);
     dialogue::say(text);
-    //confirm("ask", "hi")
+    dialogue::confirm("ask", hi);
     //dialogue::confirm("ask", "hi");
 }
 

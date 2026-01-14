@@ -2,6 +2,7 @@ use crate::dialogue::languages::locale;
 use crate::dialogue::response::{ResponseValidator, ValidationError};
 use crate::speak;
 use log::{debug, info, trace, warn};
+use rhai::FnPtr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
@@ -37,13 +38,13 @@ where
 
 pub struct RequestReply {
     pub skill_request: String,
-    pub handler: String,
+    pub handler: FnPtr,
     pub validator: Box<dyn ValidatorErasure>,
 }
 
 pub struct PendingReply {
     pub skill_request: String,
-    pub handler: String,
+    pub handler: FnPtr,
     validator: Box<dyn ValidatorErasure>,
     created_at: Instant,
     retry_count: usize,
