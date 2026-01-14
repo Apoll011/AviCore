@@ -177,9 +177,9 @@ impl LanguageSystem {
             .unwrap_or_else(Vec::new)
     }
 
-    pub fn list(&self, code: &str) -> Vec<(String, serde_yaml::Value)> {
+    pub fn list(&self, code: &str) -> HashMap<String, serde_yaml::Value> {
         let Some(lang) = self.languages.iter().find(|l| l.code == code) else {
-            return Vec::<(String, serde_yaml::Value)>::new();
+            return HashMap::<String, serde_yaml::Value>::new();
         };
 
         lang.lang

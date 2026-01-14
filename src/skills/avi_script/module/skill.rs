@@ -34,8 +34,11 @@ pub mod skill_module {
     ///
     /// # Returns
     /// A list of permissions
-    pub fn get_permissions(ctx: NativeCallContext) -> Vec<String> {
+    pub fn get_permissions(ctx: NativeCallContext) -> Vec<ImmutableString> {
         skill_context_def(ctx, |v| v.info.permissions.clone())
+            .iter()
+            .map(|v| ImmutableString::from(v))
+            .collect()
     }
 
     /// Checks if the current skill is disabled

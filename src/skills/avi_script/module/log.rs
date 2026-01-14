@@ -1,7 +1,7 @@
 use crate::skills::avi_script::helpers::get_skill_name;
 use log::{debug, error, info, trace, warn};
-use rhai::NativeCallContext;
 use rhai::plugin::*;
+use rhai::NativeCallContext;
 
 #[export_module]
 pub mod log_module {
@@ -12,7 +12,7 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    pub fn info(ctx: NativeCallContext, text: &str) {
+    pub fn info(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => info!("Skill {} - {}", v, text),
             Err(_) => (),
@@ -26,7 +26,7 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    pub fn trace(ctx: NativeCallContext, text: &str) {
+    pub fn trace(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => trace!("Skill {} - {}", v, text),
             Err(_) => (),
@@ -40,7 +40,7 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    pub fn debug(ctx: NativeCallContext, text: &str) {
+    pub fn debug(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => debug!("Skill {} - {}", v, text),
             Err(_) => (),
@@ -54,7 +54,7 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    pub fn warn(ctx: NativeCallContext, text: &str) {
+    pub fn warn(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => warn!("Skill {} - {}", v, text),
             Err(_) => (),
@@ -68,7 +68,7 @@ pub mod log_module {
     ///
     /// # Returns
     /// Nothing
-    pub fn error(ctx: NativeCallContext, text: &str) {
+    pub fn error(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => error!("Skill {} - {}", v, text),
             Err(_) => (),

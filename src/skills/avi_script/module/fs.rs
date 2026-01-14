@@ -7,17 +7,17 @@ use std::path::Path;
 
 #[export_module]
 pub mod fs_module {
-    /// Reads the entire contents of a file as a string
+    /// Reads the entire contents of a file as a ImmutableString
     ///
     /// # Arguments
     /// * `path` - The path to the file to read
     ///
     /// # Returns
-    /// The file contents as a string, or UNIT if the file could not be read
+    /// The file contents as a ImmutableString, or UNIT if the file could not be read
     #[rhai_fn(return_raw)]
-    pub fn read(path: &str) -> Result<String, Box<EvalAltResult>> {
-        match fs::read_to_string(path) {
-            Ok(content) => Ok(content),
+    pub fn read(path: ImmutableString) -> Result<ImmutableString, Box<EvalAltResult>> {
+        match fs::read_to_string(path.as_str()) {
+            Ok(content) => Ok(ImmutableString::from(content)),
             Err(e) => Err(Box::new(EvalAltResult::ErrorRuntime(
                 format!("Could not read directory: {}", e).into(),
                 Position::NONE,
@@ -25,21 +25,24 @@ pub mod fs_module {
         }
     }
 
-    /// Writes a string to a file, overwriting its contents
+    /// Writes a ImmutableString to a file, overwriting its contents
     ///
     /// # Arguments
     /// * `path` - The path to the file to write
-    /// * `content` - The string to write to the file
+    /// * `content` - The ImmutableString to write to the file
     ///
     /// # Returns
     /// Nothing
     #[rhai_fn(return_raw)]
-    pub fn write(path: &str, content: &str) -> Result<(), Box<EvalAltResult>> {
+    pub fn write(
+        path: ImmutableString,
+        content: ImmutableString,
+    ) -> Result<(), Box<EvalAltResult>> {
         let mut file = OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
-            .open(path)
+            .open(path.as_str())
             .map_err(|e| {
                 Box::new(EvalAltResult::ErrorRuntime(
                     format!("Could not open file: {}", e).into(),
@@ -57,20 +60,23 @@ pub mod fs_module {
         Ok(())
     }
 
-    /// Appends a string to the end of a file
+    /// Appends a ImmutableString to the end of a file
     ///
     /// # Arguments
     /// * `path` - The path to the file to append to
-    /// * `content` - The string to append to the file
+    /// * `content` - The ImmutableString to append to the file
     ///
     /// # Returns
     /// Nothing
     #[rhai_fn(return_raw)]
-    pub fn append(path: &str, content: &str) -> Result<(), Box<EvalAltResult>> {
+    pub fn append(
+        path: ImmutableString,
+        content: ImmutableString,
+    ) -> Result<(), Box<EvalAltResult>> {
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open(path)
+            .open(path.as_str())
             .map_err(|e| {
                 Box::new(EvalAltResult::ErrorRuntime(
                     format!("Could not open file: {}", e).into(),
@@ -96,8 +102,8 @@ pub mod fs_module {
     /// # Returns
     /// True if the path exists, false otherwise
 
-    pub fn exists(path: &str) -> bool {
-        Path::new(path).exists()
+    pub fn exists(path: ImmutableString) -> bool {
+        Path::new(path.as_str()).exists()
     }
 
     /// Deletes a file or an empty directory
@@ -108,8 +114,8 @@ pub mod fs_module {
     /// # Returns
     /// True if the deletion was successful, false otherwise
 
-    pub fn delete(path: &str) -> bool {
-        let path = Path::new(path);
+    pub fn delete(path: ImmutableString) -> bool {
+        let path = Path::new(path.as_str());
         if path.is_dir() {
             fs::remove_dir(path).is_ok()
         } else {
@@ -126,8 +132,8 @@ pub mod fs_module {
     /// # Returns
     /// True if the copy was successful, false otherwise
 
-    pub fn copy(src: &str, dest: &str) -> bool {
-        fs::copy(src, dest).is_ok()
+    pub fn copy(src: ImmutableString, dest: ImmutableString) -> bool {
+        fs::copy(src.as_str(), dest.as_str()).is_ok()
     }
 
     /// Moves or renames a file or directory
@@ -139,8 +145,8 @@ pub mod fs_module {
     /// # Returns
     /// True if the move was successful, false otherwise
     #[rhai_fn(name = "move")]
-    pub fn move_file(src: &str, dest: &str) -> bool {
-        fs::rename(src, dest).is_ok()
+    pub fn move_file(src: ImmutableString, dest: ImmutableString) -> bool {
+        fs::rename(src.as_str(), dest.as_str()).is_ok()
     }
 
     /// Lists the names of files and directories in a given path
@@ -151,15 +157,15 @@ pub mod fs_module {
     /// # Returns
     /// A list of file and directory names
     #[rhai_fn(return_raw)]
-    pub fn list_files(path: &str) -> Result<Vec<String>, Box<EvalAltResult>> {
+    pub fn list_files(path: ImmutableString) -> Result<Vec<ImmutableString>, Box<EvalAltResult>> {
         let mut files = Vec::new();
 
-        match fs::read_dir(path) {
+        match fs::read_dir(path.as_str()) {
             Ok(entries) => {
                 for entry in entries {
                     if let Ok(entry) = entry {
                         if let Ok(name) = entry.file_name().into_string() {
-                            files.push(name);
+                            files.push(ImmutableString::from(name));
                         }
                     }
                 }
@@ -180,8 +186,8 @@ pub mod fs_module {
     /// # Returns
     /// True if the directory was created successfully, false otherwise
 
-    pub fn mkdir(path: &str) -> bool {
-        fs::create_dir_all(path).is_ok()
+    pub fn mkdir(path: ImmutableString) -> bool {
+        fs::create_dir_all(path.as_str()).is_ok()
     }
 
     /// Gets the last component of a path
@@ -192,12 +198,13 @@ pub mod fs_module {
     /// # Returns
     /// The last component of the path
 
-    pub fn basename(path: &str) -> String {
-        Path::new(path)
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("")
-            .to_string()
+    pub fn basename(path: ImmutableString) -> ImmutableString {
+        ImmutableString::from(
+            Path::new(path.as_str())
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or(""),
+        )
     }
 
     /// Gets the parent directory of a path
@@ -208,11 +215,12 @@ pub mod fs_module {
     /// # Returns
     /// The parent directory of the path
 
-    pub fn dirname(path: &str) -> String {
-        Path::new(path)
-            .parent()
-            .and_then(|s| s.to_str())
-            .unwrap_or("")
-            .to_string()
+    pub fn dirname(path: ImmutableString) -> ImmutableString {
+        ImmutableString::from(
+            Path::new(path.as_str())
+                .parent()
+                .and_then(|s| s.to_str())
+                .unwrap_or(""),
+        )
     }
 }

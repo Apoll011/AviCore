@@ -13,7 +13,7 @@ pub mod settings_module {
     ///
     /// # Returns
     /// The setting value, or default if not set
-    pub fn get(ctx: NativeCallContext, name: String) -> Option<Dynamic> {
+    pub fn get(ctx: NativeCallContext, name: ImmutableString) -> Option<Dynamic> {
         skill_context(ctx, None, |v| {
             Some(yaml_to_dynamic(&v.config.setting(&name)?.value))
         })
@@ -23,8 +23,11 @@ pub mod settings_module {
     ///
     /// # Returns
     /// A list of setting names
-    pub fn list(ctx: NativeCallContext) -> HashMap<String, Setting> {
+    pub fn list(ctx: NativeCallContext) -> HashMap<ImmutableString, Setting> {
         skill_context_def(ctx, |v| v.config.list_settings())
+            .iter()
+            .map(|(k, v)| (ImmutableString::from(k), v.clone()))
+            .collect()
     }
 
     /// Checks if a setting exists for the current skill
@@ -34,7 +37,7 @@ pub mod settings_module {
     ///
     /// # Returns
     /// True if the setting exists, false otherwise
-    pub fn has(ctx: NativeCallContext, name: String) -> bool {
+    pub fn has(ctx: NativeCallContext, name: ImmutableString) -> bool {
         skill_context_def(ctx, |v| v.config.has_setting(&name))
     }
 
@@ -45,7 +48,7 @@ pub mod settings_module {
     ///
     /// # Returns
     /// The full setting object, or UNIT if not found
-    pub fn full(ctx: NativeCallContext, name: String) -> Option<SettingNamed> {
+    pub fn full(ctx: NativeCallContext, name: ImmutableString) -> Option<SettingNamed> {
         skill_context(ctx, None, |v| v.config.get_setting_full(&name))
     }
 }

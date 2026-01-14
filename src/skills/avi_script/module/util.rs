@@ -8,9 +8,9 @@ pub mod util_module {
     /// Generates a new UUID v4
     ///
     /// # Returns
-    /// A UUID string in the format "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-    pub fn uuid() -> String {
-        Uuid::new_v4().to_string()
+    /// A UUID ImmutableString in the format "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    pub fn uuid() -> ImmutableString {
+        ImmutableString::from(Uuid::new_v4().to_string())
     }
 
     /// Asserts a condition, throwing an error if the condition is true
@@ -22,7 +22,7 @@ pub mod util_module {
     /// # Note
     /// This has inverted logic compared to typical assertions - it errors when true
     #[rhai_fn(return_raw)]
-    pub fn assert(condition: bool, msg: String) -> Result<(), Box<EvalAltResult>> {
+    pub fn assert(condition: bool, msg: ImmutableString) -> Result<(), Box<EvalAltResult>> {
         if condition {
             Err(Box::new(EvalAltResult::ErrorRuntime(
                 msg.into(),
@@ -44,11 +44,11 @@ pub mod util_module {
     /// # Note
     /// Uses "cmd /C" on Windows, "sh -c" on Unix-like systems
     #[rhai_fn(return_raw)]
-    pub fn cmd(command: String) -> Result<i64, Box<EvalAltResult>> {
+    pub fn cmd(command: ImmutableString) -> Result<i64, Box<EvalAltResult>> {
         let output = if cfg!(target_os = "windows") {
-            Command::new("cmd").args(["/C", &command]).output()
+            Command::new("cmd").args(["/C", command.as_str()]).output()
         } else {
-            Command::new("sh").arg("-c").arg(&command).output()
+            Command::new("sh").arg("-c").arg(command.as_str()).output()
         };
 
         match output {
@@ -67,8 +67,8 @@ pub mod util_module {
     ///
     /// # Returns
     /// The OS name (e.g., "linux", "windows", "macos")
-    pub fn os() -> String {
-        std::env::consts::OS.to_string()
+    pub fn os() -> ImmutableString {
+        ImmutableString::from(std::env::consts::OS)
     }
 
     /// Gets an environment variable with a default fallback
@@ -79,11 +79,11 @@ pub mod util_module {
     ///
     /// # Returns
     /// The environment variable value, or the default if not found
-    pub fn env(name: String, default: String) -> String {
-        std::env::var(name).unwrap_or(default)
+    pub fn env(name: ImmutableString, default: ImmutableString) -> ImmutableString {
+        ImmutableString::from(std::env::var(name.to_string()).unwrap_or(default.to_string()))
     }
 
-    pub fn get_string(data: Vec<u8>) -> String {
-        String::from_utf8_lossy(&data).to_string()
+    pub fn get_string(data: Vec<u8>) -> ImmutableString {
+        ImmutableString::from(String::from_utf8_lossy(&data).to_string())
     }
 }

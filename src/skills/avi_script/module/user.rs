@@ -4,37 +4,31 @@ use rhai::plugin::*;
 #[export_module]
 pub mod user_module {
     use crate::dialogue::languages::lang;
-    use crate::user::{Location, QuietHours, user_name};
+    use crate::user::{user_name, Location, QuietHours};
     use chrono::{DateTime, Utc};
 
     /// Gets the user's name
     ///
     /// # Returns
-    /// The user's name, or an empty string if not available
-    pub fn name() -> String {
-        user_name()
+    /// The user's name, or an empty ImmutableString if not available
+    pub fn name() -> ImmutableString {
+        ImmutableString::from(user_name())
     }
 
     /// Gets the user's nickname
     ///
     /// # Returns
     /// The user's nickname, or () if not set
-    pub fn nickname() -> Option<String> {
-        match runtime() {
-            Ok(c) => c.user.get_nickname(),
-            Err(_) => None,
-        }
+    pub fn nickname() -> Option<ImmutableString> {
+        Some(ImmutableString::from(runtime().ok()?.user.get_nickname()?))
     }
 
     /// Gets the user's ID
     ///
     /// # Returns
-    /// The user's ID, or an empty string if not available
-    pub fn id() -> Option<String> {
-        match runtime() {
-            Ok(c) => Some(c.user.get_id()),
-            Err(_) => None,
-        }
+    /// The user's ID, or an empty ImmutableString if not available
+    pub fn id() -> Option<ImmutableString> {
+        Some(ImmutableString::from(runtime().ok()?.user.get_id()))
     }
 
     /// Gets the user's location
@@ -42,10 +36,7 @@ pub mod user_module {
     /// # Returns
     /// A map with 'city' and 'country' fields, or () if not set
     pub fn location() -> Option<Location> {
-        match runtime() {
-            Ok(c) => c.user.get_location(),
-            Err(_) => None,
-        }
+        Some(runtime().ok()?.user.get_location()?)
     }
 
     /// Gets the user's quiet hours
@@ -53,10 +44,7 @@ pub mod user_module {
     /// # Returns
     /// A map with 'start' and 'end' fields, or () if not set
     pub fn quiet_hours() -> Option<QuietHours> {
-        match runtime() {
-            Ok(c) => c.user.get_quiet_hours(),
-            Err(_) => None,
-        }
+        Some(runtime().ok()?.user.get_quiet_hours()?)
     }
 
     /// Gets the user's birthday as a Unix timestamp
@@ -64,31 +52,27 @@ pub mod user_module {
     /// # Returns
     /// The birthday timestamp
     pub fn birthday() -> Option<DateTime<Utc>> {
-        match runtime() {
-            Ok(c) => c.user.get_birthday(),
-            Err(_) => None,
-        }
+        Some(runtime().ok()?.user.get_birthday()?)
     }
 
     /// Gets the user's voice profile ID
     ///
     /// # Returns
     /// The voice profile ID, or () if not set
-    pub fn voice_profile_id() -> Option<String> {
-        match runtime() {
-            Ok(c) => c.user.get_voice_profile_id(),
-            Err(_) => None,
-        }
+    pub fn voice_profile_id() -> Option<ImmutableString> {
+        Some(ImmutableString::from(
+            runtime().ok()?.user.get_voice_profile_id()?,
+        ))
     }
 
     /// Gets the user's language preference
     ///
     /// # Returns
     /// The language code (e.g., "en"), defaults to "en" if not set
-    pub fn language() -> String {
+    pub fn language() -> ImmutableString {
         match runtime() {
-            Ok(c) => c.user.get_language(),
-            Err(_) => lang(),
+            Ok(c) => ImmutableString::from(c.user.get_language()),
+            Err(_) => ImmutableString::from(lang()),
         }
     }
 }

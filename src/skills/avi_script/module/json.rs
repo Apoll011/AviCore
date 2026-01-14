@@ -13,8 +13,8 @@ pub mod json_module {
     /// # Returns
     /// A Rhai object representing the JSON data
     #[rhai_fn(return_raw)]
-    pub fn parse(json_str: &str) -> Result<Dynamic, Box<EvalAltResult>> {
-        match serde_json::from_str::<Value>(json_str) {
+    pub fn parse(json_str: ImmutableString) -> Result<Dynamic, Box<EvalAltResult>> {
+        match serde_json::from_str::<Value>(json_str.as_str()) {
             Ok(value) => Ok(json_to_dynamic(value)),
             Err(err) => Err(Box::new(EvalAltResult::ErrorRuntime(
                 format!("JSON parse error: {}", err).into(),
@@ -23,18 +23,18 @@ pub mod json_module {
         }
     }
 
-    /// Converts a Rhai object into a pretty-printed JSON string
+    /// Converts a AviScript object into a pretty-printed JSON string
     ///
     /// # Arguments
-    /// * `value` - The Rhai object to convert
+    /// * `value` - The AviScript Map to convert
     ///
     /// # Returns
     /// A JSON string
     #[rhai_fn(return_raw)]
-    pub fn to_json(value: Dynamic) -> Result<String, Box<EvalAltResult>> {
+    pub fn to_json(value: Dynamic) -> Result<ImmutableString, Box<EvalAltResult>> {
         match dynamic_to_json(value) {
             Ok(json_value) => match serde_json::to_string_pretty(&json_value) {
-                Ok(json_str) => Ok(json_str),
+                Ok(json_str) => Ok(ImmutableString::from(json_str)),
                 Err(err) => Err(Box::new(EvalAltResult::ErrorRuntime(
                     format!("JSON stringify error: {}", err).into(),
                     Position::NONE,

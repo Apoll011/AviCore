@@ -3,9 +3,13 @@ import "url";
 import "util";
 import "user";
 import "locale";
+import "fs";
 use "test";
 
-on_start {}
+on_start {
+    print("ddd");
+    print(fs::read("./avi.log"));
+}
 
 fn hi(response) {
     print(response);

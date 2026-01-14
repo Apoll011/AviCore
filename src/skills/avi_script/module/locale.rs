@@ -5,6 +5,7 @@ use rhai::{Dynamic, EvalAltResult, Map, NativeCallContext};
 
 #[export_module]
 pub mod locale_module {
+    use std::collections::HashMap;
 
     /// Gets a translation for a given ID in the current locale
     ///
@@ -12,15 +13,18 @@ pub mod locale_module {
     /// * `id` - The ID of the translation to retrieve
     ///
     /// # Returns
-    /// The translation string if found, or None if not found
+    /// The translation ImmutableString if found, or None if not found
     #[rhai_fn(return_raw)]
-    pub fn get(ctx: NativeCallContext, id: String) -> Result<String, Box<EvalAltResult>> {
-        skill_context(ctx, None, |v| v.languages.get_translation(&id)).ok_or(Box::new(
-            EvalAltResult::ErrorRuntime(
+    pub fn get(
+        ctx: NativeCallContext,
+        id: ImmutableString,
+    ) -> Result<ImmutableString, Box<EvalAltResult>> {
+        skill_context(ctx, None, |v| v.languages.get_translation(&id))
+            .ok_or(Box::new(EvalAltResult::ErrorRuntime(
                 "Could not get the skill context".to_string().into(),
                 Position::NONE,
-            ),
-        ))
+            )))
+            .map(|v| ImmutableString::from(v))
     }
 
     /// Gets a formatted translation for a given ID in the current locale
@@ -30,13 +34,13 @@ pub mod locale_module {
     /// * `params` - A map of parameters to interpolate into the translation
     ///
     /// # Returns
-    /// The formatted translation string if found, or UNIT if not found
+    /// The formatted translation ImmutableString if found, or UNIT if not found
     #[rhai_fn(return_raw)]
     pub fn get_fmt(
         ctx: NativeCallContext,
-        id: String,
+        id: ImmutableString,
         params: Map,
-    ) -> Result<String, Box<EvalAltResult>> {
+    ) -> Result<ImmutableString, Box<EvalAltResult>> {
         let string_params = map_to_string_hashmap(params)?;
         skill_context(ctx, None, |v| {
             v.languages.locale_fmt(&lang(), &id, &string_params)
@@ -45,6 +49,7 @@ pub mod locale_module {
             "Could not get the skill context".to_string().into(),
             Position::NONE,
         )))
+        .map(|v| ImmutableString::from(v))
     }
 
     /// Lists all translations for a given locale code
@@ -54,8 +59,14 @@ pub mod locale_module {
     ///
     /// # Returns
     /// A map of translations
-    pub fn list(ctx: NativeCallContext, code: String) -> Vec<(String, serde_yaml::Value)> {
+    pub fn list(
+        ctx: NativeCallContext,
+        code: ImmutableString,
+    ) -> HashMap<ImmutableString, serde_yaml::Value> {
         skill_context_def(ctx, |v| v.languages.list(&code))
+            .iter()
+            .map(|(k, v)| (ImmutableString::from(k), v.clone()))
+            .collect()
     }
 
     /// Checks if a translation exists for a given ID
@@ -65,7 +76,7 @@ pub mod locale_module {
     ///
     /// # Returns
     /// True if the translation exists, false otherwise
-    pub fn has(ctx: NativeCallContext, id: String) -> bool {
+    pub fn has(ctx: NativeCallContext, id: ImmutableString) -> bool {
         skill_context_def(ctx, |v| v.languages.has(&id))
     }
 
@@ -74,8 +85,8 @@ pub mod locale_module {
     /// # Returns
     /// The current language code (e.g., 'en-US')
 
-    pub fn current(_ctx: NativeCallContext) -> String {
-        lang()
+    pub fn current(_ctx: NativeCallContext) -> ImmutableString {
+        ImmutableString::from(lang())
     }
 }
 
