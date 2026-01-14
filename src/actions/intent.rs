@@ -87,8 +87,11 @@ impl Action for IntentAction {
         let api = Api::new();
 
         match api.alive().await {
-            Ok(_) => {
-                info!("Avi NLU API is up and running.");
+            Ok(alive) => {
+                info!(
+                    "Avi NLU API is up and running (Server v{} on lang {:?}).",
+                    alive.version, alive.installed_lang
+                );
             }
             Err(_) => {
                 return Err("Avi NLU API is not running. Skipping intent actions.".to_string());
