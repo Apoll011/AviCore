@@ -307,7 +307,11 @@ impl UserManager {
     }
 
     pub fn remove_topic_of_interest(&self, topic: &str) {
-        self.user.write().preferences.topics_of_interest.retain(|t| t != topic);
+        self.user
+            .write()
+            .preferences
+            .topics_of_interest
+            .retain(|t| t != topic);
 
         self.save();
     }
@@ -328,13 +332,21 @@ impl UserManager {
     }
 
     pub fn set_quiet_hours(&self, start: String, end: String) {
-        self.user.write().preferences.notification_preferences.quiet_hours = Some(QuietHours { start, end });
+        self.user
+            .write()
+            .preferences
+            .notification_preferences
+            .quiet_hours = Some(QuietHours { start, end });
 
         self.save();
     }
 
     pub fn remove_quiet_hours(&self) {
-        self.user.write().preferences.notification_preferences.quiet_hours = None;
+        self.user
+            .write()
+            .preferences
+            .notification_preferences
+            .quiet_hours = None;
 
         self.save();
     }

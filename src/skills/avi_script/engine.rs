@@ -1,6 +1,6 @@
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
-use rhai::module_resolvers::{FileModuleResolver, ModuleResolversCollection};
 use rhai::Engine;
+use rhai::module_resolvers::{FileModuleResolver, ModuleResolversCollection};
 use std::sync::Arc;
 
 fn constraint_engine(engine: &mut Engine) {

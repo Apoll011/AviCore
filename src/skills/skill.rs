@@ -7,7 +7,7 @@ use crate::utils::{Event, EventType};
 use crate::{rt_spawn, subscribe};
 use log::error;
 use memory_size_derive::{DeepSize, DeepSizeTree};
-use rhai::{Dynamic, Engine, FnPtr, FuncArgs, ImmutableString, Scope, Variant, AST};
+use rhai::{AST, Dynamic, Engine, FnPtr, FuncArgs, ImmutableString, Scope, Variant};
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, RwLock};

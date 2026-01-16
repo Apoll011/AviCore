@@ -1,4 +1,4 @@
-use rhai::{Dynamic, Engine, EvalAltResult, ImmutableString};
+use rhai::{Dynamic, Engine, EvalAltResult};
 
 pub fn add(engine: &mut Engine) -> Result<(), Box<EvalAltResult>> {
     engine

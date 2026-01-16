@@ -17,8 +17,8 @@ use crate::log::AviCoreLogger;
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
 use crate::utils::{generate_documentation, generate_dsl_definition};
-use clap::{Parser, Subcommand, ValueEnum};
 use ::log::info;
+use clap::{Parser, Subcommand, ValueEnum};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 

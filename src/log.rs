@@ -1,10 +1,10 @@
 use chrono::Local;
 use colored::*;
-use log::{info, Level, LevelFilter, Log, Metadata, Record};
+use log::{Level, LevelFilter, Log, Metadata, Record, info};
 use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU8, Ordering};
 
 static MAX_LEVEL: AtomicU8 = AtomicU8::new(LevelFilter::Trace as u8);
 
