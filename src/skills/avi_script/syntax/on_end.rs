@@ -11,11 +11,8 @@ fn on_end_syntax_handler(
 ) -> Result<Dynamic, Box<EvalAltResult>> {
     let block = &inputs[0];
 
-    match context.scope().get_value::<bool>("END") {
-        Some(true) => {
-            let _ = context.eval_expression_tree(block);
-        }
-        _ => {}
+    if let Some(true) = context.scope().get_value::<bool>("END") {
+        let _ = context.eval_expression_tree(block);
     }
 
     Ok(Dynamic::UNIT)

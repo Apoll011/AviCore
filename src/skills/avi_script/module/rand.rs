@@ -50,7 +50,7 @@ pub mod rand_functions {
             )
             .into())
         } else {
-            Ok(rand::rng().random_bool(probability as f64))
+            Ok(rand::rng().random_bool(probability))
         }
     }
 

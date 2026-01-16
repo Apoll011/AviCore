@@ -68,7 +68,7 @@ pub mod dialogue_module {
     }
 
     pub fn listen() {
-        listen();
+        crate::dialogue::utils::listen();
     }
 
     pub fn repeat() {
@@ -84,7 +84,7 @@ pub mod dialogue_module {
     #[rhai_fn(name = "request_attention")]
     pub fn request_attention() {
         speak!(&format!("{}!", user_name()));
-        listen();
+        crate::dialogue::utils::listen();
     }
 
     /// Asks the user a yes/no question and handles the response

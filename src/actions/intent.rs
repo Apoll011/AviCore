@@ -111,7 +111,7 @@ impl Action for IntentAction {
         let api = Arc::clone(&self.api);
         let skill_manager = Arc::clone(&self.skill_manager);
 
-        let _ = subscribe!("intent/execute/text", captures: [skill_manager, api, device], async: |_from, _topic, data| {
+        subscribe!("intent/execute/text", captures: [skill_manager, api, device], async: |_from, _topic, data| {
                 let msg = String::from_utf8_lossy(&data);
                 let text = msg.trim();
 
@@ -127,11 +127,11 @@ impl Action for IntentAction {
                 }
         });
 
-        let _ = subscribe!("intent/reply/cancel", async: move |_from, _topic, _data| async move {
+        subscribe!("intent/reply/cancel", async: move |_from, _topic, _data| async move {
             if let Ok(c) = runtime() { c.reply_manager.cancel().await };
         });
 
-        let _ = subscribe!("skills/reload", captures: [skill_manager], async: |_from, _topic, _data| {
+        subscribe!("skills/reload", captures: [skill_manager], async: |_from, _topic, _data| {
             let mut lock = skill_manager.lock().await;
             let _ = lock.reload();
         });

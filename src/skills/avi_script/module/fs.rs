@@ -152,11 +152,9 @@ pub mod fs_module {
 
         match fs::read_dir(path.as_str()) {
             Ok(entries) => {
-                for entry in entries {
-                    if let Ok(entry) = entry {
-                        if let Ok(name) = entry.file_name().into_string() {
-                            files.push(ImmutableString::from(name));
-                        }
+                for entry in entries.flatten() {
+                    if let Ok(name) = entry.file_name().into_string() {
+                        files.push(ImmutableString::from(name));
                     }
                 }
                 Ok(files)
@@ -168,25 +166,9 @@ pub mod fs_module {
         }
     }
 
-    /// Creates a directory and all its parent directories if they don't exist
-    ///
-    /// # Arguments
-    /// * `path` - The path of the directory to create
-    ///
-    /// # Returns
-    /// True if the directory was created successfully, false otherwise
-
     pub fn mkdir(path: ImmutableString) -> bool {
         fs::create_dir_all(path.as_str()).is_ok()
     }
-
-    /// Gets the last component of a path
-    ///
-    /// # Arguments
-    /// * `path` - The path to process
-    ///
-    /// # Returns
-    /// The last component of the path
 
     pub fn basename(path: ImmutableString) -> ImmutableString {
         ImmutableString::from(
@@ -204,7 +186,6 @@ pub mod fs_module {
     ///
     /// # Returns
     /// The parent directory of the path
-
     pub fn dirname(path: ImmutableString) -> ImmutableString {
         ImmutableString::from(
             Path::new(path.as_str())

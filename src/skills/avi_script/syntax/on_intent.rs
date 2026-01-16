@@ -23,24 +23,19 @@ fn on_intent_syntax_handler(
         .to_string();
     let block = &inputs[1];
 
-    match context.scope().get_value::<ImmutableString>("INTENT_NAME") {
-        Some(intent_name_sent) => {
-            if !intent_name_sent.eq_ignore_ascii_case(&intent_name) {
-                return Ok(Dynamic::UNIT);
-            }
+    if let Some(intent_name_sent) = context.scope().get_value::<ImmutableString>("INTENT_NAME")
+        && intent_name_sent.eq_ignore_ascii_case(&intent_name)
+    {
+        let scope = context.scope_mut();
 
-            let scope = context.scope_mut();
-
-            scope.push_constant("name", intent_name.clone());
-            scope.push_constant(
-                "intent",
-                scope
-                    .get_value::<Intent>("INTENT")
-                    .ok_or("Expected Intent data")?,
-            );
-            let _ = context.eval_expression_tree(block);
-        }
-        None => {}
+        scope.push_constant("name", intent_name.clone());
+        scope.push_constant(
+            "intent",
+            scope
+                .get_value::<Intent>("INTENT")
+                .ok_or("Expected Intent data")?,
+        );
+        let _ = context.eval_expression_tree(block);
     }
 
     Ok(Dynamic::UNIT)

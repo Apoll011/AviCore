@@ -120,7 +120,7 @@ impl ContextManager {
         if let Some(ctx_value) = self.load_persistent(scope, key) {
             if !ctx_value.is_expired() {
                 debug!("Found {} in persistent storage for scope {:?}", key, scope);
-                self.save(&scope, &key, &ctx_value);
+                self.save(scope, &key, &ctx_value);
                 return Some(ctx_value.value);
             } else {
                 debug!("Found expired {} in persistent storage, deleting", key);
@@ -158,15 +158,15 @@ impl ContextManager {
 
     fn save_persistent(&self, scope: &ContextScope, key: &str, value: &ContextValue) {
         let scope_path = self.get_scope_path(scope);
-        if !scope_path.exists() {
-            if let Err(e) = fs::create_dir_all(&scope_path) {
-                error!(
-                    "Failed to create scope directory {}: {}",
-                    scope_path.display(),
-                    e
-                );
-                return;
-            }
+        if !scope_path.exists()
+            && let Err(e) = fs::create_dir_all(&scope_path)
+        {
+            error!(
+                "Failed to create scope directory {}: {}",
+                scope_path.display(),
+                e
+            );
+            return;
         }
 
         let file_path = scope_path.join(format!("{}.json", key));

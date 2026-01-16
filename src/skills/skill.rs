@@ -16,6 +16,7 @@ use std::sync::{Arc, RwLock};
 ///
 /// A skill consists of a Rhai module, a runtime environment, and a configuration context.
 #[derive(Clone, DeepSize, DeepSizeTree)]
+#[allow(dead_code)]
 pub struct Skill {
     /// The filesystem path to the skill.
     pathname: Arc<str>,
@@ -173,7 +174,7 @@ impl Skill {
 
                     // Execute the skill
                     if let Ok(ast_guard) = ast_clone.read() {
-                        let _ = engine_clone.run_ast_with_scope(&mut *scope_guard, &*ast_guard);
+                        let _ = engine_clone.run_ast_with_scope(&mut scope_guard, &ast_guard);
                     }
 
                     // Clean up scope
@@ -274,7 +275,7 @@ impl Skill {
 
         Ok(self.engine.call_fn::<T>(
             &mut *self.scope.write().map_err(|e| e.to_string())?,
-            &*ast_guard,
+            &ast_guard,
             function_name,
             args,
         )?)

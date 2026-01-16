@@ -254,5 +254,5 @@ pub fn setting<T: DeserializeOwned>(name: &str) -> Option<T> {
 }
 
 pub fn setting_or<T: DeserializeOwned>(name: &str, default: T) -> T {
-    setting::<T>(name).unwrap_or_else(|| default)
+    setting::<T>(name).unwrap_or(default)
 }

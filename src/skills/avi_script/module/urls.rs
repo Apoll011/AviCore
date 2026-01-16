@@ -118,7 +118,7 @@ pub mod url_module {
     /// Sets the Url query string.
     #[rhai_fn(set = "query", pure)]
     pub fn set_query(url: &mut Url, value: &str) {
-        if value.len() > 0 {
+        if !value.is_empty() {
             url.set_query(Some(value))
         } else {
             url.set_query(None)
@@ -150,7 +150,7 @@ pub mod url_module {
     /// Sets the Url fragment.
     #[rhai_fn(set = "fragment", pure)]
     pub fn set_fragment(url: &mut Url, value: &str) {
-        if value.len() > 0 {
+        if !value.is_empty() {
             url.set_fragment(Some(value))
         } else {
             url.set_fragment(None)
@@ -182,7 +182,7 @@ pub mod url_module {
     /// Sets the Url hash.
     #[rhai_fn(set = "hash", pure)]
     pub fn set_hash(url: &mut Url, value: &str) {
-        if value.len() > 0 {
+        if !value.is_empty() {
             url.set_fragment(Some(value))
         } else {
             url.set_fragment(None)
@@ -241,10 +241,10 @@ pub mod url_module {
         url.query_pairs_mut().clear().extend_pairs(&query);
 
         // cleanup
-        if let Some(q) = url.query() {
-            if q.len() == 0 {
-                url.set_query(None)
-            }
+        if let Some(q) = url.query()
+            && q.is_empty()
+        {
+            url.set_query(None)
         }
     }
 

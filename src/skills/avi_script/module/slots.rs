@@ -25,15 +25,6 @@ pub mod slots_module {
         }
     }
 
-    /// Checks if a slot exists in the current intent
-    ///
-    /// # Arguments
-    /// * `intent` - The intent to check
-    /// * `name` - The name of the slot
-    ///
-    /// # Returns
-    /// True if the slot exists, false otherwise
-
     pub fn exists(intent: Intent, name: ImmutableString) -> bool {
         intent.slots.iter().any(|s| s.slot_name == name)
     }
@@ -46,7 +37,6 @@ pub mod slots_module {
     ///
     /// # Returns
     /// The value of the slot as a Rhai object, or UNIT if the slot is missing
-
     pub fn get(intent: Intent, name: ImmutableString) -> Dynamic {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -64,7 +54,6 @@ pub mod slots_module {
     ///
     /// # Returns
     /// The raw text value of the slot, or UNIT if the slot is missing
-
     pub fn get_raw(intent: Intent, name: ImmutableString) -> Dynamic {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -82,7 +71,6 @@ pub mod slots_module {
     ///
     /// # Returns
     /// The full slot object, or UNIT if the slot is missing
-
     pub fn full(intent: Intent, name: ImmutableString) -> Dynamic {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -101,7 +89,6 @@ pub mod slots_module {
     ///
     /// # Returns
     /// True if the slot value is equal, false otherwise
-
     pub fn assert_equal(intent: Intent, name: ImmutableString, val: Dynamic) -> bool {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -121,7 +108,6 @@ pub mod slots_module {
     ///
     /// # Returns
     /// True if the slot value is in the list or matches the value, false otherwise
-
     pub fn assert_in(intent: Intent, name: ImmutableString, list: Dynamic) -> bool {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {
@@ -146,7 +132,6 @@ pub mod slots_module {
     ///
     /// # Returns
     /// True if the slot's string value is a key in the map, false otherwise
-
     pub fn assert_in_dict(intent: Intent, name: ImmutableString, dict: Dynamic) -> bool {
         let slot = intent.slots.iter().find(|s| s.slot_name == name);
         if let Some(slot) = slot {

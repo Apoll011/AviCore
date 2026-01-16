@@ -56,7 +56,7 @@ pub async fn core_id() -> Option<String> {
         Ok(c) => match c.device.get_core_id().await {
             Ok(v) => Some(v),
             Err(e) => {
-                warn!("Error getting core id: {}", e.to_string());
+                warn!("Error getting core id: {}", e);
                 None
             }
         },
@@ -77,7 +77,7 @@ pub fn generate_documentation(include_internal: bool) -> Result<(), Box<dyn std:
     let docs = export::options()
         .include_standard_packages(include_internal)
         .format_sections_with(export::SectionFormat::Tabs)
-        .export(&*engine)?;
+        .export(&engine)?;
 
     info!("Trying to create dir ./docs");
     let path = "./docs";

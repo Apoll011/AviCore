@@ -14,24 +14,15 @@ use smartcorelib::{
 pub mod ml {
 
     fn array_to_vec_float(arr: &mut Array) -> Vec<FLOAT> {
-        arr.into_iter()
+        arr.iter_mut()
             .map(|el| el.as_float().unwrap())
             .collect::<Vec<FLOAT>>()
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, Default)]
     pub struct Model {
         saved_model: Vec<u8>,
         model_type: String,
-    }
-
-    impl Default for Model {
-        fn default() -> Self {
-            Model {
-                saved_model: vec![],
-                model_type: String::new(),
-            }
-        }
     }
 
     /// Trains a [`smartcore`](https://smartcorelib.org/) machine learning model. The model can then

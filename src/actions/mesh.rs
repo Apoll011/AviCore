@@ -95,7 +95,7 @@ impl Action for MeshAction {
         self.device.on_peer_connected(on_peer_connected).await;
         self.device.on_peer_disconnected(on_peer_disconnected).await;
 
-        let _ = subscribe!("user/update", async: move |_from, _topic, _data| async move {
+        subscribe!("user/update", async: move |_from, _topic, _data| async move {
             tokio::task::block_in_place(|| {
                 tokio::runtime::Handle::current().block_on(match runtime() {
                     Ok(c) => c.user.load_from_device(),

@@ -46,6 +46,6 @@ pub mod skill_module {
     /// # Returns
     /// True if the skill is disabled, false otherwise
     pub fn is_disabled(ctx: NativeCallContext) -> bool {
-        skill_context_def(ctx, |v| v.info.disabled.clone())
+        skill_context_def(ctx, |v| v.info.disabled)
     }
 }

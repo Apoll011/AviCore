@@ -70,7 +70,7 @@ impl SkillManager {
 
     pub fn reload(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         info!("Reloading skills.");
-        for (_name, skill) in &mut self.skills {
+        for skill in &mut self.skills.values_mut() {
             skill.reload()?;
         }
         Ok(())
@@ -157,6 +157,7 @@ impl SkillManager {
         }
     }
 
+    #[allow(dead_code)]
     pub fn run_skill_function<T: Variant + Clone>(
         &mut self,
         skill_name: &str,

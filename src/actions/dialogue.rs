@@ -48,7 +48,7 @@ impl DialogueAction {
     async fn register_speaker(&mut self) {
         let device_id = self.device.get_id().await;
         trace!("Registering speaker for device {}", device_id);
-        let _ = subscribe!(
+        subscribe!(
             &format!("speak/{}/text", device_id),
             move |_from, _topic, data| {
                 let msg = String::from_utf8_lossy(&data);
@@ -62,7 +62,7 @@ impl DialogueAction {
     async fn register_listener(&mut self) {
         let device_id = self.device.get_id().await;
         trace!("Registering listener for device {}", device_id);
-        let _ = subscribe!(
+        subscribe!(
             &format!("listening/{}/start", device_id),
             |_from, _topic, _data| {
                 info!("Listening started on device");

@@ -484,19 +484,13 @@ pub fn user_name() -> String {
 
 pub fn get_user() -> Option<User> {
     match get_ctx!("user") {
-        Some(user) => match serde_json::from_value::<User>(user) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        },
+        Some(user) => serde_json::from_value::<User>(user).ok(),
         None => None,
     }
 }
 pub async fn get_user_from_mesh() -> Option<User> {
     match get_ctx!(device, "avi.user") {
-        Some(user) => match serde_json::from_value::<User>(user) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        },
+        Some(user) => serde_json::from_value::<User>(user).ok(),
         None => None,
     }
 }

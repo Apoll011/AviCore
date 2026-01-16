@@ -1,7 +1,7 @@
 use crate::skills::avi_script::helpers::get_skill_name;
 use log::{debug, error, info, trace, warn};
-use rhai::NativeCallContext;
 use rhai::plugin::*;
+use rhai::NativeCallContext;
 
 #[export_module]
 pub mod log_module {
@@ -15,7 +15,12 @@ pub mod log_module {
     pub fn info(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => info!("Skill {} - {}", v, text),
-            Err(_) => (),
+            Err(_) => {
+                warn!(
+                    "Skill - Could not get skill name, logging as info: {}",
+                    text
+                )
+            }
         };
     }
 
@@ -29,7 +34,10 @@ pub mod log_module {
     pub fn trace(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => trace!("Skill {} - {}", v, text),
-            Err(_) => (),
+            Err(_) => warn!(
+                "Skill - Could not get skill name, logging as trace: {}",
+                text
+            ),
         };
     }
 
@@ -43,7 +51,10 @@ pub mod log_module {
     pub fn debug(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => debug!("Skill {} - {}", v, text),
-            Err(_) => (),
+            Err(_) => warn!(
+                "Skill - Could not get skill name, logging as debug: {}",
+                text
+            ),
         };
     }
 
@@ -57,7 +68,10 @@ pub mod log_module {
     pub fn warn(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => warn!("Skill {} - {}", v, text),
-            Err(_) => (),
+            Err(_) => warn!(
+                "Skill - Could not get skill name, logging as warn: {}",
+                text
+            ),
         };
     }
 
@@ -71,7 +85,10 @@ pub mod log_module {
     pub fn error(ctx: NativeCallContext, text: ImmutableString) {
         match get_skill_name(&ctx) {
             Ok(v) => error!("Skill {} - {}", v, text),
-            Err(_) => (),
+            Err(_) => warn!(
+                "Skill - Could not get skill name, logging as info: error: {}",
+                text
+            ),
         };
     }
 }

@@ -36,7 +36,7 @@ pub mod user_module {
     /// # Returns
     /// A map with 'city' and 'country' fields, or () if not set
     pub fn location() -> Option<Location> {
-        Some(runtime().ok()?.user.get_location()?)
+        runtime().ok()?.user.get_location()
     }
 
     /// Gets the user's quiet hours
@@ -44,7 +44,7 @@ pub mod user_module {
     /// # Returns
     /// A map with 'start' and 'end' fields, or () if not set
     pub fn quiet_hours() -> Option<QuietHours> {
-        Some(runtime().ok()?.user.get_quiet_hours()?)
+        runtime().ok()?.user.get_quiet_hours()
     }
 
     /// Gets the user's birthday as a Unix timestamp
@@ -52,7 +52,7 @@ pub mod user_module {
     /// # Returns
     /// The birthday timestamp
     pub fn birthday() -> Option<DateTime<Utc>> {
-        Some(runtime().ok()?.user.get_birthday()?)
+        runtime().ok()?.user.get_birthday()
     }
 
     /// Gets the user's voice profile ID
