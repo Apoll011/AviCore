@@ -3,7 +3,7 @@ use crate::dialogue::reply::{RequestReply, ValidatorErasure};
 use crate::dialogue::response::{
     AnyValidator, BoolValidator, ListOrNoneValidator, MappedValidator, OptionalValidator,
 };
-use crate::dialogue::utils::{listen, speak};
+use crate::dialogue::utils::speak;
 use crate::skills::avi_script::helpers::get_skill_context;
 use crate::user::user_name;
 use crate::{get_ctx, rt_spawn, speak};
@@ -21,39 +21,17 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// An AnyValidator object
-
     pub fn any_validator() -> AnyValidator {
         AnyValidator::new()
     }
-
-    /// Creates a validator that accepts a list of items or nothing
-    ///
-    /// # Arguments
-    /// * `allowed_values` - A list of accepted string values
-    ///
-    /// # Returns
-    /// A ListOrNoneValidator object
 
     pub fn list_or_none_validator(allowed_values: Vec<String>) -> ListOrNoneValidator {
         ListOrNoneValidator::new(allowed_values)
     }
 
-    /// Creates a validator that makes another validator optional
-    ///
-    /// # Returns
-    /// An OptionalValidator object
-
     pub fn optional_validator() -> OptionalValidator {
         OptionalValidator::new()
     }
-
-    /// Creates a validator that accepts boolean input (yes/no)
-    ///
-    /// # Arguments
-    /// * `fuzzy` - Whether to use fuzzy matching
-    ///
-    /// # Returns
-    /// A BoolValidator object
 
     pub fn bool_validator(fuzzy: bool) -> BoolValidator {
         BoolValidator::new(fuzzy)
@@ -81,36 +59,17 @@ pub mod dialogue_module {
     ///
     /// # Returns
     /// Nothing
-
     pub fn say(text: ImmutableString) {
         speak(&text, true);
     }
-
-    /// Speaks a given text only once
-    ///
-    /// # Arguments
-    /// * `text` - The text to speak
-    ///
-    /// # Returns
-    /// Nothing
 
     pub fn say_once(text: ImmutableString) {
         speak!(&text);
     }
 
-    /// Makes the device start listening for voice input
-    ///
-    /// # Returns
-    /// Nothing
-
     pub fn listen() {
         listen();
     }
-
-    /// Repeats the last thing spoken or heard
-    ///
-    /// # Returns
-    /// Nothing
 
     pub fn repeat() {
         if let Some(v) = get_ctx!("utterance.last") {

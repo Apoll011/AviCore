@@ -101,18 +101,9 @@ pub mod fs_module {
     ///
     /// # Returns
     /// True if the path exists, false otherwise
-
     pub fn exists(path: ImmutableString) -> bool {
         Path::new(path.as_str()).exists()
     }
-
-    /// Deletes a file or an empty directory
-    ///
-    /// # Arguments
-    /// * `path` - The path to delete
-    ///
-    /// # Returns
-    /// True if the deletion was successful, false otherwise
 
     pub fn delete(path: ImmutableString) -> bool {
         let path = Path::new(path.as_str());
@@ -131,7 +122,6 @@ pub mod fs_module {
     ///
     /// # Returns
     /// True if the copy was successful, false otherwise
-
     pub fn copy(src: ImmutableString, dest: ImmutableString) -> bool {
         fs::copy(src.as_str(), dest.as_str()).is_ok()
     }

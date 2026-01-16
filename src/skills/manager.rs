@@ -24,7 +24,6 @@ impl SkillManager {
             Ok(_) => (),
             Err(e) => {
                 warn!("Failed to initialize avi_library: {}", e);
-                ()
             }
         }
         info!("Creating skills manager.");
