@@ -332,120 +332,193 @@ macro_rules! register_action {
         }
     }};
 }
-
 #[macro_export]
 macro_rules! watch_dir {
     ($path:expr, $duration:expr, async: |$event:ident| $action:block) => {{
-        use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+        use notify_debouncer_full::{
+            new_debouncer,
+            notify::{RecursiveMode, EventKind, event::{AccessKind, ModifyKind}},
+        };
         use std::sync::mpsc::channel;
         use tokio::runtime::Handle;
 
-        let path = $path.to_string();
+        let path_str = $path.to_string();
         let handle = Handle::current();
 
-        ::log::info!("Starting directory watcher for: {}", path);
-        std::thread::spawn(move || {
-            let (tx, rx) = channel();
-            let mut debouncer = match new_debouncer($duration, tx) {
-                Ok(d) => d,
-                Err(e) => {
-                    ::log::error!("Failed to create debouncer for {}: {}", path, e);
+        ::log::info!("Starting precision watcher for: {}", path_str);
+
+        std::thread::Builder::new()
+            .name(format!("watcher-{}", path_str))
+            .spawn(move || {
+                let (tx, rx) = channel();
+
+                let mut debouncer = match new_debouncer($duration, None, tx) {
+                    Ok(d) => d,
+                    Err(e) => {
+                        ::log::error!("Failed to init debouncer for {}: {}", path_str, e);
+                        return;
+                    }
+                };
+
+                if let Err(e) = debouncer.watch(std::path::Path::new(&path_str), RecursiveMode::Recursive) {
+                    ::log::error!("Failed to watch path {}: {}", path_str, e);
                     return;
                 }
-            };
 
-            if let Err(e) = debouncer.watcher().watch(std::path::Path::new(&path), RecursiveMode::Recursive) {
-                ::log::error!("Failed to watch path {}: {}", path, e);
-                return;
-            }
+                for result in rx {
+                    match result {
+                        Ok(events) => {
+                            for debounced_event in events {
+                                let event = debounced_event.event;
 
-            ::log::debug!("Watcher active for {}", path);
+                                match event.kind {
+                                    EventKind::Access(_) => continue,
+                                    EventKind::Modify(ModifyKind::Metadata(_)) => continue,
+                                    EventKind::Other => continue,
+                                    _ => {}
+                                }
 
-            for result in rx {
-                match result {
-                    Ok(events) => {
-                        for $event in events {
-                            ::log::trace!("File event in {}: {:?}", path, $event);
-                            handle.spawn(async move {
-                                $action
-                            });
-                        }
-                    },
-                    Err(e) => ::log::warn!("Watcher error in {}: {:?}", path, e),
+                                let is_noise = event.paths.iter().any(|p| {
+                                    if let Some(name) = p.file_name() {
+                                        let s = name.to_string_lossy();
+                                        s.starts_with('.') || s.ends_with('~')
+                                    } else {
+                                        false
+                                    }
+                                });
+
+                                if is_noise { continue; }
+
+                                let $event = event;
+                                handle.spawn(async move {
+                                    $action
+                                });
+                            }
+                        },
+                        Err(e) => ::log::warn!("Watch error in {}: {:?}", path_str, e),
+                    }
                 }
-            }
-        });
+            })
+            .expect("Failed to spawn watcher thread");
     }};
-    ($path:expr, $duration:expr, captures: [$($cap:ident),*], async: |$event:ident| $action:block) => {
-        use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+
+    ($path:expr, $duration:expr, captures: [$($cap:ident),*], async: |$event:ident| $action:block) => {{
+        use notify_debouncer_full::{
+            new_debouncer,
+            notify::{RecursiveMode, EventKind, event::{AccessKind, ModifyKind}},
+        };
         use std::sync::mpsc::channel;
         use tokio::runtime::Handle;
 
-        let path = $path.to_string();
+        let path_str = $path.to_string();
         let handle = Handle::current();
 
         $(let $cap = $cap.clone();)*
 
-        ::log::info!("Watching directory: {}", path);
-        std::thread::spawn(move || {
-            let (tx, rx) = channel();
+        ::log::info!("Starting capturing watcher for: {}", path_str);
 
-            let mut debouncer = match new_debouncer($duration, tx) {
-                Ok(d) => d,
-                Err(e) => {
-                    ::log::error!("Failed to create debouncer for {}: {}", path, e);
+        std::thread::Builder::new()
+            .name(format!("watcher-{}", path_str))
+            .spawn(move || {
+                let (tx, rx) = channel();
+                let mut debouncer = match new_debouncer($duration, None, tx) {
+                    Ok(d) => d,
+                    Err(e) => {
+                        ::log::error!("Failed to init debouncer: {}", e);
+                        return;
+                    }
+                };
+
+                if let Err(e) = debouncer.watch(std::path::Path::new(&path_str), RecursiveMode::Recursive) {
+                    ::log::error!("Failed to watch path {}: {}", path_str, e);
                     return;
                 }
-            };
 
-            if let Err(e) = debouncer.watcher().watch(std::path::Path::new(&path), RecursiveMode::Recursive) {
-                ::log::error!("Failed to watch path {}: {}", path, e);
-                return;
-            }
+                for result in rx {
+                    match result {
+                        Ok(events) => {
+                            for debounced_event in events {
+                                let event = debounced_event.event;
 
-            for result in rx {
-                if let Ok(events) = result {
-                    for $event in events {
-                        $(let $cap = $cap.clone();)*
+                                match event.kind {
+                                    EventKind::Access(_) => continue,
+                                    EventKind::Modify(ModifyKind::Metadata(_)) => continue,
+                                    EventKind::Other => continue,
+                                    _ => {}
+                                }
 
-                        handle.spawn(async move {
-                            $action
-                        });
+                                let is_noise = event.paths.iter().any(|p| {
+                                    if let Some(name) = p.file_name() {
+                                        let s = name.to_string_lossy();
+                                        s.starts_with('.') || s.ends_with('~')
+                                    } else {
+                                        false
+                                    }
+                                });
+                                if is_noise { continue; }
+
+                                $(let $cap = $cap.clone();)*
+
+                                let $event = event;
+                                handle.spawn(async move {
+                                    $action
+                                });
+                            }
+                        },
+                        Err(e) => ::log::warn!("Watch error: {:?}", e),
                     }
                 }
-            }
-        });
-    };
-    ($path:expr, $duration:expr, $callback:expr) => {
-        use notify_debouncer_mini::{new_debouncer, notify::{RecursiveMode}};
-        use std::sync::mpsc::channel;
-        use std::path::Path;
+            })
+            .expect("Failed to spawn watcher thread");
+    }};
 
-        let (tx, rx) = channel();
-
-        let mut debouncer = match new_debouncer($duration, tx) {
-            Ok(d) => d,
-            Err(e) => {
-                ::log::error!("Failed to create debouncer for {}: {}", path, e);
-                return;
-            }
+    ($path:expr, $duration:expr, $callback:expr) => {{
+        use notify_debouncer_full::{
+            new_debouncer,
+            notify::{RecursiveMode, EventKind, event::{AccessKind, ModifyKind}},
         };
+        use std::sync::mpsc::channel;
 
-        if let Err(e) = debouncer.watcher().watch(std::path::Path::new(&path), RecursiveMode::Recursive) {
-            ::log::error!("Failed to watch path {}: {}", path, e);
-            return;
-        }
+        let path_str = $path.to_string();
+        ::log::info!("Starting sync watcher for: {}", path_str);
 
-        ::log::info!("Watching directory: {}", path);
-        for result in rx {
-            match result {
-                Ok(events) => {
-                    for event in events {
-                        $callback(event);
+        std::thread::Builder::new()
+            .name(format!("watcher-{}", path_str))
+            .spawn(move || {
+                let (tx, rx) = channel();
+                let mut debouncer = match new_debouncer($duration, None, tx) {
+                    Ok(d) => d,
+                    Err(e) => {
+                        ::log::error!("Failed to init debouncer: {}", e);
+                        return;
+                    }
+                };
+
+                if let Err(e) = debouncer.watch(std::path::Path::new(&path_str), RecursiveMode::Recursive) {
+                    ::log::error!("Failed to watch path {}: {}", path_str, e);
+                    return;
+                }
+
+                for result in rx {
+                    match result {
+                        Ok(events) => {
+                            for debounced_event in events {
+                                let event = debounced_event.event;
+
+                                match event.kind {
+                                    EventKind::Access(_) => continue,
+                                    EventKind::Modify(ModifyKind::Metadata(_)) => continue,
+                                    EventKind::Other => continue,
+                                    _ => {}
+                                }
+
+                                $callback(event);
+                            }
+                        },
+                        Err(e) => ::log::warn!("Watch error: {:?}", e),
                     }
                 }
-                Err(e) => ::log::warn!("Watch error: {:?}", e),
-            }
-        }
-    };
+            })
+            .expect("Failed to spawn watcher thread");
+    }};
 }

@@ -7,6 +7,8 @@ import "fs";
 use "test";
 import "log";
 
+
+
 on_start {
     log::info("ddd");
 }

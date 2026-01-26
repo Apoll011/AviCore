@@ -139,18 +139,24 @@ impl Action for IntentAction {
         if self.config.watch_skill_dir {
             let time = self.config.watch_dir_debounce_time;
             watch_dir!("./config/skills", Duration::from_secs(time), captures: [skill_manager], async: |event| {
-                if event.path.is_dir() {
-                    return
-                }
 
-                match event.path.extension() {
-                    Some(extension) => {if !extension.eq("avi") { return }}
-                    None => return
-                }
+                for path in &event.paths {
+                    if path.is_dir() {
+                        continue; // or handle directory logic
+                    }
 
-                let mut lock = skill_manager.lock().await;
-                let _ = lock.reload();
-                info!("Reloaded skills due to change in: {:?}", event.path);
+                    if let Some(extension) = path.extension() {
+                        if extension.to_string_lossy() != "avi" {
+                            return;
+                        }
+                    } else {
+                        return;
+                    }
+
+                    let mut lock = skill_manager.lock().await;
+                    let _ = lock.reload();
+                    info!("Reloaded skills due to change in: {:?}", path);
+                }
             });
         }
     }
