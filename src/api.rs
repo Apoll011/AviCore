@@ -43,7 +43,7 @@ pub async fn send_dict_to_server(
     client: &Client,
     url: &str,
     args: HashMap<String, String>,
-) -> Result<Response, Box<dyn std::error::Error>> {
+) -> Result<Option<Value>, Box<dyn std::error::Error>> {
     send(client, url, args, Method::GET).await
 }
 
@@ -66,7 +66,7 @@ pub async fn send(
     url: &str,
     args: HashMap<String, String>,
     method: Method,
-) -> Result<Response, Box<dyn std::error::Error>> {
+) -> Result<Option<Value>, Box<dyn std::error::Error>> {
     trace!("Sending request to server: {} with args: {:?}", url, args);
 
     let resp = match get_builder(client, url, method).query(&args).send().await {
@@ -91,9 +91,8 @@ pub async fn send(
     };
 
     debug!("Received response from {}: {:?}", url, json);
-    let response = Response::new(json);
 
-    Ok(response)
+    Ok(Some(json))
 }
 
 /// Represents the status and basic information of the server.
@@ -105,7 +104,7 @@ pub struct Alive {
     /// The version of the server software.
     pub version: String,
     /// A list of languages currently installed on the server.
-    pub installed_lang: Vec<String>,
+    pub installed_lang: bool,
 }
 
 /// A client for interacting with the Avi server API.
@@ -143,7 +142,7 @@ impl Api {
         trace!("Checking server alive status");
         let r =
             send_dict_to_server(&self.client, &self.get_url("/avi/alive")?, HashMap::new()).await?;
-        let response = r.response;
+        let response = r;
         match response {
             Some(v) => {
                 debug!("Server alive response: {:?}", v);
@@ -160,13 +159,11 @@ impl Api {
                         .unwrap_or("0.0")
                         .to_string(),
                     installed_lang: v
-                        .get("lang")
+                        .get("intent_kit")
                         .ok_or("Expected a list of installed lang's")?
-                        .as_array()
-                        .ok_or("Error converting list into array")?
-                        .iter()
-                        .map(|x| x.clone().to_string())
-                        .collect(),
+                        .as_bool()
+                        .ok_or("Expected boolean")
+                        .unwrap_or(false),
                 })
             }
             None => {
@@ -192,7 +189,7 @@ impl Api {
         query.insert("text".to_string(), text.to_string());
         let r =
             send_dict_to_server(&self.client, &self.get_url("/intent_recognition")?, query).await?;
-        let response = r.response;
+        let response = r;
 
         match response {
             Some(v) => {
@@ -221,7 +218,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(r.response.unwrap_or(serde_json::Value::Null))
+        Ok(r.unwrap_or(serde_json::Value::Null))
     }
 
     #[allow(dead_code)]
@@ -243,9 +240,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -267,9 +262,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -287,9 +280,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -307,9 +298,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -325,9 +314,7 @@ impl Api {
         query.insert("remove_articles".to_string(), remove_articles.to_string());
         let r = send_dict_to_server(&self.client, &self.get_url("/lang/parse/normalize")?, query)
             .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -347,9 +334,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -369,9 +354,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -395,9 +378,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -417,9 +398,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -439,9 +418,7 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 
     #[allow(dead_code)]
@@ -461,8 +438,6 @@ impl Api {
             query,
         )
         .await?;
-        Ok(serde_json::from_value(
-            r.response.ok_or("No response from server")?,
-        )?)
+        Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
     }
 }

@@ -5,10 +5,10 @@ import "user";
 import "locale";
 import "fs";
 use "test";
+import "log";
 
 on_start {
-    print("ddd");
-    print(fs::read("./avi.log"));
+    log::info("ddd");
 }
 
 fn hi(response) {

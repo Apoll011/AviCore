@@ -292,7 +292,10 @@ macro_rules! rt_spawn {
 
 #[macro_export]
 macro_rules! register_action {
-    ($action_type:ty, { $($field:ident: $value:expr),* $(,)? }) => {{
+    ($action_type:ty, $pd:expr, { $($field:ident: $value:expr),* $(,)? }) => {{
+        let _ = $pd.set_message(
+            format!("Loading Action: {}", stringify!($action_type))
+        );
         ::log::info!("Registering action: {}", stringify!($action_type));
         type Config = <$action_type as $crate::actions::action::Action>::Config;
         match <$action_type>::new(Config {
@@ -309,21 +312,21 @@ macro_rules! register_action {
         }
     }};
 
-    ($action_type:ty, if: $condition:expr, { $($field:ident: $value:expr),* $(,)? }) => {{
+    ($action_type:ty, $pd:ident, if: $condition:expr, { $($field:ident: $value:expr),* $(,)? }) => {{
         if $condition {
-            register_action!($action_type, { $($field: $value),* });
+            register_action!($action_type, $pd, { $($field: $value),* });
         } else {
             ::log::info!("Ignoring action: {}", stringify!($action_type));
         }
     }};
 
-    ($action_type:ty) => {{
-        register_action!($action_type, {})
+    ($action_type:ty, $pd:ident ) => {{
+        register_action!($action_type, $pd, {})
     }};
 
-    ($action_type:ty, if: $condition:expr) => {{
+    ($action_type:ty, $pd:ident, if: $condition:expr) => {{
         if $condition {
-            register_action!($action_type, {});
+            register_action!($action_type, $pd, {});
         } else {
             ::log::info!("Ignoring action: {}", stringify!($action_type));
         }
