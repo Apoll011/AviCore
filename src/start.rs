@@ -37,10 +37,10 @@ pub async fn start_avi(
 
     device.start_event_loop();
 
-    ui::step(4, 7, "Initializing Runtime");
+    ui::step(4, 8, "Initializing Runtime");
     create_runtime(&config_path, device);
 
-    ui::step(5, 7, "Initializing Actions");
+    ui::step(5, 8, "Initializing Actions");
 
     let pb = indicatif::ProgressBar::new_spinner();
     pb.set_style(ui::spinner_style());
@@ -60,7 +60,7 @@ pub async fn start_avi(
 
     pb.finish_with_message("Actions Loaded...");
 
-    ui::step(6, 7, "Setting the config directory watcher");
+    ui::step(6, 8, "Setting the config directory watcher");
     watch_dir!(&format!("{}/config", config_path), Duration::from_secs(1), async: |_event| {
         match runtime() {
             Ok(v) => {
@@ -71,9 +71,10 @@ pub async fn start_avi(
         }
     });
 
-    ui::step(7, 7, "Creating context clenup task");
+    ui::step(7, 8, "Creating context clenup task");
     context_cleanup_task();
 
+    ui::step(8, 8, "Started AVI");
     tokio::signal::ctrl_c().await?;
     println!("Shutting down...");
 
