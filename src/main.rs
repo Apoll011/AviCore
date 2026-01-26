@@ -20,6 +20,7 @@ use crate::utils::{generate_documentation, generate_dsl_definition};
 use ::log::info;
 use clap::{Parser, Subcommand, ValueEnum};
 
+use avi_nlu_client::*;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Parser, Debug)]

@@ -28,6 +28,7 @@ smartcorelib = { version = ">=0.3.0", package = "smartcore", features = ["serde"
 bincode = "1.3.3"
 memory_size = { git = "https://github.com/apoll011/memory_size", package = "memory_size" }
 memory_size_derive = { git = "https://github.com/apoll011/memory_size", package = "memory_size_derive" }
+avi_nlu_client = { git = "https://github.com/apoll011/avi-nlu-client", package = "avi-nlu-client"}
 
 [dev-dependencies]
 async-trait = "0.1.89"
