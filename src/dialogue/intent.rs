@@ -1,12 +1,11 @@
 use crate::skills::avi_script::helpers::json_to_dynamic;
+use avi_nlu_client::*;
 use rhai::CustomType;
 use rhai::Dynamic;
 use rhai::EvalAltResult;
 use rhai::Position;
 use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
-use serde_json;
-
 /// Represents a recognized intent from a natural language input.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
 pub struct Intent {
@@ -20,30 +19,11 @@ pub struct Intent {
 
 /// Detailed information about a recognized intent.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
-pub struct IntentInfo {
-    /// The name of the intent.
-    #[serde(rename = "intentName")]
-    pub intent_name: Option<String>,
-    /// The confidence score of the intent recognition.
-    pub probability: f64,
-}
+pub struct IntentInfo(pub models::Intent);
 
 /// Represents an extracted entity (slot) from the input text.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
-pub struct Slot {
-    /// The raw text value of the slot as it appeared in the input.
-    #[serde(rename = "rawValue")]
-    pub raw_value: String,
-    /// The processed value of the slot.
-    pub value: SlotValue,
-    /// The type of entity recognized (e.g., "time", "location").
-    pub entity: String,
-    /// The name of the slot as defined in the intent model.
-    #[serde(rename = "slotName")]
-    pub slot_name: String,
-    /// The range within the original input text where the slot was found.
-    pub range: SlotRange,
-}
+pub struct Slot(pub models::Slot);
 
 impl From<SlotValue> for Dynamic {
     fn from(val: SlotValue) -> Self {
@@ -53,24 +33,8 @@ impl From<SlotValue> for Dynamic {
 
 /// The processed value of a slot.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
-pub struct SlotValue {
-    /// The kind of value (e.g., "Custom" or a built-in type like "Instant").
-    pub kind: String,
-    /// The actual resolved value of the slot.
-    pub value: serde_json::Value,
-    /// The grain of the value (optional, e.g., for time values).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub grain: Option<String>,
-    /// The precision of the value (optional).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub precision: Option<String>,
-}
+pub struct SlotValue(pub models::SlotValue);
 
 /// The range of characters in the original input string.
 #[derive(Debug, Serialize, Deserialize, Clone, CustomType)]
-pub struct SlotRange {
-    /// The starting character index (inclusive).
-    pub start: usize,
-    /// The ending character index (exclusive).
-    pub end: usize,
-}
+pub struct SlotRange(pub models::Range);

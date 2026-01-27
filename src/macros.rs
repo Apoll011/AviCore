@@ -337,7 +337,7 @@ macro_rules! watch_dir {
     ($path:expr, $duration:expr, async: |$event:ident| $action:block) => {{
         use notify_debouncer_full::{
             new_debouncer,
-            notify::{RecursiveMode, EventKind, event::{AccessKind, ModifyKind}},
+            notify::{RecursiveMode, EventKind, event::{ModifyKind}},
         };
         use std::sync::mpsc::channel;
         use tokio::runtime::Handle;
@@ -405,7 +405,7 @@ macro_rules! watch_dir {
     ($path:expr, $duration:expr, captures: [$($cap:ident),*], async: |$event:ident| $action:block) => {{
         use notify_debouncer_full::{
             new_debouncer,
-            notify::{RecursiveMode, EventKind, event::{AccessKind, ModifyKind}},
+            notify::{RecursiveMode, EventKind, event::{ModifyKind}},
         };
         use std::sync::mpsc::channel;
         use tokio::runtime::Handle;

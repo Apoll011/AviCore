@@ -1,134 +1,29 @@
 use crate::config::setting;
-use crate::dialogue::intent::Intent;
-use crate::dialogue::lang_parse::{
-    ExtractDatetime, ExtractDuration, ExtractNumber, ExtractNumbers, IsFractional,
-};
-use log::{debug, error, trace};
-use reqwest::{Client, Method, RequestBuilder};
-use serde_json::Value;
-use std::collections::HashMap;
+use avi_nlu_client::apis::configuration::Configuration;
+use avi_nlu_client::apis::*;
+use avi_nlu_client::models::{Alive, EngineTrain, EngineTrainType, RecognizedInput};
+use log::trace;
 
-/// Represents a structured response from the Avi server.
-#[derive(Debug)]
-pub struct Response {
-    /// The extracted "response" field from the server's JSON payload.
-    pub response: Option<Value>,
+fn box_err<E: std::fmt::Display>(e: E) -> Box<dyn std::error::Error> {
+    Box::new(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        e.to_string(),
+    ))
 }
-
-impl Response {
-    /// Creates a new `Response` instance by extracting the "response" field from the provided JSON value.
-    ///
-    /// # Arguments
-    ///
-    /// * `response` - The raw JSON `Value` received from the server.
-    pub fn new(response: Value) -> Self {
-        Self {
-            response: response.get("response").cloned(),
-        }
-    }
-}
-
-/// Sends a GET request to the specified server URL with the provided arguments.
-///
-/// # Arguments
-///
-/// * `client` - The reqwest Client.
-/// * `url` - The full target URL for the API request.
-/// * `args` - A map of query parameters to be included in the request.
-///
-/// # Errors
-///
-/// Returns an error if the network request fails or if the response body cannot be parsed as JSON.
-pub async fn send_dict_to_server(
-    client: &Client,
-    url: &str,
-    args: HashMap<String, String>,
-) -> Result<Option<Value>, Box<dyn std::error::Error>> {
-    send(client, url, args, Method::GET).await
-}
-
-fn get_builder(client: &Client, url: &str, t: Method) -> RequestBuilder {
-    match t {
-        Method::GET => client.get(url),
-        Method::POST => client.post(url),
-        Method::PUT => client.put(url),
-        Method::PATCH => client.patch(url),
-        Method::DELETE => client.delete(url),
-        Method::HEAD => client.head(url),
-        _ => {
-            error!("Method {} Not supported!", t);
-            client.post(url)
-        }
-    }
-}
-pub async fn send(
-    client: &Client,
-    url: &str,
-    args: HashMap<String, String>,
-    method: Method,
-) -> Result<Option<Value>, Box<dyn std::error::Error>> {
-    trace!("Sending request to server: {} with args: {:?}", url, args);
-
-    let resp = match get_builder(client, url, method).query(&args).send().await {
-        Ok(r) => r,
-        Err(e) => {
-            error!("Failed to send request to {}: {}", url, e);
-            return Err(e.into());
-        }
-    };
-
-    let status = resp.status();
-    if !status.is_success() {
-        error!("Server returned error status for {}: {}", url, status);
-    }
-
-    let json: Value = match resp.json().await {
-        Ok(j) => j,
-        Err(e) => {
-            error!("Failed to parse JSON response from {}: {}", url, e);
-            return Err(e.into());
-        }
-    };
-
-    debug!("Received response from {}: {:?}", url, json);
-
-    Ok(Some(json))
-}
-
-/// Represents the status and basic information of the server.
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct Alive {
-    /// Indicates if the server is currently online.
-    pub alive: bool,
-    /// The version of the server software.
-    pub version: String,
-    /// A list of languages currently installed on the server.
-    pub installed_lang: bool,
-}
-
 /// A client for interacting with the Avi server API.
 pub struct Api {
-    client: Client,
+    config: Configuration,
 }
 
 impl Api {
     /// Creates a new instance of the `Api` client.
     pub fn new() -> Self {
+        let url = setting::<String>("api_url").unwrap_or("http://0.0.0.0:1178".to_string());
         Self {
-            client: Client::new(),
-        }
-    }
-
-    /// Constructs a full URL for a given API path using the runtime's base API URL.
-    ///
-    /// # Arguments
-    ///
-    /// * `path` - The specific API endpoint path (e.g., "/avi/alive").
-    fn get_url(&self, path: &str) -> Result<String, String> {
-        match setting::<String>("api_url") {
-            Some(path_api) => Ok(format!("{}{}", path_api, path)),
-            None => Err("api_url Not defined".to_string()),
+            config: Configuration {
+                base_path: url,
+                ..Default::default()
+            },
         }
     }
 
@@ -140,37 +35,9 @@ impl Api {
     #[allow(dead_code)]
     pub async fn alive(&self) -> Result<Alive, Box<dyn std::error::Error>> {
         trace!("Checking server alive status");
-        let r =
-            send_dict_to_server(&self.client, &self.get_url("/avi/alive")?, HashMap::new()).await?;
-        let response = r;
-        match response {
-            Some(v) => {
-                debug!("Server alive response: {:?}", v);
-                Ok(Alive {
-                    alive: v
-                        .get("on")
-                        .ok_or("Expected a boolean")?
-                        .as_bool()
-                        .unwrap_or(false),
-                    version: v
-                        .get("version")
-                        .ok_or("Expected a version string")?
-                        .as_str()
-                        .unwrap_or("0.0")
-                        .to_string(),
-                    installed_lang: v
-                        .get("intent_kit")
-                        .ok_or("Expected a list of installed lang's")?
-                        .as_bool()
-                        .ok_or("Expected boolean")
-                        .unwrap_or(false),
-                })
-            }
-            None => {
-                error!("No response from server for /avi/alive");
-                Err("No response from server".into())
-            }
-        }
+        default_api::check_if_alive_avi_alive_get(&self.config)
+            .await
+            .map_err(box_err)
     }
 
     /// Sends a text message to the server for intent recognition.
@@ -183,44 +50,26 @@ impl Api {
     ///
     /// Returns an error if the server is unreachable or the intent cannot be parsed.
     ///
-    pub async fn intent(&self, text: &str) -> Result<Intent, Box<dyn std::error::Error>> {
+    pub async fn intent(&self, text: &str) -> Result<RecognizedInput, Box<dyn std::error::Error>> {
         trace!("Requesting intent recognition for: {}", text);
-        let mut query = HashMap::new();
-        query.insert("text".to_string(), text.to_string());
-        let r =
-            send_dict_to_server(&self.client, &self.get_url("/intent_recognition")?, query).await?;
-        let response = r;
-
-        match response {
-            Some(v) => {
-                debug!("Intent recognition response: {:?}", v);
-                Ok(serde_json::from_value(v)?)
-            }
-            None => {
-                error!("No response from server for /intent_recognition");
-                Err("No response from server".into())
-            }
-        }
+        intent_api::recognize_intent_from_sentence_intent_recognition_get(&self.config, text)
+            .await
+            .map_err(box_err)
     }
 
     #[allow(dead_code)]
     pub async fn train_intent_engine(
         &self,
-        train_type: &str,
-        lang: &str,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        let mut query = HashMap::new();
-        query.insert("type".to_string(), train_type.to_string());
-        query.insert("lang".to_string(), lang.to_string());
-        let r = send_dict_to_server(
-            &self.client,
-            &self.get_url("/intent_recognition/engine")?,
-            query,
+        train_type: EngineTrainType,
+    ) -> Result<EngineTrain, Box<dyn std::error::Error>> {
+        intent_api::train_or_reuse_the_intent_recognition_engine_intent_recognition_engine_post(
+            &self.config,
+            Some(train_type),
         )
-        .await?;
-        Ok(r.unwrap_or(serde_json::Value::Null))
+        .await
+        .map_err(box_err)
     }
-
+    /*
     #[allow(dead_code)]
     pub async fn extract_numbers(
         &self,
@@ -439,5 +288,5 @@ impl Api {
         )
         .await?;
         Ok(serde_json::from_value(r.ok_or("No response from server")?)?)
-    }
+    }*/
 }

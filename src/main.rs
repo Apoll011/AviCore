@@ -24,7 +24,6 @@ use ::log::{error, info};
 use clap::Parser;
 use std::time::Duration;
 
-use avi_nlu_client::*;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tokio::main]
