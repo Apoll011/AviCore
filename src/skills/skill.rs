@@ -133,6 +133,7 @@ impl Skill {
         self.run()
     }
 
+    #[allow(dead_code)]
     /// Subscribes to all events defined in the skill's configuration
     pub async fn subscribe(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         Self::subscribe_internal(
@@ -202,6 +203,7 @@ impl Skill {
         Ok(())
     }
 
+    #[allow(dead_code)]
     /// Stops the skill execution
     pub fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.scope
@@ -305,6 +307,7 @@ impl Skill {
         &self.name
     }
 
+    #[allow(dead_code)]
     /// Returns the skill pathname
     pub fn pathname(&self) -> &str {
         &self.pathname
