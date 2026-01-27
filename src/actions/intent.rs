@@ -1,10 +1,12 @@
 use crate::actions::action::Action;
 use crate::api::Api;
 use crate::ctx::runtime;
+use crate::dialogue::intent::{Intent, IntentInfo, Slot};
 use crate::dialogue::reply::Replayed;
 use crate::skills::manager::SkillManager;
 use crate::{subscribe, watch_dir};
 use avi_device::device::AviDevice;
+use avi_nlu_client::models::Processor;
 use log::{info, warn};
 use std::sync::Arc;
 use std::time::Duration;
@@ -67,7 +69,21 @@ impl IntentAction {
             }
         };
 
-        if let Some(intent) = maybe_intent {
+        if let Some(recognized) = maybe_intent {
+            if !matches!(recognized.processor, Processor::Ai) {
+                return false;
+            }
+            let intent = Intent {
+                input: recognized.result.input,
+                intent: Some(IntentInfo(*recognized.result.intent)),
+                slots: recognized
+                    .result
+                    .slots
+                    .unwrap()
+                    .into_iter()
+                    .map(|s| Slot(s))
+                    .collect(),
+            };
             let mut mg = skill_manager.lock().await;
 
             if let Err(e) = mg.run_intent(intent) {
@@ -88,10 +104,7 @@ impl Action for IntentAction {
 
         match api.alive().await {
             Ok(alive) => {
-                info!(
-                    "Avi NLU API is up and running (Server v{} on lang {:?}).",
-                    alive.version, alive.installed_lang
-                );
+                info!("Avi NLU API is up and running (Server v{}).", alive.version);
             }
             Err(_) => {
                 return Err("Avi NLU API is not running. Skipping intent actions.".to_string());
