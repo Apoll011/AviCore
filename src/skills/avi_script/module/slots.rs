@@ -15,7 +15,7 @@ pub mod slots_module {
     /// Nothing or throws an error if the slot is missing
     #[rhai_fn(return_raw)]
     pub fn require(intent: Intent, name: ImmutableString) -> Result<(), Box<EvalAltResult>> {
-        if intent.slots.iter().any(|s| s.slot_name == name) {
+        if intent.slots.iter().any(|s| s.0.slot_name == name) {
             Ok(())
         } else {
             Err(Box::new(EvalAltResult::ErrorRuntime(
@@ -26,7 +26,7 @@ pub mod slots_module {
     }
 
     pub fn exists(intent: Intent, name: ImmutableString) -> bool {
-        intent.slots.iter().any(|s| s.slot_name == name)
+        intent.slots.iter().any(|s| s.0.slot_name == name)
     }
 
     /// Gets the value of a slot from the current intent
@@ -38,9 +38,9 @@ pub mod slots_module {
     /// # Returns
     /// The value of the slot as a Rhai object, or UNIT if the slot is missing
     pub fn get(intent: Intent, name: ImmutableString) -> Dynamic {
-        let slot = intent.slots.iter().find(|s| s.slot_name == name);
+        let slot = intent.slots.iter().find(|s| s.0.slot_name == name);
         if let Some(slot) = slot {
-            json_to_dynamic(slot.value.value.clone())
+            Dynamic::from(slot.0.value.value.clone())
         } else {
             Dynamic::UNIT
         }
@@ -55,9 +55,9 @@ pub mod slots_module {
     /// # Returns
     /// The raw text value of the slot, or UNIT if the slot is missing
     pub fn get_raw(intent: Intent, name: ImmutableString) -> Dynamic {
-        let slot = intent.slots.iter().find(|s| s.slot_name == name);
+        let slot = intent.slots.iter().find(|s| s.0.slot_name == name);
         if let Some(slot) = slot {
-            Dynamic::from(slot.raw_value.clone())
+            Dynamic::from(slot.0.raw_value.clone())
         } else {
             Dynamic::UNIT
         }
@@ -72,7 +72,7 @@ pub mod slots_module {
     /// # Returns
     /// The full slot object, or UNIT if the slot is missing
     pub fn full(intent: Intent, name: ImmutableString) -> Dynamic {
-        let slot = intent.slots.iter().find(|s| s.slot_name == name);
+        let slot = intent.slots.iter().find(|s| s.0.slot_name == name);
         if let Some(slot) = slot {
             Dynamic::from(slot.clone())
         } else {
@@ -90,9 +90,9 @@ pub mod slots_module {
     /// # Returns
     /// True if the slot value is equal, false otherwise
     pub fn assert_equal(intent: Intent, name: ImmutableString, val: Dynamic) -> bool {
-        let slot = intent.slots.iter().find(|s| s.slot_name == name);
+        let slot = intent.slots.iter().find(|s| s.0.slot_name == name);
         if let Some(slot) = slot {
-            let slot_val: Dynamic = json_to_dynamic(slot.value.value.clone());
+            let slot_val: Dynamic = Dynamic::from(slot.0.value.value.clone());
             dynamic_eq(&slot_val, &val)
         } else {
             false
@@ -109,9 +109,9 @@ pub mod slots_module {
     /// # Returns
     /// True if the slot value is in the list or matches the value, false otherwise
     pub fn assert_in(intent: Intent, name: ImmutableString, list: Dynamic) -> bool {
-        let slot = intent.slots.iter().find(|s| s.slot_name == name);
+        let slot = intent.slots.iter().find(|s| s.0.slot_name == name);
         if let Some(slot) = slot {
-            let slot_val: Dynamic = json_to_dynamic(slot.value.value.clone());
+            let slot_val: Dynamic = Dynamic::from(slot.0.value.value.clone());
 
             if let Some(arr) = list.clone().try_cast::<Vec<Dynamic>>() {
                 arr.iter().any(|v| dynamic_eq(v, &slot_val))
@@ -133,9 +133,9 @@ pub mod slots_module {
     /// # Returns
     /// True if the slot's string value is a key in the map, false otherwise
     pub fn assert_in_dict(intent: Intent, name: ImmutableString, dict: Dynamic) -> bool {
-        let slot = intent.slots.iter().find(|s| s.slot_name == name);
+        let slot = intent.slots.iter().find(|s| s.0.slot_name == name);
         if let Some(slot) = slot {
-            let slot_val: Dynamic = json_to_dynamic(slot.value.value.clone());
+            let slot_val: Dynamic = Dynamic::from(slot.0.value.value.clone());
 
             if let Some(s) = slot_val.try_cast::<String>() {
                 if let Some(obj) = dict.try_cast::<Map>() {

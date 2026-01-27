@@ -135,14 +135,11 @@ impl SkillManager {
     pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
         info!("Running intent {:?}", intent);
         let intent_info = match intent.intent.clone() {
-            Some(v) => v,
+            Some(v) => v.0,
             None => return Err("Intent is not defined".into()),
         };
 
-        let full_name = match intent_info.intent_name {
-            Some(v) => v,
-            None => return Err("Intent name is not defined".into()),
-        };
+        let full_name = intent_info.intent_name;
 
         let parts: Vec<&str> = full_name.split("@").collect();
         if parts.is_empty() || parts.len() != 2 {

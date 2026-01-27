@@ -1,4 +1,3 @@
-use crate::skills::avi_script::helpers::json_to_dynamic;
 use avi_nlu_client::*;
 use rhai::CustomType;
 use rhai::Dynamic;
@@ -27,7 +26,7 @@ pub struct Slot(pub models::Slot);
 
 impl From<SlotValue> for Dynamic {
     fn from(val: SlotValue) -> Self {
-        json_to_dynamic(val.value)
+        Dynamic::from(val.0.value)
     }
 }
 

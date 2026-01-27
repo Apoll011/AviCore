@@ -232,14 +232,14 @@ impl Skill {
     ///
     /// Returns an error if the intent name is missing or if execution fails.
     pub fn run_intent(&mut self, intent: Intent) -> Result<bool, Box<dyn std::error::Error>> {
-        let intent_data = intent.intent.as_ref().ok_or("Intent is not defined")?;
+        let intent_name = intent
+            .clone()
+            .intent
+            .ok_or("Intent is not defined")?
+            .0
+            .intent_name;
 
-        let intent_name = intent_data
-            .intent_name
-            .as_ref()
-            .ok_or("Intent name is not defined")?;
-
-        let formatted_name = Self::format_intent_name(intent_name);
+        let formatted_name = Self::format_intent_name(&intent_name);
 
         {
             let mut scope = self.scope.write().map_err(|e| e.to_string())?;
