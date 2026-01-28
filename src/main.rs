@@ -4,6 +4,7 @@ mod actions;
 mod api;
 mod cli_args;
 mod config;
+mod content;
 mod context;
 mod ctx;
 mod dialogue;
@@ -49,15 +50,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 config_w = config_dir();
             }
 
-            let s = Setup::new(&config_w);
-
-            s.check().await;
-
             ui::step(2, 8, "Booting sequence initiated");
 
             info!("System ownership transferred to AviCore Reactor...");
 
-            start_avi(config_w.display().to_string()).await?;
+            start_avi(config_w).await?;
         }
 
         Commands::GenerateDocs {

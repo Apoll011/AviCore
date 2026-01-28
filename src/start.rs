@@ -5,16 +5,37 @@ use crate::actions::mesh::MeshAction;
 use crate::config::setting_or;
 use crate::context::context_cleanup_task;
 use crate::ctx::{create_runtime, runtime};
-use crate::ui;
+use crate::{Setup, ui};
 use crate::{register_action, watch_dir};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
+use content_resolver::{GitHubSource, ResourceResolver};
 use log::{error, info};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub async fn start_avi(config_path: String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting the System");
+
+    let mut setup = Setup::new(&config_path);
+
+    setup.check().await;
+
+    let source = Arc::new(GitHubSource::new(
+        "apoll011".to_string(),
+        "aviCore".to_string(),
+        "master".to_string(),
+        "config/".to_string(),
+    ));
+
+    // Create resolver
+    let resolver = Arc::new(ResourceResolver::new(vec![source]));
+
+    println!(
+        "{:?}",
+        Setup::download_language("pt".to_string(), resolver).await
+    );
 
     ui::step(3, 7, "Initializing Device Configuration");
 
@@ -36,7 +57,7 @@ pub async fn start_avi(config_path: String) -> Result<(), Box<dyn std::error::Er
     device.start_event_loop();
 
     ui::step(4, 8, "Initializing Runtime");
-    create_runtime(&config_path, device);
+    create_runtime(&config_path.display().to_string(), device);
 
     ui::step(5, 8, "Initializing Actions");
 
@@ -59,7 +80,7 @@ pub async fn start_avi(config_path: String) -> Result<(), Box<dyn std::error::Er
     pb.finish_with_message("Actions Loaded...");
 
     ui::step(6, 8, "Setting the config directory watcher");
-    watch_dir!(&format!("{}/config", config_path), Duration::from_secs(1), async: |_event| {
+    watch_dir!(&config_path.join("config").display(), Duration::from_secs(1), async: |_event| {
         match runtime() {
             Ok(v) => {
                 info!("Change in config directory. Reloading Configuration.");

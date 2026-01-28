@@ -1,4 +1,6 @@
 use crate::api::Api;
+use crate::content::lang::LanguageProvider;
+use crate::content::skill::SkillProvider;
 use crate::ui::ask;
 use crate::ui::ask_confirm;
 use crate::ui::ask_number;
@@ -8,7 +10,9 @@ use crate::ui::select_option;
 use crate::ui::spinner_style;
 use crate::ui::step;
 use crate::ui::sub_step;
+use crate::utils::config_dir;
 use console::style;
+use content_resolver::ResourceResolver;
 use indicatif::ProgressBar;
 use log::{error, info};
 use reqwest::StatusCode;
@@ -19,12 +23,14 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 #[allow(dead_code)]
 pub struct Setup {
     config_path: PathBuf,
+    online: bool,
 }
 
 #[allow(dead_code, unused)]
@@ -32,10 +38,11 @@ impl Setup {
     pub fn new(dir: &Path) -> Self {
         Self {
             config_path: dir.to_path_buf(),
+            online: false,
         }
     }
 
-    pub async fn check(&self) {
+    pub async fn check(&mut self) {
         info!("Checking system...");
         info!("Config path set to: {}", self.config_path.display());
         if self.need_to() {
@@ -47,7 +54,7 @@ impl Setup {
         !Path::new(&self.config_path).exists()
     }
 
-    async fn setup(&self) {
+    async fn setup(&mut self) {
         sub_step(1, 6, "Initialization");
 
         let mut nlu_host = "0.0.0.0";
@@ -136,13 +143,20 @@ impl Setup {
         );
         pb.finish_with_message("Config folder created.");
 
-        sub_step(6, 6, "Downloading Resources");
         if (mode.eq("online")) {
-            self.download_initial_skills();
-            self.dashoard();
+            self.online = true;
         } else {
             println!(" {}", style("Skipping resource download.").bright())
         }
+    }
+
+    async fn online_setup(&self, skill_resolvers: Arc<ResourceResolver>) {
+        if !self.online {
+            return;
+        }
+
+        self.download_initial_skills(skill_resolvers).await;
+        self.dashoard();
     }
 
     async fn has_nlu(&self) -> bool {
@@ -150,23 +164,43 @@ impl Setup {
         api.alive().await.is_ok()
     }
 
-    pub fn download_skill(&self, skill_id: String, pb: &ProgressBar) {
-        pb.set_message(format!("Downloading {}...", style(skill_id).cyan()));
+    pub async fn download_skill(
+        &self,
+        skill_id: String,
+        pb: &ProgressBar,
+        skill_provider: &SkillProvider,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        pb.set_message(format!("Downloading {}...", style(skill_id.clone()).cyan()));
 
-        thread::sleep(Duration::from_millis(800));
+        let output_dir = config_dir().join("skills");
+
+        let result = skill_provider
+            .download_skill(&skill_id, &output_dir)
+            .await?;
+
+        println!(
+            "Downloaded {} files ({} bytes)",
+            result.files_written.len(),
+            result.total_bytes
+        );
 
         pb.inc(1);
+        Ok(())
     }
 
-    fn download_initial_skills(&self) {
-        let initial_skills = ["saudation", "test", "bla", "bla"];
+    async fn download_initial_skills(
+        &self,
+        resolver: Arc<ResourceResolver>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SkillProvider::new(resolver, "skills".to_string());
 
-        let pb = ProgressBar::new(initial_skills.len() as u64);
+        let skills = provider.list_skills().await?;
+        let pb = ProgressBar::new(skills.len() as u64);
 
         pb.set_style(main_progress_style());
 
-        for skill in initial_skills {
-            self.download_skill(skill.to_string(), &pb);
+        for skill in skills.iter().map(|s| s.id.clone()) {
+            self.download_skill(skill.to_string(), &pb, &provider).await;
         }
 
         pb.finish_with_message("All skills downloaded.");
@@ -175,24 +209,23 @@ impl Setup {
             style("✔").green().bold(),
             style("Skill synchronization complete.").bright()
         );
-    }
-    pub async fn fetch_lang(code: &str) -> Result<String, Box<dyn Error>> {
-        let url = format!(
-            "https://raw.githubusercontent.com/Apoll011/AviCore/master/config/lang/{}.lang",
-            code
-        );
 
-        let response = reqwest::get(&url).await?;
-
-        match response.status() {
-            StatusCode::OK => Ok(response.text().await?),
-            StatusCode::NOT_FOUND => Err(format!("language file '{}' not found", code).into()),
-            status => Err(format!("failed to fetch lang file: {}", status).into()),
-        }
+        Ok(())
     }
 
-    pub fn download_language(lang_id: String) {
-        todo!()
+    pub async fn download_language(
+        lang_id: String,
+        resolver: Arc<ResourceResolver>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let provider = LanguageProvider::new(resolver, "lang".to_string());
+        let path = config_dir().join("lang").join(format!("{}.lang", lang_id));
+        let mut file = File::create(path)?;
+
+        let content = provider.fetch_language(&lang_id).await?;
+
+        file.write_all(content.as_bytes())?;
+
+        Ok(())
     }
 
     pub fn download_dashboard(&self) {
