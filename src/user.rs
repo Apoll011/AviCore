@@ -147,6 +147,7 @@ impl UserManager {
 
     pub async fn save_to_device(&self) {
         trace!("Saving user data to device context");
+        #[allow(clippy::await_holding_lock)]
         let _ = set_ctx!(device, "avi.user", &*self.user.read());
     }
 
