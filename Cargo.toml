@@ -1,17 +1,7 @@
 [package]
-name = "AviCore"
+name = "avicore"
 version = "2.2.4"
 edition = "2024"
-
-[[bin]]
-name = "avicore"
-path = "src/main.rs"
-
-[profile.dev]
-debug = 0
-
-[profile.release]
-debug = 0
 
 [dependencies]
 reqwest = { version = "0.12.24", features = ["json", "default-tls"] }
@@ -42,6 +32,7 @@ inquire = "0.7"
 termimad = "0.30"
 memory_size = { git = "https://github.com/apoll011/memory_size", package = "memory_size" }
 memory_size_derive = { git = "https://github.com/apoll011/memory_size", package = "memory_size_derive" }
+content_resolver = { git = "https://github.com/apoll011/content-resolver", package = "content-resolver" }
 avi_nlu_client = { git = "https://github.com/apoll011/avi-nlu-client"}
 dialoguer = "0.12"
 

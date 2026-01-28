@@ -9,6 +9,7 @@ mod ctx;
 mod dialogue;
 mod log;
 mod macros;
+mod setup;
 mod skills;
 mod start;
 mod ui;
@@ -19,11 +20,11 @@ use crate::cli_args::{Args, Commands};
 use crate::log::AviCoreLogger;
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
-use crate::utils::{Setup, config_dir, generate_documentation, generate_dsl_definition};
+use crate::utils::{config_dir, generate_documentation, generate_dsl_definition};
 use ::log::{error, info};
 use clap::Parser;
+use setup::Setup;
 use std::time::Duration;
-
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tokio::main]
@@ -132,6 +133,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     console::style("Runtime Information:").bold().underlined()
                 );
                 ui::info_line("Library Path", &get_lib_path().display().to_string());
+                ui::info_line("Config Path", &config_dir().display().to_string());
                 ui::info_line("Platform", std::env::consts::OS);
                 ui::info_line("Architecture", std::env::consts::ARCH);
 
