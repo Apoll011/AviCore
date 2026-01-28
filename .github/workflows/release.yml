@@ -185,13 +185,7 @@ jobs:
      - name: Build release
        run: |
          # For cross-compiled targets, use vendored OpenSSL if needed
-         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
-           # Try with system OpenSSL first, fall back to vendored
-           cargo build --release --target ${{ matrix.target }} --verbose || \
-           OPENSSL_STATIC=1 cargo build --release --target ${{ matrix.target }} --verbose
-         else
            cargo build --release --target ${{ matrix.target }} --verbose
-         fi
      
      - name: Package binary (Unix)
        if: runner.os != 'Windows'
@@ -308,13 +302,6 @@ jobs:
          ./avicore
          \`\`\`
          
-         ### Linux (ARM64/aarch64)
-         \`\`\`bash
-         wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-linux-aarch64.tar.gz
-         tar -xzf avicore-${VERSION}-linux-aarch64.tar.gz
-         ./avicore
-         \`\`\`
-         
          ### macOS (Intel)
          \`\`\`bash
          wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-macos-x86_64.tar.gz
@@ -400,13 +387,6 @@ jobs:
            \`\`\`bash
            wget ${baseUrl}/avicore-${version}-linux-x86_64.tar.gz
            tar -xzf avicore-${version}-linux-x86_64.tar.gz
-           ./avicore
-           \`\`\`
-           
-           **Linux (ARM64)**
-           \`\`\`bash
-           wget ${baseUrl}/avicore-${version}-linux-aarch64.tar.gz
-           tar -xzf avicore-${version}-linux-aarch64.tar.gz
            ./avicore
            \`\`\`
            
