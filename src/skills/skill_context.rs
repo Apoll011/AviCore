@@ -1,10 +1,10 @@
 use crate::config::ConfigSystem;
 use crate::dialogue::languages::LanguageSystem;
+use crate::utils::load_value_from_file;
 use memory_size_derive::{DeepSize, DeepSizeTree};
 use rhai::CustomType;
 use rhai::TypeBuilder;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::sync::Arc;
 
 /// Helper function to provide a default value of `true` for serde.
@@ -74,26 +74,11 @@ impl SkillContext {
     pub fn new(path: &str) -> Result<Self, String> {
         Ok(Self {
             path: Arc::from(path),
-            info: Arc::new(Self::load_manifest(path.into())?),
+            info: Arc::new(load_value_from_file(
+                format!("{}/manifest.yaml", path).into(),
+            )?),
             config: Arc::new(ConfigSystem::new(&format!("{}/config", path))),
             languages: Arc::new(LanguageSystem::new(&format!("{}/responses", path))),
         })
-    }
-
-    /// Loads the skill manifest from the filesystem.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the manifest file cannot be read or parsed.
-    fn load_manifest(pathname: String) -> Result<Manifest, String> {
-        let manifest_path = format!("{}/manifest.yaml", pathname);
-        let manifest_file = match fs::read_to_string(manifest_path) {
-            Ok(file) => file,
-            Err(e) => return Err(format!("Error reading manifest file: {}", e)),
-        };
-        match serde_yaml::from_str(&manifest_file) {
-            Ok(manifest) => Ok(manifest),
-            Err(e) => Err(format!("Error parsing manifest file: {}", e)),
-        }
     }
 }

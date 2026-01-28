@@ -2,11 +2,12 @@ use crate::actions::action::Action;
 use crate::api::Api;
 use crate::ctx::runtime;
 use crate::dialogue::intent::{Intent, IntentInfo, Slot};
+use crate::dialogue::languages::lang;
 use crate::dialogue::reply::Replayed;
 use crate::skills::manager::SkillManager;
 use crate::{subscribe, watch_dir};
 use avi_device::device::AviDevice;
-use avi_nlu_client::models::Processor;
+use avi_nlu_client::models::{self, Alive, Data1Inner};
 use log::{info, warn};
 use std::sync::Arc;
 use std::time::Duration;
@@ -59,7 +60,6 @@ impl IntentAction {
 
     pub async fn parse_as_intent(&self, text: &str) -> bool {
         let api = Arc::clone(&self.api);
-        let skill_manager = Arc::clone(&self.skill_manager);
 
         let maybe_intent = match api.lock().await.intent(text).await {
             Ok(intent) => Some(intent),
@@ -70,29 +70,111 @@ impl IntentAction {
         };
 
         if let Some(recognized) = maybe_intent {
-            if !matches!(recognized.processor, Processor::Ai) {
-                return false;
-            }
-            let intent = Intent {
-                input: recognized.result.input,
-                intent: Some(IntentInfo(*recognized.result.intent)),
-                slots: recognized
-                    .result
-                    .slots
-                    .unwrap()
-                    .into_iter()
-                    .map(|s| Slot(s))
-                    .collect(),
-            };
-            let mut mg = skill_manager.lock().await;
-
-            if let Err(e) = mg.run_intent(intent) {
-                warn!("Error executing intent: {}", e);
-            } else {
-                return true;
+            match *recognized.result {
+                models::Result::Nlu(intent) => {
+                    return self.process_intent(*intent).await;
+                }
+                _ => return false,
             }
         }
         false
+    }
+
+    async fn update_engines(&self) {
+        let skill_manager = Arc::clone(&self.skill_manager);
+        let api = Arc::clone(&self.api);
+
+        let dataset = skill_manager.lock().await.get_dataset();
+
+        let _ = api.lock().await.set_engine_dataset(dataset).await;
+
+        let _ = api
+            .lock()
+            .await
+            .train_intent_engine(models::EngineTrainType::Train)
+            .await;
+    }
+
+    async fn should_update_engine(&self) -> bool {
+        let api = Arc::clone(&self.api);
+
+        let active_intents_on_api: Vec<String> = api
+            .lock()
+            .await
+            .get_active_intents()
+            .await
+            .unwrap_or_default()
+            .get(&lang())
+            .cloned()
+            .unwrap_or_default();
+
+        let intents_i_have = self
+            .skill_manager
+            .lock()
+            .await
+            .get_dataset()
+            .data
+            .iter()
+            .filter_map(|item| match item {
+                Data1Inner::Intent(intent) => Some(intent.name.clone()),
+                _ => None,
+            })
+            .collect::<Vec<String>>();
+
+        if active_intents_on_api.len() != intents_i_have.len() {
+            return true;
+        }
+
+        for item in intents_i_have {
+            if !active_intents_on_api.contains(&item) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    async fn process_intent(&self, intent: models::NluResultInput) -> bool {
+        let skill_manager = Arc::clone(&self.skill_manager);
+
+        let intent = Intent {
+            input: intent.input,
+            intent: Some(IntentInfo(*intent.intent)),
+            slots: intent.slots.unwrap().into_iter().map(|s| Slot(s)).collect(),
+        };
+        let mut mg = skill_manager.lock().await;
+
+        if let Err(e) = mg.run_intent(intent) {
+            warn!("Error executing intent: {}", e);
+        } else {
+            return true;
+        }
+        false
+    }
+
+    async fn api_check(api: &Api, alive: Alive) {
+        info!("Checking the api");
+
+        if alive.intent_kit {
+            info!("Api already has initialized engine");
+            return;
+        };
+
+        let avaliable_language_engines = api
+            .avaliable_engines()
+            .await
+            .map(|avaliable| avaliable.installed)
+            .unwrap_or(vec![]);
+
+        info!("Avaliable engines on api: {:?}", avaliable_language_engines);
+
+        //TODO: Check if the current server language us the same as what I have
+        //TODO: If it there isent one train...
+        if avaliable_language_engines.contains(&lang()) {
+            let _ = api
+                .train_intent_engine(models::EngineTrainType::Reuse)
+                .await;
+        };
     }
 }
 
@@ -105,6 +187,7 @@ impl Action for IntentAction {
         match api.alive().await {
             Ok(alive) => {
                 info!("Avi NLU API is up and running (Server v{}).", alive.version);
+                Self::api_check(&api, alive).await;
             }
             Err(_) => {
                 return Err("Avi NLU API is not running. Skipping intent actions.".to_string());
@@ -123,6 +206,13 @@ impl Action for IntentAction {
         let device = Arc::clone(&self.device);
         let api = Arc::clone(&self.api);
         let skill_manager = Arc::clone(&self.skill_manager);
+
+        if self.should_update_engine().await {
+            info!("Updating the engine...");
+            self.update_engines().await;
+        } else {
+            info!("Engine has the latest intent... Ignoring...");
+        }
 
         subscribe!("intent/execute/text", captures: [skill_manager, api, device], async: |_from, _topic, data| {
                 let msg = String::from_utf8_lossy(&data);

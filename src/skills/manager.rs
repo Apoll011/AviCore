@@ -1,13 +1,15 @@
 use crate::ctx::runtime;
 use crate::dialogue::intent::Intent;
+use crate::dialogue::languages::lang;
 use crate::skills::avi_script::avi_librarymanager::initialize_avi_library;
 use crate::skills::skill::Skill;
+use crate::utils::get_all_docs_on_folder;
+use avi_nlu_client::models::{self, Data, Data1Inner, Entity, InputIntent};
 use log::{info, warn};
 use rhai::{FnPtr, Variant};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-
 /// Manages the lifecycle and execution of skills.
 ///
 /// It is responsible for loading skills from the filesystem and dispatching
@@ -118,6 +120,56 @@ impl SkillManager {
                 )),
             },
             Err(e) => Err(format!("Error loading skill (SkillManager): {}", e)),
+        }
+    }
+
+    fn merge_entities_and_intents(
+        entities: Vec<Entity>,
+        intents: Vec<InputIntent>,
+    ) -> Vec<Data1Inner> {
+        let mut data = Vec::with_capacity(entities.len() + intents.len());
+
+        data.extend(
+            entities
+                .into_iter()
+                .map(|e| Data1Inner::Entity(Box::new(e))),
+        );
+
+        data.extend(intents.into_iter().map(|i| Data1Inner::Intent(Box::new(i))));
+
+        data
+    }
+
+    pub fn get_dataset(&self) -> Data {
+        let mut docs_intent: Vec<InputIntent> = Default::default();
+        let mut docs_entities: Vec<Entity> = Default::default();
+
+        for skill in self
+            .skills
+            .values()
+            .into_iter()
+            .map(|skill| skill.pathname())
+            .collect::<Vec<PathBuf>>()
+        {
+            docs_intent.append(&mut get_all_docs_on_folder(
+                skill.join("intent/intents").clone(),
+                None,
+                ".itent".to_string(),
+            ));
+            docs_entities.append(&mut get_all_docs_on_folder(
+                skill.join("intent/entities"),
+                None,
+                ".entity".to_string(),
+            ));
+        }
+
+        Data {
+            language: match lang().as_str() {
+                "en" => models::Lang::En,
+                "pt" => models::Lang::Pt,
+                _ => models::Lang::En,
+            },
+            data: Self::merge_entities_and_intents(docs_entities, docs_intent),
         }
     }
 

@@ -1,9 +1,13 @@
 use crate::ctx::runtime;
 #[allow(unused_imports)]
 use crate::skills::avi_script::engine::create_avi_script_engine;
+use log::error;
 use log::info;
 #[allow(unused_imports)]
 use log::warn;
+use serde::Deserialize;
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Eq, PartialEq)]
 pub enum EventType {
@@ -123,4 +127,47 @@ pub fn generate_dsl_definition(path: String) -> Result<(), Box<dyn std::error::E
 
     info!("Generated DSL definitions");
     Ok(())
+}
+
+pub fn get_all_docs_on_folder<T: for<'a> Deserialize<'a> + Clone>(
+    path: PathBuf,
+    _lang: Option<String>,
+    _extention: String,
+) -> Vec<T> {
+    let mut docs: Vec<T> = Default::default();
+
+    if let Ok(entries) = fs::read_dir(path.clone()) {
+        info!("Searching path {:?}", path);
+        for entry_dir in entries {
+            let entry = match entry_dir {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+
+            let path = entry.path();
+
+            info!("Trying: {}", path.display());
+
+            //if path.exte(&extention) {
+            //  print!("dddsds");
+            match load_value_from_file::<T>(path) {
+                Ok(v) => docs.push(v.clone()),
+                Err(e) => error!("Error loading file: {}", e),
+                //}
+            }
+        }
+    }
+
+    docs
+}
+
+pub fn load_value_from_file<T: for<'a> Deserialize<'a>>(path: PathBuf) -> Result<T, String> {
+    let file = match fs::read_to_string(path) {
+        Ok(file) => file,
+        Err(e) => return Err(format!("Error reading file: {}", e)),
+    };
+    match serde_yaml::from_str(&file) {
+        Ok(f) => Ok(f),
+        Err(e) => Err(format!("Error parsing file: {}", e)),
+    }
 }

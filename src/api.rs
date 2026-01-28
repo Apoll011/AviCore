@@ -1,7 +1,12 @@
+use std::collections::HashMap;
+
 use crate::config::setting;
+use crate::dialogue::languages::lang;
 use avi_nlu_client::apis::configuration::Configuration;
 use avi_nlu_client::apis::*;
-use avi_nlu_client::models::{Alive, EngineTrain, EngineTrainType, RecognizedInput};
+use avi_nlu_client::models::{
+    Alive, Created, Data, EngineTrain, EngineTrainType, Installed, RecognizedInput,
+};
 use log::trace;
 
 fn box_err<E: std::fmt::Display>(e: E) -> Box<dyn std::error::Error> {
@@ -40,6 +45,35 @@ impl Api {
             .map_err(box_err)
     }
 
+    pub async fn avaliable_engines(&self) -> Result<Installed, Box<dyn std::error::Error>> {
+        intent_api::returns_the_instaled_engines_intent_recognition_installed_get(&self.config)
+            .await
+            .map_err(box_err)
+    }
+
+    pub async fn get_active_intents(
+        &self,
+    ) -> Result<HashMap<String, Vec<String>>, Box<dyn std::error::Error>> {
+        let mut data: HashMap<String, Vec<String>> = Default::default();
+
+        let a = self.avaliable_engines().await?.data;
+
+        let slot_name_mappings: HashMap<String, HashMap<String, String>> = a
+            .get(&lang())
+            .and_then(|v| v.get("slot_name_mappings"))
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or_default();
+
+        for key in a.keys() {
+            data.insert(
+                key.clone(),
+                slot_name_mappings.keys().cloned().collect::<Vec<_>>(),
+            );
+        }
+
+        Ok(data)
+    }
+
     /// Sends a text message to the server for intent recognition.
     ///
     /// # Arguments
@@ -69,6 +103,19 @@ impl Api {
         .await
         .map_err(box_err)
     }
+
+    pub async fn set_engine_dataset(
+        &self,
+        dataset: Data,
+    ) -> Result<Created, Box<dyn std::error::Error>> {
+        intent_api::define_the_intent_and_entities_intent_recognition_populate_post(
+            &self.config,
+            dataset,
+        )
+        .await
+        .map_err(box_err)
+    }
+
     /*
     #[allow(dead_code)]
     pub async fn extract_numbers(

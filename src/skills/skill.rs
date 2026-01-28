@@ -10,6 +10,7 @@ use memory_size_derive::{DeepSize, DeepSizeTree};
 use rhai::{AST, Dynamic, Engine, FnPtr, FuncArgs, ImmutableString, Scope, Variant};
 use std::fs;
 use std::path::Path;
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
 /// Represents a standalone skill that can be executed by the Avi system.
@@ -309,8 +310,8 @@ impl Skill {
 
     #[allow(dead_code)]
     /// Returns the skill pathname
-    pub fn pathname(&self) -> &str {
-        &self.pathname
+    pub fn pathname(&self) -> PathBuf {
+        (self.pathname.to_string()).into()
     }
 
     /// Reloads the skill from disk
