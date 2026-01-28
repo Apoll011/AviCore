@@ -60,11 +60,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 config_w = config_dir();
             }
 
-            info!("Checking system...");
-            info!("Config path set to: {}", config_w.display());
-            if Setup::need_to(&config_w) {
-                Setup::setup(&config_w);
-            }
+            let s = Setup::new(&config_w);
+
+            s.check().await;
 
             ui::step(2, 8, &format!("Booting sequence initiated: {}", mode_str));
 

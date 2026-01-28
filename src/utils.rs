@@ -1,3 +1,4 @@
+use crate::api::Api;
 use crate::ctx::runtime;
 #[allow(unused_imports)]
 use crate::skills::avi_script::engine::create_avi_script_engine;
@@ -215,15 +216,31 @@ pub fn config_dir() -> PathBuf {
 }
 
 #[allow(dead_code)]
-pub struct Setup {}
+pub struct Setup {
+    config_path: PathBuf,
+}
 
 #[allow(dead_code, unused)]
 impl Setup {
-    pub fn need_to(dir: &PathBuf) -> bool {
-        !Path::new(dir).exists()
+    pub fn new(dir: &PathBuf) -> Self {
+        Self {
+            config_path: dir.clone(),
+        }
     }
 
-    pub fn setup(dir: &PathBuf) {
+    pub async fn check(&self) {
+        info!("Checking system...");
+        info!("Config path set to: {}", self.config_path.display());
+        if self.need_to() {
+            self.setup().await;
+        }
+    }
+
+    fn need_to(&self) -> bool {
+        !Path::new(&self.config_path).exists()
+    }
+
+    async fn setup(&self) {
         sub_step(1, 6, "Initialization");
 
         let mut nlu_host = "0.0.0.0";
@@ -261,7 +278,7 @@ impl Setup {
 
         sub_step(4, 6, "NLU COnfiguration");
 
-        if (!Self::has_nlu()) {
+        if (!self.has_nlu().await) {
             println!(
                 "{} {}",
                 style("⚠").yellow().bold(),
@@ -277,7 +294,7 @@ impl Setup {
             let nlu = nlu_v[select_option("Select the system language", &nlus)];
 
             if nlu.eq("install") {
-                Self::install_nlu();
+                self.install_nlu();
             } else if nlu.eq("config") {
                 let nlu_host = ask("Remote NLU host", nlu_host).as_str();
                 let nlu_port = ask_number("Remote NLU host", nlu_port);
@@ -302,60 +319,50 @@ impl Setup {
 
         let pb = pb.with_message("Setting up config folder.");
 
-        Self::create_config_folder(
+        self.create_config_folder(
             lang.to_string(),
             dev.to_string(),
             net.to_string(),
             gateway,
             nlu_host.to_string(),
             nlu_port,
-            dir,
         );
         pb.finish_with_message("Config folder created.");
 
         sub_step(6, 6, "Downloading Resources");
         if (mode.eq("online")) {
-            Self::download_initial_skills();
-            if !Self::is_dashboard_avaliable() {
-                println!(
-                    "{} {}",
-                    style("⚠").yellow().bold(),
-                    style("Dashboard not found locally.").yellow()
-                );
-                if ask_confirm("Would you like to download the Avicia Dashboard?") {
-                    Self::download_dashboard();
-                }
-            } else {
-                info_line("Dashboard", "Already installed");
-                if ask_confirm("Check for updates?") {
-                    Self::download_dashboard(); // Re-run download/update
-                }
-            }
+            self.download_initial_skills();
+            self.dashoard();
         } else {
             println!(" {}", style("Skipping resource download.").bright())
         }
     }
 
-    fn has_nlu() -> bool {
-        false
+    async fn has_nlu(&self) -> bool {
+        let api = Api::new();
+        match api.alive().await {
+            Ok(_) => true,
+            Err(_) => false,
+        }
     }
 
-    pub fn download_skill(skill_id: String) {
-        todo!()
+    pub fn download_skill(&self, skill_id: String, pb: &ProgressBar) {
+        pb.set_message(format!("Downloading {}...", style(skill_id).cyan()));
+
+        thread::sleep(Duration::from_millis(800));
+
+        pb.inc(1);
     }
-    pub fn download_initial_skills() {
+
+    fn download_initial_skills(&self) {
         let initial_skills = ["saudation", "test", "bla", "bla"];
 
         let pb = ProgressBar::new(initial_skills.len() as u64);
 
         pb.set_style(main_progress_style());
 
-        for skill in &initial_skills {
-            pb.set_message(format!("Downloading {}...", style(skill).cyan()));
-
-            thread::sleep(Duration::from_millis(800));
-
-            pb.inc(1);
+        for skill in initial_skills {
+            self.download_skill(skill.to_string(), &pb);
         }
 
         pb.finish_with_message("All skills downloaded.");
@@ -369,11 +376,8 @@ impl Setup {
     pub fn download_language(lang_id: String) {
         todo!()
     }
-    pub fn setup_languages() {
-        todo!()
-    }
 
-    pub fn download_dashboard() {
+    pub fn download_dashboard(&self) {
         let dashboard_assets = [
             "Index & Templates",
             "React Runtime",
@@ -405,22 +409,40 @@ impl Setup {
         );
     }
 
-    pub fn is_dashboard_avaliable() -> bool {
+    fn dashoard(&self) {
+        if !self.is_dashboard_avaliable() {
+            println!(
+                "{} {}",
+                style("⚠").yellow().bold(),
+                style("Dashboard not found locally.").yellow()
+            );
+            if ask_confirm("Would you like to download the Avicia Dashboard?") {
+                self.download_dashboard();
+            }
+        } else {
+            info_line("Dashboard", "Already installed");
+            if ask_confirm("Check for updates?") {
+                self.download_dashboard(); // Re-run download/update
+            }
+        }
+    }
+
+    pub fn is_dashboard_avaliable(&self) -> bool {
         Path::new("config/site").exists()
     }
 
-    pub fn install_nlu() {
+    pub fn install_nlu(&self) {
         todo!()
     }
 
     pub fn create_config_folder(
+        &self,
         language: String,
         device_type: String,
         net_topology: String,
         gateway: bool,
         nlu_host: String,
         nlu_port: usize,
-        dir: &PathBuf,
     ) {
         //Create config, skills
         let folders = ["config", "lang", "skills"];
@@ -438,14 +460,14 @@ impl Setup {
             ("lang/pt.lang", include_str!("../config/lang/pt.lang")),
         ]);
 
-        let _ = fs::create_dir_all(&dir);
+        let _ = fs::create_dir_all(&self.config_path);
 
         for folder in folders {
-            let _ = fs::create_dir(dir.join(folder));
+            let _ = fs::create_dir(self.config_path.join(folder));
         }
 
         for (path, content) in &defaults {
-            let mut file = match File::create(dir.join(path)) {
+            let mut file = match File::create(self.config_path.join(path)) {
                 Ok(f) => f,
                 Err(e) => {
                     error!("Error criating file: {}", e);
