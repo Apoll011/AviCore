@@ -13,14 +13,12 @@ use log::{error, info};
 use std::sync::Arc;
 use std::time::Duration;
 
-pub async fn start_avi(
-    is_core: bool,
-    can_gate_away: bool,
-    config_path: String,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn start_avi(config_path: String) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting the System");
 
     ui::step(3, 7, "Initializing Device Configuration");
+
+    let is_core = setting_or::<String>("device_type", "core".to_string()).eq("core");
 
     let config = AviDeviceConfig {
         node_name: "avi-core".to_string(),
@@ -29,7 +27,7 @@ pub async fn start_avi(
         } else {
             AviDeviceType::NODE
         },
-        can_gateway_embedded: can_gate_away,
+        can_gateway_embedded: setting_or("can_gateway", false),
         capabilities: DeviceCapabilities::default(),
     };
 

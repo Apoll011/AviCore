@@ -15,7 +15,7 @@ mod ui;
 mod user;
 mod utils;
 
-use crate::cli_args::{Args, AviDeviceType, Commands};
+use crate::cli_args::{Args, Commands};
 use crate::log::AviCoreLogger;
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
@@ -32,25 +32,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     match args.command {
-        Commands::Start {
-            dev_type,
-            gateway,
-            config,
-            log_level,
-        } => {
+        Commands::Start { config, log_level } => {
             ui::print_logo();
 
             ui::step(1, 8, "Initializing Environment");
             if let Some(level) = log_level {
                 AviCoreLogger::set_level(&level);
             }
-
-            let is_core = matches!(dev_type, AviDeviceType::Core);
-            let mode_str = if is_core {
-                "CORE CONTROLLER"
-            } else {
-                "PERIPHERAL NODE"
-            };
 
             let config_w;
 
@@ -64,15 +52,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             s.check().await;
 
-            ui::step(2, 8, &format!("Booting sequence initiated: {}", mode_str));
-
-            if gateway {
-                info!("Enabled [Gateway Mode]");
-            }
+            ui::step(2, 8, &format!("Booting sequence initiated"));
 
             info!("System ownership transferred to AviCore Reactor...");
 
-            start_avi(is_core, gateway, config_w.display().to_string()).await?;
+            start_avi(config_w.display().to_string()).await?;
         }
 
         Commands::GenerateDocs {

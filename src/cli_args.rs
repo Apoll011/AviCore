@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -22,23 +22,6 @@ pub enum Commands {
     /// Start the AviCore system
     #[command(about = "Launch AviCore in the specified mode")]
     Start {
-        /// Device type to run as
-        #[arg(
-            long = "type",
-            short = 't',
-            default_value = "core",
-            help = "Specify device type: CORE (main controller) or NODE (peripheral device)"
-        )]
-        dev_type: AviDeviceType,
-
-        /// Enable CAN gateway functionality
-        #[arg(
-            long = "can-gateway",
-            short = 'g',
-            help = "Enable CAN bus gateway for automotive integration"
-        )]
-        gateway: bool,
-
         /// Configuration file path
         #[arg(long = "config", short = 'c', help = "Path to configuration path")]
         config: Option<String>,
@@ -98,24 +81,4 @@ pub enum Commands {
         )]
         verbose: bool,
     },
-}
-
-#[derive(Copy, Clone, Debug, ValueEnum)]
-pub enum AviDeviceType {
-    /// Main controller node with full orchestration capabilities
-    #[value(name = "core")]
-    Core,
-
-    /// Peripheral node for distributed processing
-    #[value(name = "node")]
-    Node,
-}
-
-impl std::fmt::Display for AviDeviceType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AviDeviceType::Core => write!(f, "CORE"),
-            AviDeviceType::Node => write!(f, "NODE"),
-        }
-    }
 }
