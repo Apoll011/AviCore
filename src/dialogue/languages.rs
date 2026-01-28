@@ -119,7 +119,8 @@ impl LanguageSystem {
             .map(|i| match &i.value {
                 serde_yaml::Value::Sequence(seq) if !seq.is_empty() => {
                     let mut rng = rand::rng();
-                    seq.choose(&mut rng).cloned()
+                    seq.choose(&mut rng)
+                        .cloned()
                         .unwrap_or_else(|| i.value.clone())
                 }
                 _ => i.value.clone(),
