@@ -1,439 +1,439 @@
 name: Release Build
- on:
-  pull_request:
-    types: [closed]
-    branches:
-      - master
-  workflow_dispatch:  # Manual trigger
-    inputs:
-      pr_number:
-        description: 'PR number to build'
-        required: true
-        type: number
-      version_tag:
-        description: 'Version tag (e.g., v1.0.0) - optional, will extract from PR title if not provided'
-        required: false
-        type: string
+on:
+ pull_request:
+   types: [closed]
+   branches:
+     - master
+ workflow_dispatch:  # Manual trigger
+   inputs:
+     pr_number:
+       description: 'PR number to build'
+       required: true
+       type: number
+     version_tag:
+       description: 'Version tag (e.g., v1.0.0) - optional, will extract from PR title if not provided'
+       required: false
+       type: string
 
 env:
-  CARGO_TERM_COLOR: always
+ CARGO_TERM_COLOR: always
 
 jobs:
-  prepare-release:
-    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    outputs:
-      has_version: ${{ steps.check_version.outputs.has_version }}
-      version_tag: ${{ steps.check_version.outputs.version_tag }}
-      version: ${{ steps.check_version.outputs.version }}
-      pr_number: ${{ steps.get_pr_info.outputs.pr_number }}
-      pr_title: ${{ steps.get_pr_info.outputs.pr_title }}
-      pr_url: ${{ steps.get_pr_info.outputs.pr_url }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Get PR information
-        id: get_pr_info
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            # Manual trigger - fetch PR info from API
-            PR_NUMBER="${{ github.event.inputs.pr_number }}"
-            echo "Fetching PR #${PR_NUMBER} information..."
-            
-            PR_DATA=$(gh pr view ${PR_NUMBER} --json number,title,url,merged,mergedAt)
-            
-            PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
-            PR_URL=$(echo "$PR_DATA" | jq -r '.url')
-            PR_MERGED=$(echo "$PR_DATA" | jq -r '.merged')
-            
-            if [ "$PR_MERGED" != "true" ]; then
-              echo "ERROR: PR #${PR_NUMBER} is not merged!"
-              exit 1
-            fi
-            
-            echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-            echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
-            echo "pr_url=${PR_URL}" >> $GITHUB_OUTPUT
-          else
-            # Regular PR merge trigger
-            echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-            echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
-            echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-      
-      - name: Check PR title for version tag
-        id: check_version
-        run: |
-          PR_TITLE="${{ steps.get_pr_info.outputs.pr_title }}"
-          MANUAL_VERSION="${{ github.event.inputs.version_tag }}"
-          
-          echo "PR Title: ${PR_TITLE}"
-          
-          # If manual version provided, use it
-          if [ -n "$MANUAL_VERSION" ]; then
-            echo "Using manually specified version: ${MANUAL_VERSION}"
-            echo "has_version=true" >> $GITHUB_OUTPUT
-            echo "version_tag=${MANUAL_VERSION}" >> $GITHUB_OUTPUT
-            echo "version=${MANUAL_VERSION#v}" >> $GITHUB_OUTPUT
-          # Check if title contains version pattern
-          elif echo "${PR_TITLE}" | grep -qE 'v[0-9]+\.[0-9]+\.[0-9]+'; then
-            VERSION=$(echo "${PR_TITLE}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9.-]*' | head -1)
-            echo "has_version=true" >> $GITHUB_OUTPUT
-            echo "version_tag=${VERSION}" >> $GITHUB_OUTPUT
-            echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
-            echo "Found version tag: ${VERSION}"
-          else
-            echo "has_version=false" >> $GITHUB_OUTPUT
-            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-            echo "version_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
-            echo "version=${LATEST_TAG#v}" >> $GITHUB_OUTPUT
-            echo "No version tag in title, will update latest tag: ${LATEST_TAG}"
-          fi
-      
-      - name: Delete existing release if updating
-        if: steps.check_version.outputs.has_version == 'false'
-        run: |
-          VERSION_TAG="${{ steps.check_version.outputs.version_tag }}"
-          echo "Deleting existing release: ${VERSION_TAG}"
-          gh release delete "${VERSION_TAG}" --yes || true
-          
-          echo "Deleting existing tag: ${VERSION_TAG}"
-          git push origin --delete "${VERSION_TAG}" || true
-        env:
-          GH_TOKEN: ${{ github.token }}
-  
-  build-binaries:
-    needs: prepare-release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact_name: avicore
-            asset_name: avicore-${{ needs.prepare-release.outputs.version }}-linux-x86_64
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: avicore
-            asset_name: avicore-${{ needs.prepare-release.outputs.version }}-macos-x86_64
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            artifact_name: avicore
-            asset_name: avicore-${{ needs.prepare-release.outputs.version }}-macos-aarch64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact_name: avicore.exe
-            asset_name: avicore-${{ needs.prepare-release.outputs.version }}-windows-x86_64
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config libssl-dev
-      
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install openssl@3
-          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
-      
-      - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-          cache: true
-      
-      - name: Configure cross-compilation environment (Linux ARM)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> $GITHUB_ENV
-          # OpenSSL cross-compilation
-          echo "OPENSSL_DIR=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=/usr/include" >> $GITHUB_ENV
-      
-      - name: Update Cargo.toml version
-        shell: bash
-        run: |
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS sed syntax
-            sed -i '' 's/^version = ".*"/version = "${{ needs.prepare-release.outputs.version }}"/' Cargo.toml
-          else
-            # Linux sed syntax
-            sed -i 's/^version = ".*"/version = "${{ needs.prepare-release.outputs.version }}"/' Cargo.toml
-          fi
-          echo "Updated version in Cargo.toml to ${{ needs.prepare-release.outputs.version }}"
-      
-      - name: Build release
-        run: |
-          # For cross-compiled targets, use vendored OpenSSL if needed
-          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
-            # Try with system OpenSSL first, fall back to vendored
-            cargo build --release --target ${{ matrix.target }} --verbose || \
-            OPENSSL_STATIC=1 cargo build --release --target ${{ matrix.target }} --verbose
-          else
-            cargo build --release --target ${{ matrix.target }} --verbose
-          fi
-      
-      - name: Package binary (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          cd target/${{ matrix.target }}/release
-          
-          # Create tarball
-          tar -czf ${{ matrix.asset_name }}.tar.gz ${{ matrix.artifact_name }}
-          
-          # Create checksum
-          shasum -a 256 ${{ matrix.asset_name }}.tar.gz > ${{ matrix.asset_name }}.tar.gz.sha256
-          
-          echo "Created archive and checksum"
-          ls -lh ${{ matrix.asset_name }}*
-      
-      - name: Package binary (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          cd target/${{ matrix.target }}/release
-          
-          # Create zip archive
-          7z a ${{ matrix.asset_name }}.zip ${{ matrix.artifact_name }}
-          
-          # Create checksum
-          sha256sum ${{ matrix.asset_name }}.zip > ${{ matrix.asset_name }}.zip.sha256
-          
-          echo "Created archive and checksum"
-          ls -lh ${{ matrix.asset_name }}*
-      
-      - name: Upload artifacts (Unix)
-        if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.asset_name }}
-          path: |
-            target/${{ matrix.target }}/release/${{ matrix.asset_name }}.tar.gz
-            target/${{ matrix.target }}/release/${{ matrix.asset_name }}.tar.gz.sha256
-      
-      - name: Upload artifacts (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.asset_name }}
-          path: |
-            target/${{ matrix.target }}/release/${{ matrix.asset_name }}.zip
-            target/${{ matrix.target }}/release/${{ matrix.asset_name }}.zip.sha256
-  
-  create-release:
-    needs: [prepare-release, build-binaries]
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-      
-      - name: Display artifact structure
-        run: |
-          ls -R ./artifacts
-      
-      - name: Create or update git tag
-        run: |
-          VERSION_TAG="${{ needs.prepare-release.outputs.version_tag }}"
-          
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Create tag
-          git tag -a "${VERSION_TAG}" -m "Release ${VERSION_TAG}"
-          git push origin "${VERSION_TAG}"
-          
-          echo "Created and pushed tag: ${VERSION_TAG}"
-      
-      - name: Create GitHub Release
-        run: |
-          VERSION_TAG="${{ needs.prepare-release.outputs.version_tag }}"
-          VERSION="${{ needs.prepare-release.outputs.version }}"
-          PR_NUMBER="${{ needs.prepare-release.outputs.pr_number }}"
-          PR_TITLE="${{ needs.prepare-release.outputs.pr_title }}"
-          PR_URL="${{ needs.prepare-release.outputs.pr_url }}"
-          HAS_VERSION="${{ needs.prepare-release.outputs.has_version }}"         
-          
-          # Create release notes
-          if [ "${HAS_VERSION}" == "true" ]; then
-            RELEASE_TYPE="New Version Release"
-            PRERELEASE_FLAG=""
-          else
-            RELEASE_TYPE="Updated Release"
-            PRERELEASE_FLAG="--prerelease"
-          fi
-          
-          cat > release_notes.md << EOF
-          # ${RELEASE_TYPE} - ${VERSION_TAG}
-          
-          **PR #${PR_NUMBER}:** ${PR_TITLE}
-          **Version:** ${VERSION}
-          
-          ## Changes
-          Merged PR #${PR_NUMBER}: ${{ github.event.pull_request.html_url }}
-          
-          ## Installation
-          
-          ### Linux (x86_64)
-          \`\`\`bash
-          wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-linux-x86_64.tar.gz
-          tar -xzf avicore-${VERSION}-linux-x86_64.tar.gz
-          ./avicore
-          \`\`\`
-          
-          ### Linux (ARM64/aarch64)
-          \`\`\`bash
-          wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-linux-aarch64.tar.gz
-          tar -xzf avicore-${VERSION}-linux-aarch64.tar.gz
-          ./avicore
-          \`\`\`
-          
-          ### macOS (Intel)
-          \`\`\`bash
-          wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-macos-x86_64.tar.gz
-          tar -xzf avicore-${VERSION}-macos-x86_64.tar.gz
-          ./avicore
-          \`\`\`
-          
-          ### macOS (Apple Silicon)
-          \`\`\`bash
-          wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-macos-aarch64.tar.gz
-          tar -xzf avicore-${VERSION}-macos-aarch64.tar.gz
-          ./avicore
-          \`\`\`
-          
-          ### Windows (x86_64)
-          Download the zip file and extract it:
-          \`\`\`powershell
-          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-windows-x86_64.zip" -OutFile "avicore-${VERSION}-windows-x86_64.zip"
-          Expand-Archive -Path "avicore-${VERSION}-windows-x86_64.zip" -DestinationPath .
-          .\avicore.exe
-          \`\`\`
-          
-          ## Verification
-          
-          All archives include SHA256 checksums for verification:
-          
-          \`\`\`bash
-          # Linux/macOS
-          wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-linux-x86_64.tar.gz.sha256
-          sha256sum -c avicore-${VERSION}-linux-x86_64.tar.gz.sha256
-          
-          # Windows (PowerShell)
-          \$hash = Get-FileHash avicore-${VERSION}-windows-x86_64.zip -Algorithm SHA256
-          \$expectedHash = Get-Content avicore-${VERSION}-windows-x86_64.zip.sha256
-          if (\$hash.Hash -eq \$expectedHash.Split()[0]) { Write-Host "Checksum verified!" }
-          \`\`\`
-          EOF
-          
-          # Prepare all artifact files
-          find ./artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.sha256" \) -exec echo {} \;
-          
-          # Create the release
-          gh release create "${VERSION_TAG}" \
-            --title "${VERSION_TAG}: ${PR_TITLE}" \
-            --notes-file release_notes.md \
-            ${PRERELEASE_FLAG} \
-            ./artifacts/*/*.tar.gz \
-            ./artifacts/*/*.tar.gz.sha256 \
-            ./artifacts/*/*.zip \
-            ./artifacts/*/*.zip.sha256
-          
-          echo "Release created: ${VERSION_TAG}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-      
-      - name: Create PR comment with release links
-        if: github.event_name == 'pull_request'  # Only comment on actual PR merges
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const version = '${{ needs.prepare-release.outputs.version }}';
-            const tag = '${{ needs.prepare-release.outputs.version_tag }}';
-            const hasVersion = '${{ needs.prepare-release.outputs.has_version }}' === 'true';
-            const releaseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/${tag}`;
-            const baseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/download/${tag}`;
-            
-            const releaseType = hasVersion ? '🎉 New Version Released' : '🔄 Release Updated';
-            
-            const comment = `## ${releaseType}
-            
-            **Version:** \`${version}\`
-            **Tag:** \`${tag}\`
-            
-            ### 📦 Download Release
-            Your merged PR has been built and published for all platforms:
-            
-            🔗 **[View Release](${releaseUrl})**
-            
-            ### Quick Install
-            
-            **Linux (x86_64)**
-            \`\`\`bash
-            wget ${baseUrl}/avicore-${version}-linux-x86_64.tar.gz
-            tar -xzf avicore-${version}-linux-x86_64.tar.gz
-            ./avicore
-            \`\`\`
-            
-            **Linux (ARM64)**
-            \`\`\`bash
-            wget ${baseUrl}/avicore-${version}-linux-aarch64.tar.gz
-            tar -xzf avicore-${version}-linux-aarch64.tar.gz
-            ./avicore
-            \`\`\`
-            
-            **macOS (Intel)**
-            \`\`\`bash
-            wget ${baseUrl}/avicore-${version}-macos-x86_64.tar.gz
-            tar -xzf avicore-${version}-macos-x86_64.tar.gz
-            ./avicore
-            \`\`\`
-            
-            **macOS (Apple Silicon)**
-            \`\`\`bash
-            wget ${baseUrl}/avicore-${version}-macos-aarch64.tar.gz
-            tar -xzf avicore-${version}-macos-aarch64.tar.gz
-            ./avicore
-            \`\`\`
-            
-            **Windows (x86_64)**
-            \`\`\`powershell
-            Invoke-WebRequest -Uri "${baseUrl}/avicore-${version}-windows-x86_64.zip" -OutFile "avicore.zip"
-            Expand-Archive -Path "avicore.zip" -DestinationPath .
-            .\\avicore.exe
-            \`\`\`
-            
-            ### 🔐 Checksums
-            SHA256 checksums are available for all downloads to verify integrity.
-            `;
-            
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: comment
-            });
+ prepare-release:
+   if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+   runs-on: ubuntu-latest
+   outputs:
+     has_version: ${{ steps.check_version.outputs.has_version }}
+     version_tag: ${{ steps.check_version.outputs.version_tag }}
+     version: ${{ steps.check_version.outputs.version }}
+     pr_number: ${{ steps.get_pr_info.outputs.pr_number }}
+     pr_title: ${{ steps.get_pr_info.outputs.pr_title }}
+     pr_url: ${{ steps.get_pr_info.outputs.pr_url }}
+   
+   steps:
+     - name: Checkout code
+       uses: actions/checkout@v4
+       with:
+         fetch-depth: 0
+     
+     - name: Get PR information
+       id: get_pr_info
+       run: |
+         if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+           # Manual trigger - fetch PR info from API
+           PR_NUMBER="${{ github.event.inputs.pr_number }}"
+           echo "Fetching PR #${PR_NUMBER} information..."
+           
+           PR_DATA=$(gh pr view ${PR_NUMBER} --json number,title,url,merged,mergedAt)
+           
+           PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
+           PR_URL=$(echo "$PR_DATA" | jq -r '.url')
+           PR_MERGED=$(echo "$PR_DATA" | jq -r '.merged')
+           
+           if [ "$PR_MERGED" != "true" ]; then
+             echo "ERROR: PR #${PR_NUMBER} is not merged!"
+             exit 1
+           fi
+           
+           echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+           echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
+           echo "pr_url=${PR_URL}" >> $GITHUB_OUTPUT
+         else
+           # Regular PR merge trigger
+           echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+           echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+           echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+         fi
+       env:
+         GH_TOKEN: ${{ github.token }}
+     
+     - name: Check PR title for version tag
+       id: check_version
+       run: |
+         PR_TITLE="${{ steps.get_pr_info.outputs.pr_title }}"
+         MANUAL_VERSION="${{ github.event.inputs.version_tag }}"
+         
+         echo "PR Title: ${PR_TITLE}"
+         
+         # If manual version provided, use it
+         if [ -n "$MANUAL_VERSION" ]; then
+           echo "Using manually specified version: ${MANUAL_VERSION}"
+           echo "has_version=true" >> $GITHUB_OUTPUT
+           echo "version_tag=${MANUAL_VERSION}" >> $GITHUB_OUTPUT
+           echo "version=${MANUAL_VERSION#v}" >> $GITHUB_OUTPUT
+         # Check if title contains version pattern
+         elif echo "${PR_TITLE}" | grep -qE 'v[0-9]+\.[0-9]+\.[0-9]+'; then
+           VERSION=$(echo "${PR_TITLE}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9.-]*' | head -1)
+           echo "has_version=true" >> $GITHUB_OUTPUT
+           echo "version_tag=${VERSION}" >> $GITHUB_OUTPUT
+           echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+           echo "Found version tag: ${VERSION}"
+         else
+           echo "has_version=false" >> $GITHUB_OUTPUT
+           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+           echo "version_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
+           echo "version=${LATEST_TAG#v}" >> $GITHUB_OUTPUT
+           echo "No version tag in title, will update latest tag: ${LATEST_TAG}"
+         fi
+     
+     - name: Delete existing release if updating
+       if: steps.check_version.outputs.has_version == 'false'
+       run: |
+         VERSION_TAG="${{ steps.check_version.outputs.version_tag }}"
+         echo "Deleting existing release: ${VERSION_TAG}"
+         gh release delete "${VERSION_TAG}" --yes || true
+         
+         echo "Deleting existing tag: ${VERSION_TAG}"
+         git push origin --delete "${VERSION_TAG}" || true
+       env:
+         GH_TOKEN: ${{ github.token }}
+ 
+ build-binaries:
+   needs: prepare-release
+   runs-on: ${{ matrix.os }}
+   strategy:
+     matrix:
+       include:
+         - os: ubuntu-latest
+           target: x86_64-unknown-linux-gnu
+           artifact_name: avicore
+           asset_name: avicore-${{ needs.prepare-release.outputs.version }}-linux-x86_64
+         - os: macos-latest
+           target: x86_64-apple-darwin
+           artifact_name: avicore
+           asset_name: avicore-${{ needs.prepare-release.outputs.version }}-macos-x86_64
+         - os: macos-latest
+           target: aarch64-apple-darwin
+           artifact_name: avicore
+           asset_name: avicore-${{ needs.prepare-release.outputs.version }}-macos-aarch64
+         - os: windows-latest
+           target: x86_64-pc-windows-msvc
+           artifact_name: avicore.exe
+           asset_name: avicore-${{ needs.prepare-release.outputs.version }}-windows-x86_64
+   
+   steps:
+     - name: Checkout code
+       uses: actions/checkout@v4
+     
+     - name: Install dependencies (Linux)
+       if: runner.os == 'Linux'
+       run: |
+         sudo apt-get update
+         sudo apt-get install -y pkg-config libssl-dev
+     
+     - name: Install dependencies (macOS)
+       if: runner.os == 'macOS'
+       run: |
+         brew install openssl@3
+         echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
+         echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
+     
+     - name: Install Rust toolchain
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
+         target: ${{ matrix.target }}
+         cache: true
+     
+     - name: Configure cross-compilation environment (Linux ARM)
+       if: matrix.target == 'aarch64-unknown-linux-gnu'
+       run: |
+         echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+         echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+         echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> $GITHUB_ENV
+         # OpenSSL cross-compilation
+         echo "OPENSSL_DIR=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
+         echo "OPENSSL_LIB_DIR=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
+         echo "OPENSSL_INCLUDE_DIR=/usr/include" >> $GITHUB_ENV
+     
+     - name: Update Cargo.toml version
+       shell: bash
+       run: |
+         if [[ "$OSTYPE" == "darwin"* ]]; then
+           # macOS sed syntax
+           sed -i '' 's/^version = ".*"/version = "${{ needs.prepare-release.outputs.version }}"/' Cargo.toml
+         else
+           # Linux sed syntax
+           sed -i 's/^version = ".*"/version = "${{ needs.prepare-release.outputs.version }}"/' Cargo.toml
+         fi
+         echo "Updated version in Cargo.toml to ${{ needs.prepare-release.outputs.version }}"
+     
+     - name: Build release
+       run: |
+         # For cross-compiled targets, use vendored OpenSSL if needed
+         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+           # Try with system OpenSSL first, fall back to vendored
+           cargo build --release --target ${{ matrix.target }} --verbose || \
+           OPENSSL_STATIC=1 cargo build --release --target ${{ matrix.target }} --verbose
+         else
+           cargo build --release --target ${{ matrix.target }} --verbose
+         fi
+     
+     - name: Package binary (Unix)
+       if: runner.os != 'Windows'
+       run: |
+         cd target/${{ matrix.target }}/release
+         
+         # Create tarball
+         tar -czf ${{ matrix.asset_name }}.tar.gz ${{ matrix.artifact_name }}
+         
+         # Create checksum
+         shasum -a 256 ${{ matrix.asset_name }}.tar.gz > ${{ matrix.asset_name }}.tar.gz.sha256
+         
+         echo "Created archive and checksum"
+         ls -lh ${{ matrix.asset_name }}*
+     
+     - name: Package binary (Windows)
+       if: runner.os == 'Windows'
+       shell: bash
+       run: |
+         cd target/${{ matrix.target }}/release
+         
+         # Create zip archive
+         7z a ${{ matrix.asset_name }}.zip ${{ matrix.artifact_name }}
+         
+         # Create checksum
+         sha256sum ${{ matrix.asset_name }}.zip > ${{ matrix.asset_name }}.zip.sha256
+         
+         echo "Created archive and checksum"
+         ls -lh ${{ matrix.asset_name }}*
+     
+     - name: Upload artifacts (Unix)
+       if: runner.os != 'Windows'
+       uses: actions/upload-artifact@v4
+       with:
+         name: ${{ matrix.asset_name }}
+         path: |
+           target/${{ matrix.target }}/release/${{ matrix.asset_name }}.tar.gz
+           target/${{ matrix.target }}/release/${{ matrix.asset_name }}.tar.gz.sha256
+     
+     - name: Upload artifacts (Windows)
+       if: runner.os == 'Windows'
+       uses: actions/upload-artifact@v4
+       with:
+         name: ${{ matrix.asset_name }}
+         path: |
+           target/${{ matrix.target }}/release/${{ matrix.asset_name }}.zip
+           target/${{ matrix.target }}/release/${{ matrix.asset_name }}.zip.sha256
+ 
+ create-release:
+   needs: [prepare-release, build-binaries]
+   runs-on: ubuntu-latest
+   
+   steps:
+     - name: Checkout code
+       uses: actions/checkout@v4
+       with:
+         fetch-depth: 0
+     
+     - name: Download all artifacts
+       uses: actions/download-artifact@v4
+       with:
+         path: ./artifacts
+     
+     - name: Display artifact structure
+       run: |
+         ls -R ./artifacts
+     
+     - name: Create or update git tag
+       run: |
+         VERSION_TAG="${{ needs.prepare-release.outputs.version_tag }}"
+         
+         git config user.name "github-actions[bot]"
+         git config user.email "github-actions[bot]@users.noreply.github.com"
+         
+         # Create tag
+         git tag -a "${VERSION_TAG}" -m "Release ${VERSION_TAG}"
+         git push origin "${VERSION_TAG}"
+         
+         echo "Created and pushed tag: ${VERSION_TAG}"
+     
+     - name: Create GitHub Release
+       run: |
+         VERSION_TAG="${{ needs.prepare-release.outputs.version_tag }}"
+         VERSION="${{ needs.prepare-release.outputs.version }}"
+         PR_NUMBER="${{ needs.prepare-release.outputs.pr_number }}"
+         PR_TITLE="${{ needs.prepare-release.outputs.pr_title }}"
+         PR_URL="${{ needs.prepare-release.outputs.pr_url }}"
+         HAS_VERSION="${{ needs.prepare-release.outputs.has_version }}"         
+         
+         # Create release notes
+         if [ "${HAS_VERSION}" == "true" ]; then
+           RELEASE_TYPE="New Version Release"
+           PRERELEASE_FLAG=""
+         else
+           RELEASE_TYPE="Updated Release"
+           PRERELEASE_FLAG="--prerelease"
+         fi
+         
+         cat > release_notes.md << EOF
+         # ${RELEASE_TYPE} - ${VERSION_TAG}
+         
+         **PR #${PR_NUMBER}:** ${PR_TITLE}
+         **Version:** ${VERSION}
+         
+         ## Changes
+         Merged PR #${PR_NUMBER}: ${{ github.event.pull_request.html_url }}
+         
+         ## Installation
+         
+         ### Linux (x86_64)
+         \`\`\`bash
+         wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-linux-x86_64.tar.gz
+         tar -xzf avicore-${VERSION}-linux-x86_64.tar.gz
+         ./avicore
+         \`\`\`
+         
+         ### Linux (ARM64/aarch64)
+         \`\`\`bash
+         wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-linux-aarch64.tar.gz
+         tar -xzf avicore-${VERSION}-linux-aarch64.tar.gz
+         ./avicore
+         \`\`\`
+         
+         ### macOS (Intel)
+         \`\`\`bash
+         wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-macos-x86_64.tar.gz
+         tar -xzf avicore-${VERSION}-macos-x86_64.tar.gz
+         ./avicore
+         \`\`\`
+         
+         ### macOS (Apple Silicon)
+         \`\`\`bash
+         wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-macos-aarch64.tar.gz
+         tar -xzf avicore-${VERSION}-macos-aarch64.tar.gz
+         ./avicore
+         \`\`\`
+         
+         ### Windows (x86_64)
+         Download the zip file and extract it:
+         \`\`\`powershell
+         Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-windows-x86_64.zip" -OutFile "avicore-${VERSION}-windows-x86_64.zip"
+         Expand-Archive -Path "avicore-${VERSION}-windows-x86_64.zip" -DestinationPath .
+         .\avicore.exe
+         \`\`\`
+         
+         ## Verification
+         
+         All archives include SHA256 checksums for verification:
+         
+         \`\`\`bash
+         # Linux/macOS
+         wget https://github.com/${{ github.repository }}/releases/download/${VERSION_TAG}/avicore-${VERSION}-linux-x86_64.tar.gz.sha256
+         sha256sum -c avicore-${VERSION}-linux-x86_64.tar.gz.sha256
+         
+         # Windows (PowerShell)
+         \$hash = Get-FileHash avicore-${VERSION}-windows-x86_64.zip -Algorithm SHA256
+         \$expectedHash = Get-Content avicore-${VERSION}-windows-x86_64.zip.sha256
+         if (\$hash.Hash -eq \$expectedHash.Split()[0]) { Write-Host "Checksum verified!" }
+         \`\`\`
+         EOF
+         
+         # Prepare all artifact files
+         find ./artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.sha256" \) -exec echo {} \;
+         
+         # Create the release
+         gh release create "${VERSION_TAG}" \
+           --title "${VERSION_TAG}: ${PR_TITLE}" \
+           --notes-file release_notes.md \
+           ${PRERELEASE_FLAG} \
+           ./artifacts/*/*.tar.gz \
+           ./artifacts/*/*.tar.gz.sha256 \
+           ./artifacts/*/*.zip \
+           ./artifacts/*/*.zip.sha256
+         
+         echo "Release created: ${VERSION_TAG}"
+       env:
+         GH_TOKEN: ${{ github.token }}
+     
+     - name: Create PR comment with release links
+       if: github.event_name == 'pull_request'  # Only comment on actual PR merges
+       uses: actions/github-script@v7
+       with:
+         script: |
+           const prNumber = context.payload.pull_request.number;
+           const version = '${{ needs.prepare-release.outputs.version }}';
+           const tag = '${{ needs.prepare-release.outputs.version_tag }}';
+           const hasVersion = '${{ needs.prepare-release.outputs.has_version }}' === 'true';
+           const releaseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/${tag}`;
+           const baseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/download/${tag}`;
+           
+           const releaseType = hasVersion ? '🎉 New Version Released' : '🔄 Release Updated';
+           
+           const comment = `## ${releaseType}
+           
+           **Version:** \`${version}\`
+           **Tag:** \`${tag}\`
+           
+           ### 📦 Download Release
+           Your merged PR has been built and published for all platforms:
+           
+           🔗 **[View Release](${releaseUrl})**
+           
+           ### Quick Install
+           
+           **Linux (x86_64)**
+           \`\`\`bash
+           wget ${baseUrl}/avicore-${version}-linux-x86_64.tar.gz
+           tar -xzf avicore-${version}-linux-x86_64.tar.gz
+           ./avicore
+           \`\`\`
+           
+           **Linux (ARM64)**
+           \`\`\`bash
+           wget ${baseUrl}/avicore-${version}-linux-aarch64.tar.gz
+           tar -xzf avicore-${version}-linux-aarch64.tar.gz
+           ./avicore
+           \`\`\`
+           
+           **macOS (Intel)**
+           \`\`\`bash
+           wget ${baseUrl}/avicore-${version}-macos-x86_64.tar.gz
+           tar -xzf avicore-${version}-macos-x86_64.tar.gz
+           ./avicore
+           \`\`\`
+           
+           **macOS (Apple Silicon)**
+           \`\`\`bash
+           wget ${baseUrl}/avicore-${version}-macos-aarch64.tar.gz
+           tar -xzf avicore-${version}-macos-aarch64.tar.gz
+           ./avicore
+           \`\`\`
+           
+           **Windows (x86_64)**
+           \`\`\`powershell
+           Invoke-WebRequest -Uri "${baseUrl}/avicore-${version}-windows-x86_64.zip" -OutFile "avicore.zip"
+           Expand-Archive -Path "avicore.zip" -DestinationPath .
+           .\\avicore.exe
+           \`\`\`
+           
+           ### 🔐 Checksums
+           SHA256 checksums are available for all downloads to verify integrity.
+           `;
+           
+           github.rest.issues.createComment({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             issue_number: prNumber,
+             body: comment
+           });
