@@ -3,7 +3,7 @@ use crate::dialogue::intent::Intent;
 use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::skills::avi_script::helpers::fix_module_imports;
 use crate::skills::skill_context::SkillContext;
-use crate::utils::{Event, EventType};
+use crate::utils::{Event, EventType, config_dir};
 use crate::{rt_spawn, subscribe};
 use log::error;
 use memory_size_derive::{DeepSize, DeepSizeTree};
@@ -74,7 +74,7 @@ impl Skill {
     /// Constructs the path to a skill's directory.
     fn skill_path(name: &str) -> Result<String, Box<dyn std::error::Error>> {
         let config = runtime()?;
-        Ok(format!("{}/{}", config.skill_path, name))
+        Ok(format!("{}/skills/{}", config_dir().display(), name))
     }
 
     /// Compiles the AST from the skill's entry file

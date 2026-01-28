@@ -5,17 +5,18 @@ use crate::dialogue::reply::{ReplyConfig, ReplyManager};
 use crate::user::UserManager;
 use avi_device::device::AviDevice;
 use log::{debug, error, info, trace};
+use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use tokio::runtime::Handle;
 
 /// Holds the runtime configuration and shared resources for the AviCore application.
 pub struct RuntimeContext {
-    /// The filesystem path where skills are located.
-    pub skill_path: String,
     /// A handle to the Tokio runtime for spawning async tasks.
     pub rt: Handle,
     /// A shared reference to the Avi device.
     pub device: Arc<AviDevice>,
+
+    pub config_path: PathBuf,
 
     pub reply_manager: ReplyManager,
 
@@ -53,7 +54,6 @@ pub fn create_runtime(config_path: &str, device: Arc<AviDevice>) {
     info!("Initializing runtime.");
     RUNTIMECTX
         .set(Arc::from(RuntimeContext {
-            skill_path: format!("{}/skills", config_path),
             device,
             rt: Handle::current(),
             reply_manager: ReplyManager::new(Option::from(ReplyConfig {
@@ -64,6 +64,7 @@ pub fn create_runtime(config_path: &str, device: Arc<AviDevice>) {
             configuration: ConfigSystem::new(&format!("{}/config", config_path)),
             context: ContextManager::new(format!("{}/context", config_path)),
             user: UserManager::new(),
+            config_path: config_path.into(),
         }))
         .unwrap_or_else(|_| {
             error!("Failed to set Runtime Context: already initialized.");

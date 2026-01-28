@@ -1,5 +1,4 @@
 use crate::ctx::runtime;
-use crate::dialogue::languages::lang;
 #[allow(unused_imports)]
 use crate::skills::avi_script::engine::create_avi_script_engine;
 use crate::ui::ask;
@@ -11,7 +10,6 @@ use crate::ui::select_option;
 use crate::ui::spinner_style;
 use crate::ui::step;
 use crate::ui::sub_step;
-use avi_device::device;
 use console::style;
 use indicatif::ProgressBar;
 use log::error;
@@ -19,12 +17,13 @@ use log::info;
 #[allow(unused_imports)]
 use log::warn;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::fs;
-use std::os;
+use std::fs::File;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
-use std::time;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -192,13 +191,28 @@ pub fn load_value_from_file<T: for<'a> Deserialize<'a>>(path: PathBuf) -> Result
 }
 
 #[cfg(debug_assertions)]
-pub fn config_dir() {
-
+pub fn config_dir() -> PathBuf {
+    match runtime() {
+        Ok(runtime) => runtime.config_path.clone(),
+        Err(_) => "./config".into(),
+    }
 }
 
 #[cfg(not(debug_assertions))]
-pub fn config_dir() {
+pub fn config_dir() -> PathBuf {
+    match runtime() {
+        Ok(runtime) => runtime.config_path.clone(),
+        Err(_) => {
+            use dirs::config_local_dir;
 
+            if let Some(path) = config_local_dir() {
+                let config_path = path.push("avi");
+                fs::create_dir_all(config_path);
+                return config_path;
+            }
+            "./config"
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -207,7 +221,7 @@ pub struct Setup {}
 #[allow(dead_code, unused)]
 impl Setup {
     pub fn need_to() -> bool {
-        false
+        Path::new(&config_dir()).exists()
     }
 
     pub fn setup() {
@@ -409,12 +423,36 @@ impl Setup {
     ) {
         //Create config, skills
         let folders = ["config", "lang", "skills"];
-        
-        fs::remove_dir_all()
 
-        //let mut file = File::create(&script_path)?;
-        //file.write_all(content.as_bytes())?;
-        //updated_scripts.push(name.clone());
-        sleep(Duration::from_secs(3));
+        let defaults = HashMap::from([
+            (
+                "config/const.config",
+                include_str!("../config/config/const.config"),
+            ),
+            (
+                "config/const.config",
+                include_str!("../config/config/settings.config"),
+            ),
+            ("lang/en.lang", include_str!("../config/lang/en.lang")),
+            ("lang/pt.lang", include_str!("../config/lang/pt.lang")),
+        ]);
+
+        let dir = config_dir();
+
+        for folder in folders {
+            let _ = fs::create_dir(dir.join(folder));
+        }
+
+        for (path, content) in &defaults {
+            let mut file = match File::create(config_dir().join(path)) {
+                Ok(f) => f,
+                Err(e) => {
+                    error!("Error criating file: {}", e);
+                    continue;
+                }
+            };
+
+            let _ = file.write_all(content.as_bytes());
+        }
     }
 }
