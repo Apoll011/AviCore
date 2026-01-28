@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AviCoreLogger::set_level(&level);
             }
 
-            let is_core = matches!(dev_type, AviDeviceType::CORE);
+            let is_core = matches!(dev_type, AviDeviceType::Core);
             let mode_str = if is_core {
                 "CORE CONTROLLER"
             } else {

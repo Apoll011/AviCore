@@ -109,18 +109,18 @@ pub enum Commands {
 pub enum AviDeviceType {
     /// Main controller node with full orchestration capabilities
     #[value(name = "core")]
-    CORE,
+    Core,
 
     /// Peripheral node for distributed processing
     #[value(name = "node")]
-    NODE,
+    Node,
 }
 
 impl std::fmt::Display for AviDeviceType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AviDeviceType::CORE => write!(f, "CORE"),
-            AviDeviceType::NODE => write!(f, "NODE"),
+            AviDeviceType::Core => write!(f, "CORE"),
+            AviDeviceType::Node => write!(f, "NODE"),
         }
     }
 }

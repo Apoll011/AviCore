@@ -283,7 +283,7 @@ async fn on_started(device: AviDevice, peer_id: String, _listening: Vec<String>)
 
     device
         .subscribe(
-            &format!("speak/{}/text", device.get_id().await.to_string()),
+            &format!("speak/{}/text", device.get_id().await),
             move |_from, _topic, data| {
                 let msg = String::from_utf8_lossy(&data);
                 println!("Speaker: {}", msg);
