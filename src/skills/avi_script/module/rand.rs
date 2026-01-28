@@ -40,7 +40,7 @@ pub mod rand_functions {
     /// ```
     #[rhai_fn(name = "rand_bool", return_raw)]
     pub fn rand_bool_with_probability(probability: FLOAT) -> Result<bool, Box<EvalAltResult>> {
-        if probability < 0.0 || probability > 1.0 {
+        if !(0.0..=1.0).contains(&probability) {
             Err(EvalAltResult::ErrorArithmetic(
                 format!(
                     "Invalid probability (must be between 0.0 and 1.0): {}",

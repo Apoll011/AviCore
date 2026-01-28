@@ -199,7 +199,7 @@ impl Skill {
 
         self.engine.run_ast_with_scope(
             &mut *self.scope.write().map_err(|e| e.to_string())?,
-            &*ast_guard,
+            &ast_guard,
         )?;
         Ok(())
     }

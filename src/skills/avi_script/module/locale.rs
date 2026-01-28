@@ -24,7 +24,7 @@ pub mod locale_module {
                 "Could not get the skill context".to_string().into(),
                 Position::NONE,
             )))
-            .map(|v| ImmutableString::from(v))
+            .map(ImmutableString::from)
     }
 
     /// Gets a formatted translation for a given ID in the current locale
@@ -49,7 +49,7 @@ pub mod locale_module {
             "Could not get the skill context".to_string().into(),
             Position::NONE,
         )))
-        .map(|v| ImmutableString::from(v))
+        .map(ImmutableString::from)
     }
 
     /// Lists all translations for a given locale code
@@ -84,7 +84,6 @@ pub mod locale_module {
     ///
     /// # Returns
     /// The current language code (e.g., 'en-US')
-
     pub fn current(_ctx: NativeCallContext) -> ImmutableString {
         ImmutableString::from(lang())
     }

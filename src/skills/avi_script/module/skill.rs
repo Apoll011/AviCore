@@ -37,7 +37,7 @@ pub mod skill_module {
     pub fn get_permissions(ctx: NativeCallContext) -> Vec<ImmutableString> {
         skill_context_def(ctx, |v| v.info.permissions.clone())
             .iter()
-            .map(|v| ImmutableString::from(v))
+            .map(ImmutableString::from)
             .collect()
     }
 

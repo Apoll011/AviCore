@@ -47,12 +47,12 @@ pub mod ml {
     ) -> Result<Model, Box<EvalAltResult>> {
         // Make x array
         let array_as_vec_vec_float = &x
-            .into_iter()
+            .iter_mut()
             .map(|observation| array_to_vec_float(&mut observation.clone().into_array().unwrap()))
             .collect::<Vec<Vec<FLOAT>>>();
 
         // Check if x array is empty
-        if array_as_vec_vec_float.len() == 0 {
+        if array_as_vec_vec_float.is_empty() {
             Err(EvalAltResult::ErrorArrayBounds(0, 0, Position::NONE).into())
         } else {
             let algorithm_string = algorithm.as_str();
@@ -147,12 +147,12 @@ pub mod ml {
     pub fn predict_with_model(x: &mut Array, model: Model) -> Result<Array, Box<EvalAltResult>> {
         // Make x array
         let array_as_vec_vec_float = &x
-            .into_iter()
+            .iter_mut()
             .map(|observation| array_to_vec_float(&mut observation.clone().into_array().unwrap()))
             .collect::<Vec<Vec<FLOAT>>>();
 
         // Check if x array is empty
-        if array_as_vec_vec_float.len() == 0 {
+        if array_as_vec_vec_float.is_empty() {
             Err(EvalAltResult::ErrorArrayBounds(0, 0, Position::NONE).into())
         } else {
             let xvec = DenseMatrix::from_2d_vec(array_as_vec_vec_float).map_err(|e| {
@@ -169,48 +169,48 @@ pub mod ml {
                         FLOAT,
                         DenseMatrix<FLOAT>,
                         Vec<FLOAT>,
-                    > = bincode::deserialize(&*model.saved_model).unwrap();
-                    return match model_ready.predict(&xvec) {
+                    > = bincode::deserialize(&model.saved_model).unwrap();
+                    match model_ready.predict(&xvec) {
                         Ok(y) => Ok(y
                             .into_iter()
-                            .map(|observation| Dynamic::from_float(observation))
+                            .map(Dynamic::from_float)
                             .collect::<Vec<Dynamic>>()),
                         Err(e) => Err(EvalAltResult::ErrorArithmetic(
                             format!("{e}"),
                             Position::NONE,
                         )
                         .into()),
-                    };
+                    }
                 }
                 "lasso" => {
                     let model_ready: Lasso<FLOAT, FLOAT, DenseMatrix<FLOAT>, Vec<FLOAT>> =
-                        bincode::deserialize(&*model.saved_model).unwrap();
-                    return match model_ready.predict(&xvec) {
+                        bincode::deserialize(&model.saved_model).unwrap();
+                    match model_ready.predict(&xvec) {
                         Ok(y) => Ok(y
                             .into_iter()
-                            .map(|observation| Dynamic::from_float(observation))
+                            .map(Dynamic::from_float)
                             .collect::<Vec<Dynamic>>()),
                         Err(e) => Err(EvalAltResult::ErrorArithmetic(
                             format!("{e}"),
                             Position::NONE,
                         )
                         .into()),
-                    };
+                    }
                 }
                 "logistic" => {
                     let model_ready: LogisticRegression<FLOAT, INT, DenseMatrix<FLOAT>, Vec<INT>> =
-                        bincode::deserialize(&*model.saved_model).unwrap();
-                    return match model_ready.predict(&xvec) {
+                        bincode::deserialize(&model.saved_model).unwrap();
+                    match model_ready.predict(&xvec) {
                         Ok(y) => Ok(y
                             .into_iter()
-                            .map(|observation| Dynamic::from_int(observation))
+                            .map(Dynamic::from_int)
                             .collect::<Vec<Dynamic>>()),
                         Err(e) => Err(EvalAltResult::ErrorArithmetic(
                             format!("{e}"),
                             Position::NONE,
                         )
                         .into()),
-                    };
+                    }
                 }
                 &_ => Err(EvalAltResult::ErrorArithmetic(
                     format!("{} is not a recognized model type.", algorithm_string),
