@@ -43,7 +43,7 @@ impl SkillManager {
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
-        if let Ok(c) = runtime()
+        if let Ok(_c) = runtime()
             && let Ok(entries) = fs::read_dir(config_dir().join("skills"))
         {
             info!("Searching skills path {}/skills", config_dir().display());

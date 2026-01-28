@@ -40,13 +40,8 @@ pub enum Commands {
         gateway: bool,
 
         /// Configuration file path
-        #[arg(
-            long = "config",
-            short = 'c',
-            default_value = "./config",
-            help = "Path to configuration path"
-        )]
-        config: String,
+        #[arg(long = "config", short = 'c', help = "Path to configuration path")]
+        config: Option<String>,
 
         /// Log level
         #[arg(

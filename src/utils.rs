@@ -25,7 +25,6 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
 use std::time::Duration;
-use tokio::time::sleep;
 
 #[derive(Eq, PartialEq)]
 pub enum EventType {
@@ -220,11 +219,11 @@ pub struct Setup {}
 
 #[allow(dead_code, unused)]
 impl Setup {
-    pub fn need_to() -> bool {
-        Path::new(&config_dir()).exists()
+    pub fn need_to(dir: &PathBuf) -> bool {
+        !Path::new(dir).exists()
     }
 
-    pub fn setup() {
+    pub fn setup(dir: &PathBuf) {
         sub_step(1, 6, "Initialization");
 
         let mut nlu_host = "0.0.0.0";
@@ -234,13 +233,13 @@ impl Setup {
             "Offline (Bare Minimum)",
             "Online (Download all the required resources)",
         ];
-        let modes_v = vec!["offline", "online"];
+        let modes_v = ["offline", "online"];
         let mode = modes_v[select_option("How would you like to setup Avi", &modes)];
 
         sub_step(2, 6, "Enviroment Configuration");
 
         let langs = vec!["English", "Português"];
-        let lang_v = vec!["en", "pt"];
+        let lang_v = ["en", "pt"];
         let lang = lang_v[select_option("Select the system language", &langs)];
 
         let devs = vec![
@@ -249,13 +248,13 @@ impl Setup {
             "Both (Listenner and Speaker)",
             "None",
         ];
-        let dev_v = vec!["listenner", "speaker", "both", "none"];
+        let dev_v = ["listenner", "speaker", "both", "none"];
         let dev = dev_v[select_option("Select Device Profile", &devs)];
 
         sub_step(3, 6, "Enviroment Configuration");
 
         let nets = vec!["Core (Central Hub)", "Node (Satelite)"];
-        let nets_v = vec!["core", "node"];
+        let nets_v = ["core", "node"];
         let net = nets_v[select_option("Select the system language", &nets)];
 
         let gateway = ask_confirm("Allow device to act as Gateway");
@@ -274,7 +273,7 @@ impl Setup {
                 "Configure remote NLU connection",
                 "Skip",
             ];
-            let nlu_v = vec!["install", "config", "skip"];
+            let nlu_v = ["install", "config", "skip"];
             let nlu = nlu_v[select_option("Select the system language", &nlus)];
 
             if nlu.eq("install") {
@@ -310,6 +309,7 @@ impl Setup {
             gateway,
             nlu_host.to_string(),
             nlu_port,
+            dir,
         );
         pb.finish_with_message("Config folder created.");
 
@@ -420,6 +420,7 @@ impl Setup {
         gateway: bool,
         nlu_host: String,
         nlu_port: usize,
+        dir: &PathBuf,
     ) {
         //Create config, skills
         let folders = ["config", "lang", "skills"];
@@ -437,14 +438,14 @@ impl Setup {
             ("lang/pt.lang", include_str!("../config/lang/pt.lang")),
         ]);
 
-        let dir = config_dir();
+        let _ = fs::create_dir_all(&dir);
 
         for folder in folders {
             let _ = fs::create_dir(dir.join(folder));
         }
 
         for (path, content) in &defaults {
-            let mut file = match File::create(config_dir().join(path)) {
+            let mut file = match File::create(dir.join(path)) {
                 Ok(f) => f,
                 Err(e) => {
                     error!("Error criating file: {}", e);

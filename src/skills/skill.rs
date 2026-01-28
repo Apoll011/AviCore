@@ -73,7 +73,7 @@ impl Skill {
 
     /// Constructs the path to a skill's directory.
     fn skill_path(name: &str) -> Result<String, Box<dyn std::error::Error>> {
-        let config = runtime()?;
+        let _config = runtime()?;
         Ok(format!("{}/skills/{}", config_dir().display(), name))
     }
 

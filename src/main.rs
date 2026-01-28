@@ -19,7 +19,7 @@ use crate::cli_args::{Args, AviDeviceType, Commands};
 use crate::log::AviCoreLogger;
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
-use crate::utils::{Setup, generate_documentation, generate_dsl_definition};
+use crate::utils::{Setup, config_dir, generate_documentation, generate_dsl_definition};
 use ::log::{error, info};
 use clap::Parser;
 use std::time::Duration;
@@ -51,7 +51,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 "PERIPHERAL NODE"
             };
-            Setup::setup();
+
+            let config_w;
+
+            if let Some(c) = config {
+                config_w = c.as_str().into();
+            } else {
+                config_w = config_dir();
+            }
+
+            info!("Checking system...");
+            info!("Config path set to: {}", config_w.display());
+            if Setup::need_to(&config_w) {
+                Setup::setup(&config_w);
+            }
+
             ui::step(2, 8, &format!("Booting sequence initiated: {}", mode_str));
 
             if gateway {
@@ -60,7 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             info!("System ownership transferred to AviCore Reactor...");
 
-            start_avi(is_core, gateway, config).await?;
+            start_avi(is_core, gateway, config_w.display().to_string()).await?;
         }
 
         Commands::GenerateDocs {
