@@ -19,7 +19,7 @@ use crate::cli_args::{Args, AviDeviceType, Commands};
 use crate::log::AviCoreLogger;
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
-use crate::utils::{generate_documentation, generate_dsl_definition};
+use crate::utils::{Setup, generate_documentation, generate_dsl_definition};
 use ::log::{error, info};
 use clap::Parser;
 use std::time::Duration;
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 "PERIPHERAL NODE"
             };
-
+            Setup::setup();
             ui::step(2, 8, &format!("Booting sequence initiated: {}", mode_str));
 
             if gateway {
