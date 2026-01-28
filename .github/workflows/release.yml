@@ -1,23 +1,34 @@
 name: Release Build
-
-on:
+ on:
   pull_request:
     types: [closed]
     branches:
       - master
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      pr_number:
+        description: 'PR number to build'
+        required: true
+        type: number
+      version_tag:
+        description: 'Version tag (e.g., v1.0.0) - optional, will extract from PR title if not provided'
+        required: false
+        type: string
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   prepare-release:
-    # Only run if PR was merged
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       has_version: ${{ steps.check_version.outputs.has_version }}
       version_tag: ${{ steps.check_version.outputs.version_tag }}
       version: ${{ steps.check_version.outputs.version }}
+      pr_number: ${{ steps.get_pr_info.outputs.pr_number }}
+      pr_title: ${{ steps.get_pr_info.outputs.pr_title }}
+      pr_url: ${{ steps.get_pr_info.outputs.pr_url }}
     
     steps:
       - name: Checkout code
@@ -25,15 +36,53 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Get PR information
+        id: get_pr_info
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Manual trigger - fetch PR info from API
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            echo "Fetching PR #${PR_NUMBER} information..."
+            
+            PR_DATA=$(gh pr view ${PR_NUMBER} --json number,title,url,merged,mergedAt)
+            
+            PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
+            PR_URL=$(echo "$PR_DATA" | jq -r '.url')
+            PR_MERGED=$(echo "$PR_DATA" | jq -r '.merged')
+            
+            if [ "$PR_MERGED" != "true" ]; then
+              echo "ERROR: PR #${PR_NUMBER} is not merged!"
+              exit 1
+            fi
+            
+            echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+            echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
+            echo "pr_url=${PR_URL}" >> $GITHUB_OUTPUT
+          else
+            # Regular PR merge trigger
+            echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+            echo "pr_url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
       - name: Check PR title for version tag
         id: check_version
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_TITLE="${{ steps.get_pr_info.outputs.pr_title }}"
+          MANUAL_VERSION="${{ github.event.inputs.version_tag }}"
+          
           echo "PR Title: ${PR_TITLE}"
           
-          # Check if title contains version pattern (e.g., v1.2.3, v0.1.0-beta, etc.)
-          if echo "${PR_TITLE}" | grep -qE 'v[0-9]+\.[0-9]+\.[0-9]+'; then
-            # Extract version from title
+          # If manual version provided, use it
+          if [ -n "$MANUAL_VERSION" ]; then
+            echo "Using manually specified version: ${MANUAL_VERSION}"
+            echo "has_version=true" >> $GITHUB_OUTPUT
+            echo "version_tag=${MANUAL_VERSION}" >> $GITHUB_OUTPUT
+            echo "version=${MANUAL_VERSION#v}" >> $GITHUB_OUTPUT
+          # Check if title contains version pattern
+          elif echo "${PR_TITLE}" | grep -qE 'v[0-9]+\.[0-9]+\.[0-9]+'; then
             VERSION=$(echo "${PR_TITLE}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9.-]*' | head -1)
             echo "has_version=true" >> $GITHUB_OUTPUT
             echo "version_tag=${VERSION}" >> $GITHUB_OUTPUT
@@ -41,7 +90,6 @@ jobs:
             echo "Found version tag: ${VERSION}"
           else
             echo "has_version=false" >> $GITHUB_OUTPUT
-            # Get latest tag to update
             LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
             echo "version_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
             echo "version=${LATEST_TAG#v}" >> $GITHUB_OUTPUT
@@ -224,9 +272,10 @@ jobs:
         run: |
           VERSION_TAG="${{ needs.prepare-release.outputs.version_tag }}"
           VERSION="${{ needs.prepare-release.outputs.version }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          HAS_VERSION="${{ needs.prepare-release.outputs.has_version }}"
+          PR_NUMBER="${{ needs.prepare-release.outputs.pr_number }}"
+          PR_TITLE="${{ needs.prepare-release.outputs.pr_title }}"
+          PR_URL="${{ needs.prepare-release.outputs.pr_url }}"
+          HAS_VERSION="${{ needs.prepare-release.outputs.has_version }}"         
           
           # Create release notes
           if [ "${HAS_VERSION}" == "true" ]; then
@@ -318,6 +367,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       
       - name: Create PR comment with release links
+        if: github.event_name == 'pull_request'  # Only comment on actual PR merges
         uses: actions/github-script@v7
         with:
           script: |

@@ -1,0 +1,20 @@
+{
+  "pull_request": {
+    "merged": true,
+    "number": 1,
+    "title": "Test Release v1.0.0",
+    "html_url": "https://github.com/apoll011/repo/pull/1",
+    "head": {
+      "ref": "feature-branch"
+    },
+    "base": {
+      "ref": "master"
+    }
+  },
+  "repository": {
+    "name": "aviCore",
+    "owner": {
+      "login": "apoll011"
+    }
+  }
+}
