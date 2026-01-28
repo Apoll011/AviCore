@@ -222,7 +222,7 @@ pub struct Setup {
 
 #[allow(dead_code, unused)]
 impl Setup {
-    pub fn new(dir: &PathBuf) -> Self {
+    pub fn new(dir: &Path) -> Self {
         Self {
             config_path: dir.to_path_buf(),
         }
