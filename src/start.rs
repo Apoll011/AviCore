@@ -53,7 +53,7 @@ pub async fn start_avi(
     });
 
     register_action!(DialogueAction, pb, {
-        capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "both".to_string())),
+        capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "none".to_string())),
     });
 
     register_action!(MeshAction, pb, if: is_core);

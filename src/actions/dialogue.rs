@@ -23,6 +23,7 @@ pub enum DialogueCapability {
     /// Only listener capability is enabled.
     #[allow(dead_code)]
     Listener = 2,
+    None = 3,
 }
 
 impl DialogueCapability {
@@ -31,8 +32,10 @@ impl DialogueCapability {
             DialogueCapability::Speaker
         } else if cap.eq("listener") {
             DialogueCapability::Listener
-        } else {
+        } else if cap.eq("both") {
             DialogueCapability::Both
+        } else {
+            DialogueCapability::None
         }
     }
 }
@@ -92,6 +95,7 @@ impl Action for DialogueAction {
             }
             DialogueCapability::Speaker => self.register_speaker().await,
             DialogueCapability::Listener => self.register_listener().await,
+            DialogueCapability::None => info!("Skiping dialogue capabilities."),
         }
     }
 }

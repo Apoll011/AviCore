@@ -171,3 +171,50 @@ pub fn load_value_from_file<T: for<'a> Deserialize<'a>>(path: PathBuf) -> Result
         Err(e) => Err(format!("Error parsing file: {}", e)),
     }
 }
+
+#[allow(dead_code)]
+pub struct Setup {}
+
+#[allow(dead_code, unused)]
+impl Setup {
+    pub fn need_to() -> bool {
+        false
+    }
+
+    pub fn setup() {
+        //print, ask, setup
+    }
+
+    fn config_offline(language: String, device_type: String) {
+        let folders = ["config", "skills", "lang"];
+    }
+
+    pub fn download_skill(skill_id: String) {
+        todo!()
+    }
+    pub fn download_initial_skills() {
+        todo!()
+    }
+
+    pub fn download_language(lang_id: String) {
+        todo!()
+    }
+    pub fn setup_languages() {
+        todo!()
+    }
+
+    pub fn download_dashboard() {
+        todo!()
+    }
+
+    pub fn is_dashboard_avaliable() -> bool {
+        todo!()
+    }
+
+    pub fn create_config_folder(offline_mode: bool, language: String, device_type: String) {
+        //Create config, skills
+        //let mut file = File::create(&script_path)?;
+        //file.write_all(content.as_bytes())?;
+        //updated_scripts.push(name.clone());
+    }
+}
