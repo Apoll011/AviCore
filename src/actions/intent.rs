@@ -140,7 +140,7 @@ impl IntentAction {
         let intent = Intent {
             input: intent.input,
             intent: Some(IntentInfo(*intent.intent)),
-            slots: intent.slots.unwrap().into_iter().map(|s| Slot(s)).collect(),
+            slots: intent.slots.unwrap().into_iter().map(Slot).collect(),
         };
         let mut mg = skill_manager.lock().await;
 

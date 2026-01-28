@@ -18,7 +18,7 @@ pub mod context_module {
     pub fn get(ctx: NativeCallContext, key: ImmutableString) -> Dynamic {
         skill_context_def(ctx, |v| {
             get_ctx!(skill: v.info.name.clone(), &key)
-                .map(|v| json_to_dynamic(v))
+                .map(json_to_dynamic)
                 .unwrap_or(Dynamic::UNIT)
         })
     }

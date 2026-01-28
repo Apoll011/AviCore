@@ -147,7 +147,6 @@ impl SkillManager {
         for skill in self
             .skills
             .values()
-            .into_iter()
             .map(|skill| skill.pathname())
             .collect::<Vec<PathBuf>>()
         {

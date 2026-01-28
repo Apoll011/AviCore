@@ -120,7 +120,7 @@ impl ContextManager {
         if let Some(ctx_value) = self.load_persistent(scope, key) {
             if !ctx_value.is_expired() {
                 debug!("Found {} in persistent storage for scope {:?}", key, scope);
-                self.save(scope, &key, &ctx_value);
+                self.save(scope, key, &ctx_value);
                 return Some(ctx_value.value);
             } else {
                 debug!("Found expired {} in persistent storage, deleting", key);
