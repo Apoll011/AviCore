@@ -332,39 +332,36 @@ mod tests {
     fn test_bool_validator_basic() {
         let validator = BoolValidator::new(false);
 
-        assert_eq!(validator.validate_and_parse("yes").unwrap(), true);
-        assert_eq!(validator.validate_and_parse("no").unwrap(), false);
-        assert_eq!(validator.validate_and_parse("always").unwrap(), true);
-        assert_eq!(validator.validate_and_parse("never").unwrap(), false);
+        assert!(validator.validate_and_parse("yes").unwrap());
+        assert!(!validator.validate_and_parse("no").unwrap());
+        assert!(validator.validate_and_parse("always").unwrap());
+        assert!(!validator.validate_and_parse("never").unwrap());
     }
 
     #[test]
     fn test_bool_validator_case_insensitive() {
         let validator = BoolValidator::new(false);
 
-        assert_eq!(validator.validate_and_parse("YES").unwrap(), true);
-        assert_eq!(validator.validate_and_parse("No").unwrap(), false);
-        assert_eq!(validator.validate_and_parse("ALWAYS").unwrap(), true);
-        assert_eq!(validator.validate_and_parse("NeVeR").unwrap(), false);
+        assert!(validator.validate_and_parse("YES").unwrap());
+        assert!(!validator.validate_and_parse("No").unwrap());
+        assert!(validator.validate_and_parse("ALWAYS").unwrap());
+        assert!(!validator.validate_and_parse("NeVeR").unwrap());
     }
 
     #[test]
     fn test_bool_validator_partial_match() {
         let validator = BoolValidator::new(false);
 
-        assert_eq!(validator.validate_and_parse("oh yes please").unwrap(), true);
-        assert_eq!(validator.validate_and_parse("no way").unwrap(), false);
-        assert_eq!(
-            validator.validate_and_parse("I will always do it").unwrap(),
-            true
-        );
+        assert!(validator.validate_and_parse("oh yes please").unwrap());
+        assert!(!validator.validate_and_parse("no way").unwrap());
+        assert!(validator.validate_and_parse("I will always do it").unwrap());
     }
 
     #[test]
     fn test_bool_validator_hard_search() {
         let validator = BoolValidator::new(true);
 
-        assert_eq!(validator.validate_and_parse("yes").unwrap(), true);
+        assert!(validator.validate_and_parse("yes").unwrap());
         assert!(validator.validate_and_parse("oh yes please").is_err());
         assert!(validator.validate_and_parse("maybe").is_err());
     }

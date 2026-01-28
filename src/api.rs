@@ -10,9 +10,7 @@ use avi_nlu_client::models::{
 use log::trace;
 
 fn box_err<E: std::fmt::Display>(e: E) -> Box<dyn std::error::Error> {
-    Box::new(std::io::Error::other(
-        e.to_string(),
-    ))
+    Box::new(std::io::Error::other(e.to_string()))
 }
 /// A client for interacting with the Avi server API.
 pub struct Api {

@@ -157,7 +157,7 @@ impl Skill {
         for subscription in subscriptions {
             let event = Event::get_event(subscription.to_string())?;
 
-            if matches!(event.event_type, EventType::TOPIC) {
+            if matches!(event.event_type, EventType::Topic) {
                 // Clone Arc and create new engine instance for closure
                 let ast_clone = Arc::clone(&ast);
                 let scope_clone = Arc::clone(&scope);

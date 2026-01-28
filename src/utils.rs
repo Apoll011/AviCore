@@ -11,23 +11,23 @@ use std::path::PathBuf;
 
 #[derive(Eq, PartialEq)]
 pub enum EventType {
-    TOPIC,
-    EVENT,
+    Topic,
+    Event,
 }
 
 impl EventType {
     pub fn from(string: &str) -> Option<EventType> {
         if string.eq_ignore_ascii_case("topic") {
-            return Some(EventType::TOPIC);
+            return Some(EventType::Topic);
         } else if string.eq_ignore_ascii_case("event") {
-            return Some(EventType::EVENT);
+            return Some(EventType::Event);
         }
         None
     }
     pub fn name(&self) -> String {
         match self {
-            EventType::TOPIC => "topic".to_string(),
-            EventType::EVENT => "event".to_string(),
+            EventType::Topic => "topic".to_string(),
+            EventType::Event => "event".to_string(),
         }
     }
 }

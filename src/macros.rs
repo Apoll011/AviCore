@@ -111,6 +111,7 @@ macro_rules! subscribe {
     }};
 }
 
+#[allow(clippy::await_holding_lock)]
 #[macro_export]
 macro_rules! set_ctx {
     ($key:expr, $value:expr) => {

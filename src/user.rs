@@ -147,7 +147,12 @@ impl UserManager {
 
     pub async fn save_to_device(&self) {
         trace!("Saving user data to device context");
-        let _ = set_ctx!(device, "avi.user", &*self.user.read());
+        let user = {
+            let guard = self.user.read();
+            guard.clone()
+        };
+
+        let _ = set_ctx!(device, "avi.user", user);
     }
 
     fn save_to_persistent(&self) {
