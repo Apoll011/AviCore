@@ -20,6 +20,7 @@ use log::info;
 use log::warn;
 use serde::Deserialize;
 use std::fs;
+use std::os;
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
@@ -188,6 +189,16 @@ pub fn load_value_from_file<T: for<'a> Deserialize<'a>>(path: PathBuf) -> Result
         Ok(f) => Ok(f),
         Err(e) => Err(format!("Error parsing file: {}", e)),
     }
+}
+
+#[cfg(debug_assertions)]
+pub fn config_dir() {
+
+}
+
+#[cfg(not(debug_assertions))]
+pub fn config_dir() {
+
 }
 
 #[allow(dead_code)]
@@ -397,7 +408,10 @@ impl Setup {
         nlu_port: usize,
     ) {
         //Create config, skills
-        let folders = ["config", ""]
+        let folders = ["config", "lang", "skills"];
+        
+        fs::remove_dir_all()
+
         //let mut file = File::create(&script_path)?;
         //file.write_all(content.as_bytes())?;
         //updated_scripts.push(name.clone());
