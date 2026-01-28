@@ -1,4 +1,4 @@
-use console::{style, Term};
+use console::{Term, style};
 use indicatif::ProgressStyle;
 
 pub static LOGO: &str = r#"
