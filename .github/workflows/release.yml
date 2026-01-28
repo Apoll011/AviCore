@@ -91,6 +91,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+      
+      - name: Install cross-compilation tools (Linux ARM)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          # Install ARM64 OpenSSL development libraries
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev:arm64 || true
+          # Note: If cross-compilation fails, we'll use vendored OpenSSL
+      
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
+      
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -98,11 +122,16 @@ jobs:
           target: ${{ matrix.target }}
           cache: true
       
-      - name: Install cross-compilation tools (Linux ARM)
+      - name: Configure cross-compilation environment (Linux ARM)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> $GITHUB_ENV
+          # OpenSSL cross-compilation
+          echo "OPENSSL_DIR=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=/usr/include" >> $GITHUB_ENV
       
       - name: Update Cargo.toml version
         shell: bash
@@ -118,13 +147,14 @@ jobs:
       
       - name: Build release
         run: |
-          cargo build --release --target ${{ matrix.target }} --verbose
-      
-      #- name: Run tests
-      #  # Skip tests for cross-compiled targets
-      #  if: matrix.target == 'x86_64-unknown-linux-gnu' || matrix.target == 'x86_64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin'
-      #  run: |
-      #    cargo test --release --target ${{ matrix.target }} --verbose
+          # For cross-compiled targets, use vendored OpenSSL if needed
+          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+            # Try with system OpenSSL first, fall back to vendored
+            cargo build --release --target ${{ matrix.target }} --verbose || \
+            OPENSSL_STATIC=1 cargo build --release --target ${{ matrix.target }} --verbose
+          else
+            cargo build --release --target ${{ matrix.target }} --verbose
+          fi
       
       - name: Package binary (Unix)
         if: runner.os != 'Windows'
