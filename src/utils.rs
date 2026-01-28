@@ -224,7 +224,7 @@ pub struct Setup {
 impl Setup {
     pub fn new(dir: &PathBuf) -> Self {
         Self {
-            config_path: dir.clone(),
+            config_path: dir.to_path_buf(),
         }
     }
 
@@ -340,10 +340,7 @@ impl Setup {
 
     async fn has_nlu(&self) -> bool {
         let api = Api::new();
-        match api.alive().await {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        api.alive().await.is_ok()
     }
 
     pub fn download_skill(&self, skill_id: String, pb: &ProgressBar) {

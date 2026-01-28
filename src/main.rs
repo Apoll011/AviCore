@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             s.check().await;
 
-            ui::step(2, 8, &format!("Booting sequence initiated"));
+            ui::step(2, 8, "Booting sequence initiated");
 
             info!("System ownership transferred to AviCore Reactor...");
 
