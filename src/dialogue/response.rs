@@ -354,9 +354,7 @@ mod tests {
 
         assert!(validator.validate_and_parse("oh yes please").unwrap());
         assert!(!validator.validate_and_parse("no way").unwrap());
-        assert!(
-            validator.validate_and_parse("I will always do it").unwrap()
-        );
+        assert!(validator.validate_and_parse("I will always do it").unwrap());
     }
 
     #[test]
