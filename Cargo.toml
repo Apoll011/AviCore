@@ -7,6 +7,12 @@ edition = "2024"
 name = "avicore"
 path = "src/main.rs"
 
+[profile.dev]
+debug = 0
+
+[profile.release]
+debug = 0
+
 [dependencies]
 reqwest = { version = "0.12.24", features = ["json", "default-tls"] }
 tokio = { version = "1.35", features = ["full"] }
