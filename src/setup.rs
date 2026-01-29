@@ -198,6 +198,8 @@ impl Setup {
         let skills = provider.list_skills().await?;
         let pb = ProgressBar::new(skills.len() as u64);
 
+        println!("skills: {:?}", skills);
+
         pb.set_style(main_progress_style());
 
         for skill in skills.iter().map(|s| s.id.clone()) {

@@ -44,10 +44,12 @@ pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::E
     ui::step(4, 8, "Initializing Runtime");
     create_runtime(&config_path.display().to_string(), device);
 
-    setup.online_setup(
-        Arc::new(get_from_settings("lang_resolvers".to_string()).unwrap()),
-        Arc::new(get_from_settings("skill_resolvers".to_string()).unwrap()),
-    );
+    setup
+        .online_setup(
+            Arc::new(get_from_settings("lang_resolvers".to_string()).unwrap()),
+            Arc::new(get_from_settings("skill_resolvers".to_string()).unwrap()),
+        )
+        .await;
 
     ui::step(5, 8, "Initializing Actions");
 
