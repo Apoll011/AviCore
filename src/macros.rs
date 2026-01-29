@@ -157,7 +157,7 @@ macro_rules! set_ctx {
     ($key:expr, $value:expr, persistent: $persistent:expr) => {
         match $crate::ctx::runtime() {
             Ok(c) => c.context.set(
-                $crate::context::ContextScope::Global,
+                $crate::data::context::ContextScope::Global,
                 $key.to_string(),
                 serde_json::json!($value),
                 None,
@@ -169,7 +169,7 @@ macro_rules! set_ctx {
     (skill: $skill:expr, $key:expr, $value:expr, $ttl:expr, $persistent:expr) => {
         match $crate::ctx::runtime() {
             Ok(c) => c.context.set(
-                $crate::context::ContextScope::Skill($skill),
+                $crate::data::context::ContextScope::Skill($skill),
                 $key.to_string(),
                 serde_json::json!($value),
                 Some(::std::time::Duration::from_secs($ttl)),
@@ -184,7 +184,9 @@ macro_rules! set_ctx {
 macro_rules! get_ctx {
     ($key:expr) => {
         match $crate::ctx::runtime() {
-            Ok(c) => c.context.get(&$crate::context::ContextScope::Global, $key),
+            Ok(c) => c
+                .context
+                .get(&$crate::data::context::ContextScope::Global, $key),
             Err(e) => {
                 ::log::error!("Failed to get context: runtime not available: {}", e);
                 None
@@ -213,7 +215,7 @@ macro_rules! get_ctx {
         match $crate::ctx::runtime() {
             Ok(c) => c
                 .context
-                .get(&$crate::context::ContextScope::Skill($name), $key),
+                .get(&$crate::data::context::ContextScope::Skill($name), $key),
             Err(e) => {
                 ::log::error!("Failed to get skill context: runtime not available: {}", e);
                 None
@@ -226,7 +228,9 @@ macro_rules! get_ctx {
 macro_rules! has_ctx {
     ($key:expr) => {
         match $crate::ctx::runtime() {
-            Ok(c) => c.context.has(&$crate::context::ContextScope::Global, $key),
+            Ok(c) => c
+                .context
+                .has(&$crate::data::context::ContextScope::Global, $key),
             Err(_) => false,
         }
     };
@@ -240,7 +244,7 @@ macro_rules! has_ctx {
         match $crate::ctx::runtime() {
             Ok(c) => c
                 .context
-                .has(&$crate::context::ContextScope::Skill($name), $key),
+                .has(&$crate::data::context::ContextScope::Skill($name), $key),
             Err(_) => false,
         }
     };
@@ -252,7 +256,7 @@ macro_rules! remove_ctx {
         match $crate::ctx::runtime() {
             Ok(c) => {
                 c.context
-                    .remove(&$crate::context::ContextScope::Global, $key);
+                    .remove(&$crate::data::context::ContextScope::Global, $key);
                 Ok(())
             }
             Err(e) => Err(e),
@@ -271,7 +275,7 @@ macro_rules! remove_ctx {
         match $crate::ctx::runtime() {
             Ok(c) => {
                 c.context
-                    .remove(&$crate::context::ContextScope::Skill($name), $key);
+                    .remove(&$crate::data::context::ContextScope::Skill($name), $key);
                 Ok(())
             }
             Err(e) => Err(e),

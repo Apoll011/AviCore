@@ -1,8 +1,8 @@
-use crate::config::ConfigSystem;
-use crate::context::ContextManager;
+use crate::data::config::ConfigSystem;
+use crate::data::context::ContextManager;
+use crate::data::user::UserManager;
 use crate::dialogue::languages::LanguageSystem;
 use crate::dialogue::reply::{ReplyConfig, ReplyManager};
-use crate::user::UserManager;
 use avi_device::device::AviDevice;
 use log::{debug, error, info, trace};
 use std::path::PathBuf;

@@ -2,29 +2,25 @@ extern crate core;
 
 mod actions;
 mod api;
-mod cli_args;
-mod config;
+mod cli;
 mod content;
-mod context;
 mod ctx;
+mod data;
 mod dialogue;
 mod log;
 mod macros;
-mod setup;
 mod skills;
 mod start;
-mod ui;
-mod user;
 mod utils;
 
-use crate::cli_args::{Args, Commands};
+use crate::cli::args::{Args, Commands};
+use crate::cli::ui;
 use crate::log::AviCoreLogger;
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
 use crate::utils::{config_dir, generate_documentation, generate_dsl_definition};
 use ::log::{error, info};
 use clap::Parser;
-use setup::Setup;
 use std::time::Duration;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 

@@ -5,7 +5,7 @@ use crate::dialogue::response::{
 };
 use crate::dialogue::utils::speak;
 use crate::skills::avi_script::helpers::get_skill_context;
-use crate::user::user_name;
+use crate::data::user::user_name;
 use crate::{get_ctx, rt_spawn, speak};
 use log::error;
 use rhai::plugin::*;

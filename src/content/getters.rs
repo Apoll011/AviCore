@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use content_resolver::{ContentSource, GitHubSource, ResourceResolver};
 
-use crate::config::setting;
+use crate::data::config::setting;
 
 //TODO uncomment the checks
 pub fn get_from_settings(settings_name: String) -> Option<ResourceResolver> {

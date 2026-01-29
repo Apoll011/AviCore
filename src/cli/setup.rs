@@ -4,7 +4,6 @@ use crate::content::skill::SkillProvider;
 use crate::ui::ask;
 use crate::ui::ask_confirm;
 use crate::ui::ask_number;
-use crate::ui::info_line;
 use crate::ui::main_progress_style;
 use crate::ui::select_option;
 use crate::ui::spinner_style;
@@ -317,14 +316,14 @@ impl Setup {
         let defaults = HashMap::from([
             (
                 "config/const.config",
-                include_str!("../config/config/const.config"),
+                include_str!("../../config/config/const.config"),
             ),
             (
                 "config/settings.config",
-                include_str!("../config/config/settings.config"),
+                include_str!("../../config/config/settings.config"),
             ),
-            ("lang/en.lang", include_str!("../config/lang/en.lang")),
-            ("lang/pt.lang", include_str!("../config/lang/pt.lang")),
+            ("lang/en.lang", include_str!("../../config/lang/en.lang")),
+            ("lang/pt.lang", include_str!("../../config/lang/pt.lang")),
         ]);
 
         let _ = fs::create_dir_all(&self.config_path);

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::config::setting;
+use crate::data::config::setting;
 use crate::dialogue::languages::lang;
 use avi_nlu_client::apis::configuration::Configuration;
 use avi_nlu_client::apis::*;

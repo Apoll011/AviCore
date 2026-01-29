@@ -3,8 +3,8 @@ use rhai::plugin::*;
 
 #[export_module]
 pub mod user_module {
+    use crate::data::user::{Location, QuietHours, user_name};
     use crate::dialogue::languages::lang;
-    use crate::user::{Location, QuietHours, user_name};
     use chrono::{DateTime, Utc};
 
     /// Gets the user's name
