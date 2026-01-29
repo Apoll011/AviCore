@@ -1,8 +1,4 @@
-use content_resolver::{
-    error::{ContentError, Result},
-    resolver::ResourceResolver,
-    types::EntryType,
-};
+use content_resolver::{error::Result, resolver::ResourceResolver, types::EntryType};
 use std::boxed::Box;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
@@ -24,6 +20,7 @@ pub struct SkillInfo {
     /// Unique identifier for the skill
     pub id: String,
     /// Path to the skill directory
+    #[allow(dead_code)]
     pub path: String,
 }
 
@@ -31,6 +28,7 @@ pub struct SkillInfo {
 #[derive(Debug)]
 pub struct SkillDownload {
     /// The skill that was downloaded
+    #[allow(dead_code)]
     pub skill: SkillInfo,
     /// Paths of all files that were written
     pub files_written: Vec<PathBuf>,
@@ -38,6 +36,7 @@ pub struct SkillDownload {
     pub total_bytes: usize,
 }
 
+#[allow(dead_code)]
 impl SkillProvider {
     /// Create a new skill provider
     ///

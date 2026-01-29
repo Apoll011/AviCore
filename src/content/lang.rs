@@ -14,6 +14,7 @@ pub struct LanguageProvider {
     base_path: String,
 }
 
+#[allow(dead_code)]
 impl LanguageProvider {
     /// Create a new language provider
     ///
@@ -57,10 +58,10 @@ impl LanguageProvider {
 
         let mut locales = Vec::new();
         for entry in listing.entries {
-            if entry.name.ends_with(".lang") {
-                if let Some(locale) = entry.name.strip_suffix(".lang") {
-                    locales.push(locale.to_string());
-                }
+            if entry.name.ends_with(".lang")
+                && let Some(locale) = entry.name.strip_suffix(".lang")
+            {
+                locales.push(locale.to_string());
             }
         }
 
