@@ -288,13 +288,8 @@ impl Setup {
                 style("⚠").yellow().bold(),
                 style("Dashboard not found locally.").yellow()
             );
-            if ask_confirm("Would you like to download the Avicia Dashboard?") {
+            if ask_confirm("Would you like to download the Avi Dashboard?") {
                 self.download_dashboard();
-            }
-        } else {
-            info_line("Dashboard", "Already installed");
-            if ask_confirm("Check for updates?") {
-                self.download_dashboard(); // Re-run download/update
             }
         }
     }
