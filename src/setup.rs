@@ -15,9 +15,7 @@ use console::style;
 use content_resolver::ResourceResolver;
 use indicatif::ProgressBar;
 use log::{error, info};
-use reqwest::StatusCode;
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -66,6 +64,10 @@ impl Setup {
         ];
         let modes_v = ["offline", "online"];
         let mode = modes_v[select_option("How would you like to setup Avi", &modes)];
+
+        if (mode.eq("online")) {
+            self.online = true;
+        }
 
         sub_step(2, 6, "Enviroment Configuration");
 
@@ -142,20 +144,19 @@ impl Setup {
             nlu_port,
         );
         pb.finish_with_message("Config folder created.");
-
-        if (mode.eq("online")) {
-            self.online = true;
-        } else {
-            println!(" {}", style("Skipping resource download.").bright())
-        }
     }
 
-    async fn online_setup(&self, skill_resolvers: Arc<ResourceResolver>) {
+    pub async fn online_setup(
+        &self,
+        skill_resolvers: Arc<ResourceResolver>,
+        lang_resolvers: Arc<ResourceResolver>,
+    ) {
         if !self.online {
             return;
         }
 
         self.download_initial_skills(skill_resolvers).await;
+        self.download_languages(lang_resolvers).await;
         self.dashoard();
     }
 
@@ -209,6 +210,26 @@ impl Setup {
             style("✔").green().bold(),
             style("Skill synchronization complete.").bright()
         );
+
+        Ok(())
+    }
+
+    async fn download_languages(
+        &self,
+        resolver: Arc<ResourceResolver>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let provider = LanguageProvider::new(resolver, "lang".to_string());
+
+        let langs_list = provider.list_languages().await?;
+
+        for lang in langs_list {
+            let path = config_dir().join("lang").join(format!("{}.lang", lang));
+            let mut file = File::create(path)?;
+
+            let content = provider.fetch_language(&lang).await?;
+
+            file.write_all(content.as_bytes())?;
+        }
 
         Ok(())
     }
@@ -304,7 +325,7 @@ impl Setup {
                 include_str!("../config/config/const.config"),
             ),
             (
-                "config/const.config",
+                "config/settings.config",
                 include_str!("../config/config/settings.config"),
             ),
             ("lang/en.lang", include_str!("../config/lang/en.lang")),
@@ -317,7 +338,11 @@ impl Setup {
             let _ = fs::create_dir(self.config_path.join(folder));
         }
 
-        for (path, content) in &defaults {
+        for (path, content) in defaults {
+            if self.online && path.contains("lang") {
+                continue;
+            };
+
             let mut file = match File::create(self.config_path.join(path)) {
                 Ok(f) => f,
                 Err(e) => {

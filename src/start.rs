@@ -3,13 +3,13 @@ use crate::actions::dialogue::{DialogueAction, DialogueCapability};
 use crate::actions::intent::IntentAction;
 use crate::actions::mesh::MeshAction;
 use crate::config::setting_or;
+use crate::content::getters::get_from_settings;
 use crate::context::context_cleanup_task;
 use crate::ctx::{create_runtime, runtime};
 use crate::{Setup, ui};
 use crate::{register_action, watch_dir};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
-use content_resolver::{GitHubSource, ResourceResolver};
 use log::{error, info};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -21,21 +21,6 @@ pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::E
     let mut setup = Setup::new(&config_path);
 
     setup.check().await;
-
-    let source = Arc::new(GitHubSource::new(
-        "apoll011".to_string(),
-        "aviCore".to_string(),
-        "master".to_string(),
-        "config/".to_string(),
-    ));
-
-    // Create resolver
-    let resolver = Arc::new(ResourceResolver::new(vec![source]));
-
-    println!(
-        "{:?}",
-        Setup::download_language("pt".to_string(), resolver).await
-    );
 
     ui::step(3, 7, "Initializing Device Configuration");
 
@@ -58,6 +43,11 @@ pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::E
 
     ui::step(4, 8, "Initializing Runtime");
     create_runtime(&config_path.display().to_string(), device);
+
+    setup.online_setup(
+        Arc::new(get_from_settings("lang_resolvers".to_string()).unwrap()),
+        Arc::new(get_from_settings("skill_resolvers".to_string()).unwrap()),
+    );
 
     ui::step(5, 8, "Initializing Actions");
 
