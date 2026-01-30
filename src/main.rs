@@ -2,28 +2,26 @@ extern crate core;
 
 mod actions;
 mod api;
-mod cli_args;
-mod config;
-mod context;
+mod cli;
+mod content;
 mod ctx;
+mod data;
 mod dialogue;
 mod log;
 mod macros;
 mod skills;
 mod start;
-mod ui;
-mod user;
 mod utils;
 
-use crate::cli_args::{Args, AviDeviceType, Commands};
+use crate::cli::args::{Args, Commands};
+use crate::cli::ui;
 use crate::log::AviCoreLogger;
 use crate::skills::avi_script::avi_librarymanager::get_lib_path;
 use crate::start::start_avi;
-use crate::utils::{generate_documentation, generate_dsl_definition};
+use crate::utils::{config_dir, generate_documentation, generate_dsl_definition};
 use ::log::{error, info};
 use clap::Parser;
 use std::time::Duration;
-
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tokio::main]
@@ -32,12 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     match args.command {
-        Commands::Start {
-            dev_type,
-            gateway,
-            config,
-            log_level,
-        } => {
+        Commands::Start { config, log_level } => {
             ui::print_logo();
 
             ui::step(1, 8, "Initializing Environment");
@@ -45,22 +38,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AviCoreLogger::set_level(&level);
             }
 
-            let is_core = matches!(dev_type, AviDeviceType::Core);
-            let mode_str = if is_core {
-                "CORE CONTROLLER"
+            let config_w;
+
+            if let Some(c) = config {
+                config_w = c.as_str().into();
             } else {
-                "PERIPHERAL NODE"
-            };
-
-            ui::step(2, 8, &format!("Booting sequence initiated: {}", mode_str));
-
-            if gateway {
-                info!("Enabled [Gateway Mode]");
+                config_w = config_dir();
             }
+
+            ui::step(2, 8, "Booting sequence initiated");
 
             info!("System ownership transferred to AviCore Reactor...");
 
-            start_avi(is_core, gateway, config).await?;
+            start_avi(config_w).await?;
         }
 
         Commands::GenerateDocs {
@@ -136,6 +126,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     console::style("Runtime Information:").bold().underlined()
                 );
                 ui::info_line("Library Path", &get_lib_path().display().to_string());
+                ui::info_line("Config Path", &config_dir().display().to_string());
                 ui::info_line("Platform", std::env::consts::OS);
                 ui::info_line("Architecture", std::env::consts::ARCH);
 

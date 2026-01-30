@@ -8,7 +8,7 @@ use crate::skills::manager::SkillManager;
 use crate::{subscribe, watch_dir};
 use avi_device::device::AviDevice;
 use avi_nlu_client::models::{self, Alive, Data1Inner};
-use log::{info, warn};
+use log::{error, info, warn};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -86,13 +86,20 @@ impl IntentAction {
 
         let dataset = skill_manager.lock().await.get_dataset();
 
-        let _ = api.lock().await.set_engine_dataset(dataset).await;
+        match api.lock().await.set_engine_dataset(dataset).await {
+            Ok(_) => info!("Updated the engine sucessfully"),
+            Err(e) => error!("Error updating the engine: {}", e),
+        }
 
-        let _ = api
+        match api
             .lock()
             .await
             .train_intent_engine(models::EngineTrainType::Train)
-            .await;
+            .await
+        {
+            Ok(v) => info!("Trained the engine on lang {}", v.lang),
+            Err(e) => error!("Error training the engine: {}", e),
+        }
     }
 
     async fn should_update_engine(&self) -> bool {
@@ -169,11 +176,14 @@ impl IntentAction {
         info!("Avaliable engines on api: {:?}", avaliable_language_engines);
 
         //TODO: Check if the current server language us the same as what I have
-        //TODO: If it there isent one train...
         if avaliable_language_engines.contains(&lang()) {
-            let _ = api
+            match api
                 .train_intent_engine(models::EngineTrainType::Reuse)
-                .await;
+                .await
+            {
+                Ok(v) => info!("Reused the engine on lang {}", v.lang),
+                Err(e) => error!("Error reusing the engine: {}", e),
+            }
         };
     }
 }

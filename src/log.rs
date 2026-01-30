@@ -109,7 +109,7 @@ impl AviCoreLogger {
 
 impl Log for AviCoreLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.target().starts_with("AviCore")
+        metadata.target().starts_with("avicore")
     }
 
     fn log(&self, record: &Record) {

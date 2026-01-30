@@ -3,7 +3,7 @@ use crate::dialogue::intent::Intent;
 use crate::dialogue::languages::lang;
 use crate::skills::avi_script::avi_librarymanager::initialize_avi_library;
 use crate::skills::skill::Skill;
-use crate::utils::get_all_docs_on_folder;
+use crate::utils::{config_dir, get_all_docs_on_folder};
 use avi_nlu_client::models::{self, Data, Data1Inner, Entity, InputIntent};
 use log::{info, warn};
 use rhai::{FnPtr, Variant};
@@ -43,10 +43,10 @@ impl SkillManager {
     pub fn load_skills() -> HashMap<String, Skill> {
         let mut skills = HashMap::new();
 
-        if let Ok(c) = runtime()
-            && let Ok(entries) = fs::read_dir(c.skill_path.clone())
+        if let Ok(_c) = runtime()
+            && let Ok(entries) = fs::read_dir(config_dir().join("skills"))
         {
-            info!("Searching skills path {}", c.skill_path);
+            info!("Searching skills path {}/skills", config_dir().display());
             for entry_dir in entries {
                 let entry = match entry_dir {
                     Ok(v) => v,

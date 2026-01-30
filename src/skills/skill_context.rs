@@ -1,4 +1,4 @@
-use crate::config::ConfigSystem;
+use crate::data::config::ConfigSystem;
 use crate::dialogue::languages::LanguageSystem;
 use crate::utils::load_value_from_file;
 use memory_size_derive::{DeepSize, DeepSizeTree};

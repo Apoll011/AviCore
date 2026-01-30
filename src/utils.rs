@@ -8,7 +8,6 @@ use log::warn;
 use serde::Deserialize;
 use std::fs;
 use std::path::PathBuf;
-
 #[derive(Eq, PartialEq)]
 pub enum EventType {
     Topic,
@@ -169,5 +168,30 @@ pub fn load_value_from_file<T: for<'a> Deserialize<'a>>(path: PathBuf) -> Result
     match serde_yaml::from_str(&file) {
         Ok(f) => Ok(f),
         Err(e) => Err(format!("Error parsing file: {}", e)),
+    }
+}
+
+#[cfg(debug_assertions)]
+pub fn config_dir() -> PathBuf {
+    match runtime() {
+        Ok(runtime) => runtime.config_path.clone(),
+        Err(_) => "./config".into(),
+    }
+}
+
+#[cfg(not(debug_assertions))]
+pub fn config_dir() -> PathBuf {
+    match runtime() {
+        Ok(runtime) => runtime.config_path.clone(),
+        Err(_) => {
+            use dirs::config_local_dir;
+
+            if let Some(path) = config_local_dir() {
+                let config_path = path.push("avi");
+                fs::create_dir_all(config_path);
+                return config_path;
+            }
+            "./config"
+        }
     }
 }

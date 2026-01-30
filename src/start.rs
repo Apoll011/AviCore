@@ -2,25 +2,30 @@ use crate::actions::action::Action;
 use crate::actions::dialogue::{DialogueAction, DialogueCapability};
 use crate::actions::intent::IntentAction;
 use crate::actions::mesh::MeshAction;
-use crate::config::setting_or;
-use crate::context::context_cleanup_task;
+use crate::cli::setup::Setup;
+use crate::cli::ui;
+use crate::content::getters::get_from_settings;
 use crate::ctx::{create_runtime, runtime};
-use crate::ui;
+use crate::data::config::setting_or;
+use crate::data::context::context_cleanup_task;
 use crate::{register_action, watch_dir};
 use avi_device::DeviceCapabilities;
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use log::{error, info};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub async fn start_avi(
-    is_core: bool,
-    can_gate_away: bool,
-    config_path: String,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting the System");
 
+    let mut setup = Setup::new(&config_path);
+
+    setup.check().await;
+
     ui::step(3, 7, "Initializing Device Configuration");
+
+    let is_core = setting_or::<String>("device_type", "core".to_string()).eq("core");
 
     let config = AviDeviceConfig {
         node_name: "avi-core".to_string(),
@@ -29,7 +34,7 @@ pub async fn start_avi(
         } else {
             AviDeviceType::NODE
         },
-        can_gateway_embedded: can_gate_away,
+        can_gateway_embedded: setting_or("can_gateway", false),
         capabilities: DeviceCapabilities::default(),
     };
 
@@ -38,7 +43,14 @@ pub async fn start_avi(
     device.start_event_loop();
 
     ui::step(4, 8, "Initializing Runtime");
-    create_runtime(&config_path, device);
+    create_runtime(&config_path.display().to_string(), device);
+
+    setup
+        .online_setup(
+            Arc::new(get_from_settings("lang_resolvers".to_string()).unwrap()),
+            Arc::new(get_from_settings("skill_resolvers".to_string()).unwrap()),
+        )
+        .await;
 
     ui::step(5, 8, "Initializing Actions");
 
@@ -53,7 +65,7 @@ pub async fn start_avi(
     });
 
     register_action!(DialogueAction, pb, {
-        capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "both".to_string())),
+        capability: DialogueCapability::new(setting_or::<String>("dialogue_cap", "none".to_string())),
     });
 
     register_action!(MeshAction, pb, if: is_core);
@@ -61,7 +73,7 @@ pub async fn start_avi(
     pb.finish_with_message("Actions Loaded...");
 
     ui::step(6, 8, "Setting the config directory watcher");
-    watch_dir!(&format!("{}/config", config_path), Duration::from_secs(1), async: |_event| {
+    watch_dir!(&config_path.join("config").display(), Duration::from_secs(1), async: |_event| {
         match runtime() {
             Ok(v) => {
                 info!("Change in config directory. Reloading Configuration.");
