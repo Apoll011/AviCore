@@ -187,11 +187,11 @@ pub fn config_dir() -> PathBuf {
             use dirs::config_local_dir;
 
             if let Some(path) = config_local_dir() {
-                let config_path = path.push("avi");
+                let config_path = path.join("avi");
                 fs::create_dir_all(config_path);
                 return config_path;
             }
-            "./config"
+            "./config".into()
         }
     }
 }
