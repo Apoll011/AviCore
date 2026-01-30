@@ -4,7 +4,6 @@ use crate::actions::intent::IntentAction;
 use crate::actions::mesh::MeshAction;
 use crate::cli::setup::Setup;
 use crate::cli::ui;
-use crate::content::getters::get_from_settings;
 use crate::ctx::{create_runtime, runtime};
 use crate::data::config::setting_or;
 use crate::data::context::context_cleanup_task;
@@ -21,7 +20,7 @@ pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::E
 
     let mut setup = Setup::new(&config_path);
 
-    setup.check().await;
+    setup.check().await.map(|_| info!("Setup Finished"))?;
 
     ui::step(3, 7, "Initializing Device Configuration");
 
@@ -45,12 +44,7 @@ pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::E
     ui::step(4, 8, "Initializing Runtime");
     create_runtime(&config_path.display().to_string(), device);
 
-    setup
-        .online_setup(
-            Arc::new(get_from_settings("lang_resolvers".to_string()).unwrap()),
-            Arc::new(get_from_settings("skill_resolvers".to_string()).unwrap()),
-        )
-        .await;
+    setup.post_runtime_init().await?;
 
     ui::step(5, 8, "Initializing Actions");
 
