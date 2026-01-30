@@ -215,7 +215,7 @@ impl Setup {
     }
 
     fn validate_port(&self, port: i64) -> Result<u16, SetupError> {
-        if port < 1 || port > 65535 {
+        if !(1..=65535).contains(&port) {
             return Err(SetupError::ConfigError(
                 "Port must be between 1 and 65535".to_string(),
             ));
