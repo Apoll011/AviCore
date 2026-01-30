@@ -14,6 +14,7 @@ use console::style;
 use content_resolver::ResourceResolver;
 use indicatif::ProgressBar;
 use log::{error, info};
+use self_update::cargo_crate_version;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -25,6 +26,7 @@ use std::thread;
 use std::time::Duration;
 
 #[allow(dead_code)]
+#[derive(Clone)]
 pub struct Setup {
     config_path: PathBuf,
     online: bool,
@@ -154,9 +156,35 @@ impl Setup {
             return;
         }
 
+        sub_step(1, 5, "Downloading online resources");
+        sub_step(2, 5, "Checking for updates");
+        let setup_clone = self.clone();
+
+        let _ = tokio::task::spawn_blocking(move || {
+            if let Err(e) = setup_clone.update() {
+                log::error!("Update failed: {}", e);
+            }
+        })
+        .await;
+        sub_step(3, 5, "Downloading skills");
         self.download_initial_skills(skill_resolvers).await;
+        sub_step(4, 5, "Downloading Languages");
         self.download_languages(lang_resolvers).await;
+        sub_step(5, 5, "Downloading Dashboard");
         self.dashoard();
+    }
+
+    fn update(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let status = self_update::backends::github::Update::configure()
+            .repo_owner("apoll011")
+            .repo_name("aviCore")
+            .bin_name("avicore")
+            .show_download_progress(true)
+            .current_version(cargo_crate_version!())
+            .build()?
+            .update()?;
+        println!("Update status: `{}`!", status.version());
+        Ok(())
     }
 
     async fn has_nlu(&self) -> bool {

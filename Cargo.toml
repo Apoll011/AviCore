@@ -32,6 +32,7 @@ memory_size_derive = { git = "https://github.com/apoll011/memory_size", package 
 content_resolver = { git = "https://github.com/apoll011/content-resolver", package = "content-resolver" }
 avi_nlu_client = { git = "https://github.com/apoll011/avi-nlu-client"}
 dialoguer = "0.12"
+self_update = "0.42.0"
 
 [dev-dependencies]
 async-trait = "0.1.89"
