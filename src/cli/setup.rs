@@ -23,7 +23,7 @@ pub struct Setup {
     config_path: PathBuf,
     online: bool,
 }
-
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug)]
 pub enum SetupError {
     IoError(std::io::Error),
