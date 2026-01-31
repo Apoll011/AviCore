@@ -35,7 +35,6 @@ pub struct SkillDownload {
     /// Total bytes downloaded
     pub total_bytes: usize,
 }
-
 #[allow(dead_code)]
 impl SkillProvider {
     /// Create a new skill provider
@@ -164,7 +163,9 @@ impl SkillProvider {
             // Create the directory
             fs::create_dir_all(local_path).await?;
             // List contents
+
             let listing = self.resolver.list_directory(remote_path).await?;
+            println!("{:?}", listing);
             for entry in listing.entries {
                 let local_entry_path = local_path.join(&entry.name);
                 match entry.entry_type {

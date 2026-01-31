@@ -263,6 +263,7 @@ impl Setup {
         let status = self_update::backends::github::Update::configure()
             .repo_owner("apoll011")
             .repo_name("aviCore")
+            .bin_path_in_archive("./{{ bin }}")
             .bin_name("avicore")
             .show_download_progress(true)
             .current_version(cargo_crate_version!())
@@ -286,7 +287,7 @@ impl Setup {
     ) -> Result<(), Box<dyn std::error::Error>> {
         pb.set_message(format!("Downloading {}...", style(&skill_id).cyan()));
 
-        let output_dir = config_dir().join("skills");
+        let output_dir = config_dir().join("skills").join(skill_id.clone());
 
         let result = skill_provider
             .download_skill(&skill_id, &output_dir)
@@ -307,9 +308,11 @@ impl Setup {
         &self,
         resolver: Arc<ResourceResolver>,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let provider = SkillProvider::new(resolver, "skills".to_string());
+        println!("{:?}", resolver.list_directory("").await);
+        let provider = SkillProvider::new(resolver, "config/skills".to_string());
 
         let skills = provider.list_skills().await?;
+        println!("{:?}", skills);
         let pb = ProgressBar::new(skills.len() as u64);
         pb.set_style(main_progress_style());
 
@@ -549,7 +552,7 @@ impl Setup {
     description: A list of all the lang resolvers
   skill_resolvers:
     value:
-      - git:apoll011@aviCore:master:./config
+      - git:apoll011@aviCore:master:/
     vtype: list
     description: A list of all the skill resolvers
 "#,
