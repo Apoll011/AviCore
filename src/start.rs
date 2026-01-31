@@ -44,7 +44,10 @@ pub async fn start_avi(config_path: PathBuf) -> Result<(), Box<dyn std::error::E
     ui::step(4, 8, "Initializing Runtime");
     create_runtime(&config_path.display().to_string(), device);
 
-    setup.post_runtime_init().await?;
+    setup
+        .post_runtime_init()
+        .await
+        .unwrap_or_else(|e| error!("Online Setup Failed: {}", e));
 
     ui::step(5, 8, "Initializing Actions");
 
