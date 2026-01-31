@@ -149,8 +149,8 @@ impl Setup {
 
     pub async fn post_runtime_init(&self) -> Result<(), SetupError> {
         self.online_setup(
-            Arc::new(get_from_settings("lang_resolvers".to_string()).unwrap()),
             Arc::new(get_from_settings("skill_resolvers".to_string()).unwrap()),
+            Arc::new(get_from_settings("lang_resolvers".to_string()).unwrap()),
         )
         .await
     }
@@ -309,7 +309,7 @@ impl Setup {
         resolver: Arc<ResourceResolver>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("{:?}", resolver.list_directory("").await);
-        let provider = SkillProvider::new(resolver, "config/skills".to_string());
+        let provider = SkillProvider::new(resolver, "skills".to_string());
 
         let skills = provider.list_skills().await?;
         println!("{:?}", skills);
@@ -547,12 +547,12 @@ impl Setup {
     ui: toggle
   lang_resolvers:
     value:
-      - git:apoll011@aviCore:master:./config
+      - git:apoll011@aviCore:master:config
     vtype: list
     description: A list of all the lang resolvers
   skill_resolvers:
     value:
-      - git:apoll011@aviCore:master:/
+      - git:apoll011@aviCore:master:config
     vtype: list
     description: A list of all the skill resolvers
 "#,

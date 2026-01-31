@@ -165,7 +165,7 @@ impl SkillProvider {
             // List contents
 
             let listing = self.resolver.list_directory(remote_path).await?;
-            println!("{:?}", listing);
+
             for entry in listing.entries {
                 let local_entry_path = local_path.join(&entry.name);
                 match entry.entry_type {
