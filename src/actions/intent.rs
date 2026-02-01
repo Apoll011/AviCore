@@ -39,7 +39,7 @@ impl IntentAction {
         match IntentAction::process_reply_text(text).await {
             Ok(replay) => {
                 let mut mg = skill_manager.lock().await;
-                if let Err(e) = mg.run_skill_function_ptr(
+                if let Err(e) = mg.run_skill_function_ptr::<String, ()>(
                     &replay.pending_reply.skill_request,
                     replay.pending_reply.handler,
                     vec![replay.parsed_output],

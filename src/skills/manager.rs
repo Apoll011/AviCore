@@ -218,14 +218,14 @@ impl SkillManager {
         }
     }
 
-    pub fn run_skill_function_ptr<T: Variant + Clone>(
+    pub fn run_skill_function_ptr<T: Variant + Clone, R: Variant + Clone>(
         &mut self,
         skill_name: &str,
         function: FnPtr,
         args: Vec<T>,
-    ) -> Result<bool, Box<dyn std::error::Error>> {
+    ) -> Result<R, Box<dyn std::error::Error>> {
         match self.skills.get_mut(skill_name) {
-            Some(v) => Ok(v.run_function_ptr(function, args)?),
+            Some(v) => Ok(v.run_function_ptr::<R>(function, args)?),
             None => Err(format!("Skill {} not found", skill_name).into()),
         }
     }
