@@ -188,7 +188,7 @@ pub fn config_dir() -> PathBuf {
 
             if let Some(path) = config_local_dir() {
                 let config_path = path.join("avi");
-                fs::create_dir_all(config_path);
+                let _ = fs::create_dir_all(&config_path);
                 return config_path;
             }
             "./config".into()
