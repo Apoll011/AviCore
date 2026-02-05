@@ -99,10 +99,7 @@ pub struct ChatSession {
 
 impl ChatSession {
     pub fn new(stream_id: StreamId, peer_id: String) -> Self {
-        let id = format!(
-            "session-{}",
-            uuid::Uuid::new_v4().to_string()[..8].to_string()
-        );
+        let id = format!("session-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
         Self {
             id,

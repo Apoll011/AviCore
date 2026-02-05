@@ -3,7 +3,6 @@ use avi_device::capability::{CapabilityBuilder, SensorCapability};
 use avi_device::device::{AviDevice, AviDeviceConfig, AviDeviceType};
 use avi_device::stream::{StreamContext, StreamHandler, StreamHandlerFactory};
 use avi_p2p::{PeerId, StreamCloseReason, StreamId};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use std::io::{self, Write};
@@ -16,9 +15,8 @@ mod domain;
 mod message_types;
 mod session;
 
-use commands::{Command, CommandExecutor, CommandRegistry};
-use domain::{ChatMessage, ChatSession, MessageType, TypingIndicator};
-use message_types::{TypedMessage, TypedSubscription};
+use commands::{Command, CommandRegistry};
+use domain::{ChatMessage, MessageType};
 use session::SessionManager;
 
 // ============================================================================
@@ -443,12 +441,12 @@ async fn show_status(device: &AviDevice) -> Result<(), String> {
 
     println!("  Local ID: {}", device.get_id().await);
 
-    if let Ok(ctx) = device.get_ctx("").await {
-        if let Some(obj) = ctx.as_object() {
-            println!("\n  Context Keys ({}):", obj.keys().len());
-            for key in obj.keys() {
-                println!("    • {}", key);
-            }
+    if let Ok(ctx) = device.get_ctx("").await
+        && let Some(obj) = ctx.as_object()
+    {
+        println!("\n  Context Keys ({}):", obj.keys().len());
+        for key in obj.keys() {
+            println!("    • {}", key);
         }
     }
 
@@ -480,7 +478,7 @@ async fn query_nodes(device: &AviDevice) -> Result<(), String> {
 }
 
 async fn subscribe(state: &AppState, topic: String) -> Result<(), String> {
-    let topic_clone = topic.clone();
+    let _topic_clone = topic.clone();
 
     state
         .device
@@ -504,7 +502,7 @@ async fn subscribe(state: &AppState, topic: String) -> Result<(), String> {
 }
 
 async fn subscribe_typed(state: &AppState, topic: String, type_name: String) -> Result<(), String> {
-    let topic_clone = topic.clone();
+    let _topic_clone = topic.clone();
     let type_clone = type_name.clone();
 
     state
@@ -580,7 +578,7 @@ async fn list_subscriptions(state: &AppState) {
         println!(" No active subscriptions");
     } else {
         println!("\n Active Subscriptions ({}):", subs.len());
-        for (topic, desc) in subs.iter() {
+        for (_topic, desc) in subs.iter() {
             println!("   • {}", desc);
         }
         println!();
@@ -824,7 +822,7 @@ async fn show_history(state: &AppState, session_id: Option<String>) -> Result<()
     if session_guard.messages.is_empty() {
         println!("   (no messages yet)");
     } else {
-        for (i, msg) in session_guard.messages.iter().enumerate() {
+        for (_i, msg) in session_guard.messages.iter().enumerate() {
             let time = format_timestamp(msg.timestamp);
             let icon = match msg.message_type {
                 MessageType::Text => "💬",
@@ -876,15 +874,14 @@ async fn broadcast_message(state: &AppState, message: String) -> Result<(), Stri
             message_type: MessageType::Text,
         };
 
-        if let Ok(data) = serde_json::to_vec(&msg) {
-            if state
+        if let Ok(data) = serde_json::to_vec(&msg)
+            && state
                 .device
                 .send_stream_data(session_info.stream_id, data)
                 .await
                 .is_ok()
-            {
-                sent += 1;
-            }
+        {
+            sent += 1;
         }
     }
 
