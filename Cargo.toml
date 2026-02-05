@@ -35,7 +35,8 @@ dialoguer = "0.12"
 self_update = {version = "0.42.0", features = ["archive-tar"]}
 serde_bytes = "0.11.19"
 
-[dev-dependencies]
-async-trait = "0.1.89"
-avi-p2p = { git = "https://github.com/apoll011/avi-net-device" }
-tempfile = "3.24.0"
+[workspace]
+members = [
+    ".",
+    "chat"
+]

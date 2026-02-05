@@ -1,0 +1,17 @@
+
+[package]
+name = "avidevice-chat"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+async-trait = "0.1.89"
+avi-p2p = { git = "https://github.com/apoll011/avi-net-device" }
+tempfile = "3.24.0"
+serde_json = "1.0.147"
+chrono = { version = "0.4.42", features = ["serde"] }
+avi_device = { package = "avi-device", git = "https://github.com/apoll011/avi-net-device" }
+uuid = { version = "1.19.0", features = ["v4", "fast-rng"] }
+serde_bytes = "0.11.19"
